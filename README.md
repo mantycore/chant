@@ -5,7 +5,7 @@ written with preserving the traditions of internet anonymity in mind. The main i
 * To keep the technology behind it simple and compact enough, for ease of code auditing and reasoning about it;
 * To study the organization of distributed systems and related technologies by implementing one.
 
-#Installation
+# Installation
 
 The installation and usage is typical for a node project:
 
