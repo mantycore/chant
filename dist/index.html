@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style>
+		#files {
+			font-size: 10px;
+		}
+		#files span {
+			margin-right: 10px;
+		}
+		#drop_zone {
+			border: 2px dashed #bbb;
+			padding: 2px;
+			color: #bbb;
+			width: 400px;
+			height: 50px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+		}
+	</style>
+</head>
+<body>
+	<textarea id="body"></textarea>
+	<button id="submit">Post</button>
+	<div id="files"></div>
+	<div id="drop_zone">Drop files here</div>
+	<input type="file" id="drop_zone_helper" multiple style="display:none"/> 
+	<div id="main"></div>
+	<script src="main.js"></script>
+</body>
+</html>
