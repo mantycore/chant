@@ -1,8 +1,9 @@
 import toCID from './cid.js'
 import { Buffer } from 'buffer'
+import BSON from 'bson'
 
 export default state => {
-    const pr = state.pr
+    const {isServerNode, pr} = state
     const peers = new Set()
     const contentStore = new Map()
     const posts = []
@@ -10,7 +11,7 @@ export default state => {
 
     const generatePId = () => `${pr.id.toString('hex')}:${new Date().toISOString()}`
 
-    const pr_send = (id, message) => {
+    const pr_send = (id, message, binary = false) => {
         const newMessage = Object.assign({}, message)
         let mid
         if (message.mid) {
@@ -20,9 +21,10 @@ export default state => {
             Object.assign(newMessage, {mid})
         }
         if (message.type !== 'ping' && message.type !== 'pong') {
-            console.log("SEND", id.toString('hex', 0, 2), JSON.stringify(newMessage))
+            const {payload1: omit, ...messageSansPayload} = newMessage
+            console.log("SEND", id.toString('hex', 0, 2), messageSansPayload) // JSON.stringify()
         }
-        pr.send(id, newMessage)
+        pr.send(id, newMessage, binary)
         return mid
     }
 
@@ -91,13 +93,16 @@ export default state => {
         let filesFull = []
         if (filesToLoad) {
             const arrayBufferReaders = await Promise.all(Array.from(filesToLoad).map(pFileReader('readAsArrayBuffer')))
-            const arrayBuffers = arrayBufferReaders.map(event => event.target.result)
+            const arrayBuffers = arrayBufferReaders.map(event => event.target.result)  // change to Buffers, check if the result is the same
             const cids = await Promise.all(arrayBuffers.map(toCID))
 
-            const dataURLReaders = await Promise.all(Array.from(filesToLoad).map(pFileReader('readAsDataURL')))
-            const dataURLs = dataURLReaders.map(event => event.target.result)
+            const buffers = arrayBuffers.map(arrayBuffer => Buffer.from(arrayBuffer))
 
-            filesFull = Array.from(filesToLoad).map((file, i) => ({dataURL: dataURLs[i], cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
+            //const dataURLReaders = await Promise.all(Array.from(filesToLoad).map(pFileReader('readAsDataURL')))
+            //const dataURLs = dataURLReaders.map(event => event.target.result)
+
+            //filesFull = Array.from(filesToLoad).map((file, i) => ({dataURL: dataURLs[i], cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
+            filesFull = Array.from(filesToLoad).map((file, i) => ({buffer: buffers[i], cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
             files = Array.from(filesToLoad).map((file, i) => ({cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
             filesFull.forEach(file => {
                 contentStore.set(file.cid, file)
@@ -137,7 +142,18 @@ export default state => {
 
     // --- THINGS THAT USE GETTERS ---
 
-    setInterval(async () => {
+    const getAndStoreContent = async cid => {
+        try {
+            const file = await getContent(cid)
+            const storageFile = {...file, buffer: file.buffer.buffer}
+            contentStore.set(cid, storageFile)
+            stateChangeHandler()
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    /*setInterval(async () => {
         for (const peer of peers.values()) {
             try {
                 await ping(peer)
@@ -145,7 +161,7 @@ export default state => {
                 peers.delete(peer)    
             }
         }
-    }, 10000)
+    }, 10000)*/
 
     let postInitialized = false
     pr.on('peer', async id => {
@@ -172,23 +188,40 @@ export default state => {
         posts.push(post)
         posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
         stateChangeHandler() //todo: optimize
-
-        if (post.files) {
-            post.files.map(async file => {
-                if (!contentStore.get(file.cid)) {
-                    try {
-                        const fullFile = await getContent(file.cid)
-                        contentStore.set(file.cid, fullFile)
-                        stateChangeHandler() 
-                    } catch(e) {
-                        console.log("timeout (10s) on waiting the file", file)
+        if (isServerNode) {
+            if (post.files) {
+                post.files.map(async file => {
+                    if (!contentStore.get(file.cid)) {
+                        try {
+                            await getAndStoreContent(file.cid) //stateChangeHandler is fired inside; think if it is good solution
+                        } catch(e) {
+                            console.log("timeout (10s) on waiting the file", file)
+                        }
                     }
-                }
-            })
+                })
+            }
         }
     }
 
-    Object.assign(state, {peers, contentStore, posts, messagesProcessed, putContent, getContent, putPost, repliesPending, onStateChange, Buffer, toCID})
+    Object.assign(state, {
+        peers,
+        contentStore,
+        posts,
+        messagesProcessed,
+
+        putContent,
+        getContent,
+        putPost,
+        repliesPending,
+
+        getAndStoreContent,
+
+        onStateChange,
+
+        Buffer,
+        toCID,
+        BSON
+    })
 
     /*
     messages scheme:
@@ -204,7 +237,8 @@ export default state => {
 
     pr.on('message', async (message, from) => {
         if (message.type !== 'ping' && message.type !== 'pong') {
-            console.log('RECV', from.toString('hex', 0, 2), JSON.stringify(message))
+            const {payload1: omit, ...messageSansPayload} = message
+            console.log('RECV', from.toString('hex', 0, 2), messageSansPayload) //JSON.stringify(messageSansPayload)
         }
         const forwardedMessage = Object.assign({}, message, {origin: message.origin ? Buffer.from(message.origin.data) : from})
         {
@@ -236,10 +270,11 @@ export default state => {
                 }
                 break
             }
+
             case 'get content': { // todo: split to query (~= head) and get
                 const payload = contentStore.get(message.cid)
                 if (payload) {
-                    pr_send(forwardedMessage.origin, {type: 'content found', payload, inReplyTo: message.mid})
+                    pr_send(forwardedMessage.origin, {type: 'content found', payload, inReplyTo: message.mid}, /*binary*/ true)
                 } else {
                     broadcast(forwardedMessage)
                 }
@@ -249,6 +284,7 @@ export default state => {
                 handleReply(message, message.payload)
                 break
             }
+
             case 'ping': {
                 pr_send(from, {type: 'pong', inReplyTo: message.mid})
                 break
@@ -256,6 +292,7 @@ export default state => {
             case 'pong': 
                 handleReply(message)
                 break
+
             case 'get posts': {
                 pr_send(forwardedMessage.origin, {type: 'put posts', posts, inReplyTo: message.mid})
                 broadcast(forwardedMessage)

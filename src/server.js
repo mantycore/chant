@@ -14,10 +14,12 @@ if (!needsHelp) {
   }
 
   const state = {
-    pr: new Client(opts)
+    pr: new Client(opts),
+    isServerNode: true,
   }
 
   messageHandler(state)
+
 } else {
   console.error(`\
     ${process.argv[1]} port [bootstrap_urls...]
