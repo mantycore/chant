@@ -4,7 +4,7 @@ import React, {useState} from 'react'
 import ReactDOM from 'react-dom'
 
 const state = {
-    pr: new PeerRelay({bootstrap: ['wss://chant.anoma.li:7001']})
+    pr: new PeerRelay({bootstrap: ['ws://localhost:7001']})
 }
 
 messageHandler(state)
