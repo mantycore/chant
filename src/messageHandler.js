@@ -162,7 +162,6 @@ export default state => {
                     //stateChangeHandler()
                 }
                 postInitialized = true
-                console.log("postInitialized", postInitialized)
             } catch (error) {
                 // do nothing
             }
@@ -175,7 +174,6 @@ export default state => {
         stateChangeHandler() //todo: optimize
 
         if (post.files) {
-            console.log("let's get the files")
             post.files.map(async file => {
                 if (!contentStore.get(file.cid)) {
                     try {
