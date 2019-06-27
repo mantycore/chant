@@ -18,7 +18,7 @@
     "immer": "^3.1.3",
     "ipfs-unixfs": "^0.1.16",
     "ipld-dag-pb": "^0.17.4",
-    "peer-relay": "0.0.2",
+    "peer-relay": "mantycore/peer-relay",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-redux": "^7.1.0",
