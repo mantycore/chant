@@ -1,6 +1,12 @@
 import toCID from './cid.js'
 import { Buffer } from 'buffer'
 import BSON from 'bson'
+import thousandFile from './google-10000-english.txt'
+import tweetnacl from 'tweetnacl'
+
+const thousand = thousandFile.split('\n')
+const pass = () => Array(4).fill(() => Math.floor(Math.random() * 10000)).map(rand => thousand[rand()]).join('-')
+const masterPassword = pass()
 
 export default state => {
     const {isServerNode, pr} = state

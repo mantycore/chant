@@ -7,9 +7,19 @@ const resolve = {
     }
 }
 
+const myModule = {
+    rules: [
+        {
+            test: /\.txt$/i,
+            use: 'raw-loader',
+        }
+    ]
+}
+
 module.exports = [
     {
         resolve,
+        module: myModule,
         target: 'node',
         entry: './src/server.js',
         output: {
@@ -21,6 +31,7 @@ module.exports = [
     },
     {
         resolve,
+        module: myModule,
         target: 'web',
         entry: './src/browser/index.js',
         plugins: [
