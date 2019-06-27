@@ -1,12 +1,8 @@
 import toCID from './cid.js'
 import { Buffer } from 'buffer'
 import BSON from 'bson'
-import thousandFile from './google-10000-english.txt'
-import tweetnacl from 'tweetnacl'
-
-const thousand = thousandFile.split('\n')
-const pass = () => Array(4).fill(() => Math.floor(Math.random() * 10000)).map(rand => thousand[rand()]).join('-')
-const masterPassword = pass()
+import crypto from './crypto.js'
+import bs58 from 'bs58'
 
 export default state => {
     const {isServerNode, pr} = state
@@ -122,6 +118,12 @@ export default state => {
         if (files.length > 0) {
             post = Object.assign(post, {files})
         }
+
+        const bsonPost = BSON.serialize(post)
+        const [proofKey, proofSignature] = crypto.proof.signOrigin(bsonPost).map(Buffer).map(bs58.encode)
+        const directSignature = bs58.encode(Buffer(crypto.direct.signOrigin(bsonPost)))
+        console.log(proofKey, proofSignature, directSignature)
+
         posts.push(Object.assign({}, post, {body}))
         posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
         stateChangeHandler()

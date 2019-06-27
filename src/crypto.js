@@ -1,7 +1,5 @@
-const encoder = new TextEncoder("utf-8")
-const encode = encoder.encode.bind(encoder)
-const decoder = new TextDecoder("utf-8")
-const decode = decoder.decode.bind(decoder)
+import nacl from 'tweetnacl'
+import BSON from 'bson'
 
 const concat = args => {
     const len = args.reduce((acc, cur) => acc + cur.byteLength, 0)
@@ -14,7 +12,7 @@ const concat = args => {
     return result
 }
 
-const passphrase = encode("Owls are not that they seem")
+let passphrase = BSON.serialize("Owls are not that they seem")
 const salt = nacl.randomBytes(24)
 const saltMessage = message => nacl.hash(concat([passphrase, salt, message])).slice(0, 32)
 
@@ -23,6 +21,7 @@ const messageToBoxPair = message => nacl.box.keyPair.fromSecretKey(saltMessage(m
 const hashTogether = (sender, recipient) => nacl.hash(concat([sender, recipient])).slice(0, 24)
 
 const crypto = {
+    setPassphrase: newPassphrase => { passphrase = newPassphrase },
     proof: {
         signOrigin: message => {
             const keyPair = messageToSignPair(message)
@@ -51,7 +50,8 @@ const crypto = {
                     hashTogether(senderPublicKey, recipientPublicKey),
                     recipientPublicKey,
                     senderSecretKey
-                )]);
+                )
+            ]);
         },
 
         decrypt: (ciphertext, originalMessage) => {
@@ -66,3 +66,5 @@ const crypto = {
         }
     }
 }
+
+export default crypto

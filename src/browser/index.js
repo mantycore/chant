@@ -2,6 +2,7 @@ import PeerRelay from 'peer-relay'
 import messageHandler from 'Common/messageHandler.js'
 import { store } from './reactRoot.js'
 import handleUpload from './upload.js'
+//import browserCrypto from './browserCrypto.js'
 
 const state = {
     pr: new PeerRelay({bootstrap: ['ws://localhost:7001']}),
