@@ -1,5 +1,6 @@
 # Post type
 Current:
+
     {
         body: string
         bodyCid: string:cid
@@ -12,7 +13,9 @@ Current:
         pid: string:hex,isodate
         timestamp: string:date
     }
+
 Project:
+
     {
         body: {
             cid: string:cid
@@ -40,7 +43,9 @@ Project:
         proofSignature: string:bs58:64
         directSignature: string:bs58:32
     }
+    
 Direct (asymmetrically encrypted)
+
     {
         ciphertext: string:bs58 //?
         // 
@@ -49,7 +54,9 @@ Direct (asymmetrically encrypted)
         timestamp: number:epoch
         version: number // ??
     }
+
 Symmetrically encrypted
+
     {
         ciphertext: string:bs58 //?
         subchant: string:bs58:hash //?
