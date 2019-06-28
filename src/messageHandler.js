@@ -1,8 +1,7 @@
 import toCID from './cid.js'
 import { Buffer } from 'buffer'
+import { createPost, processFiles } from './createPost.js'
 import BSON from 'bson'
-import crypto from './crypto.js'
-import bs58 from 'bs58'
 
 export default state => {
     const {isServerNode, pr} = state
@@ -79,52 +78,22 @@ export default state => {
         return cid
     }
 
-    const putPost = async ({body, filesToLoad}) => {
-        
-        if (!filesToLoad && body === '') {
-            return
+    const putPost = async({body, filesToLoad}) => {
+        if (!filesToLoad && body.match(/^\s+$/)) {
+           return
         }
 
-        const pFileReader = method => file => new Promise((resolve, reject) => {
-            const fileReader = new FileReader()
-            fileReader.onload = resolve
-            fileReader[method](file)
+        const [filesFull, attachments] = await processFiles(filesToLoad)
+        const post = await createPost(body, attachments, pr.id)
+
+        filesFull.forEach(file => {
+            contentStore.set(file.cid, file)
         })
 
-        let files = []
-        let filesFull = []
-        if (filesToLoad) {
-            const arrayBufferReaders = await Promise.all(Array.from(filesToLoad).map(pFileReader('readAsArrayBuffer')))
-            const arrayBuffers = arrayBufferReaders.map(event => event.target.result)  // change to Buffers, check if the result is the same
-            const cids = await Promise.all(arrayBuffers.map(toCID))
+        contentStore.set(post.body.cid, {type: 'text/plain', text: body, cid: post.body.cid}) // todo: regularize with files?
 
-            const buffers = arrayBuffers.map(arrayBuffer => Buffer.from(arrayBuffer))
-
-            //const dataURLReaders = await Promise.all(Array.from(filesToLoad).map(pFileReader('readAsDataURL')))
-            //const dataURLs = dataURLReaders.map(event => event.target.result)
-
-            //filesFull = Array.from(filesToLoad).map((file, i) => ({dataURL: dataURLs[i], cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
-            filesFull = Array.from(filesToLoad).map((file, i) => ({buffer: buffers[i], cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
-            files = Array.from(filesToLoad).map((file, i) => ({cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
-            filesFull.forEach(file => {
-                contentStore.set(file.cid, file)
-            })
-        }
-
-        const cid = await toCID(body)
-        contentStore.set(cid, {type: 'text/plain', body, cid}) // todo: regularize with files?
-
-        let post = {pid: generatePId(), bodyCid: cid, body, timestamp: new Date().toUTCString()}
-        if (files.length > 0) {
-            post = Object.assign(post, {files})
-        }
-
-        const bsonPost = BSON.serialize(post)
-        const [proofKey, proofSignature] = crypto.proof.signOrigin(bsonPost).map(Buffer).map(bs58.encode)
-        const directSignature = bs58.encode(Buffer(crypto.direct.signOrigin(bsonPost)))
-        console.log(proofKey, proofSignature, directSignature)
-
-        posts.push(Object.assign({}, post, {body}))
+        console.log(post)
+        posts.push(post)
         posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
         stateChangeHandler()
 
