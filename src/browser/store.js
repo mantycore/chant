@@ -5,21 +5,21 @@ const initialState = {
     posts: [],
     contentStore: new Map(),
     getAndStoreContent: () => {},
-    fileIsLoading: {}
+    attachmentIsLoading: {}
 }
 
 function reducer(state = initialState, action) {
     console.log("RDCR", action)
     const newState = produce(state, draft => {
         switch (action.type) {
-            case 'file load start':
-                draft.fileIsLoading[action.cid] = 'loading'
+            case 'attachment load start':
+                draft.attachmentIsLoading[action.cid] = 'loading'
                 break
-            case 'file load failure':
-                draft.fileIsLoading[action.cid] = 'fail'
+            case 'attachment load failure':
+                draft.attachmentIsLoading[action.cid] = 'fail'
                 break
-            case 'file load success':
-                draft.fileIsLoading[action.cid] = 'loaded'
+            case 'attachment load success':
+                draft.attachmentIsLoading[action.cid] = 'loaded'
                 break
             case 'update':
                 draft.posts = [...action.state.posts]

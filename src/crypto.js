@@ -11,9 +11,12 @@ const concat = args => {
     })
     return result
 }
-
 let passphrase = BSON.serialize("Owls are not that they seem")
-const salt = nacl.randomBytes(24)
+const salt = new Uint8Array([
+    195, 43, 34, 160, 25, 196,
+    174, 125, 48, 181, 174, 196,
+    32, 70, 187, 210, 82, 61,
+    131, 89, 228, 119, 150, 55])
 const saltMessage = message => nacl.hash(concat([passphrase, salt, message])).slice(0, 32)
 
 const messageToSignPair = message => nacl.sign.keyPair.fromSeed(saltMessage(message))

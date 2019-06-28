@@ -121,9 +121,9 @@ export default state => {
 
     const getAndStoreContent = async cid => {
         try {
-            const file = await getContent(cid)
-            const storageFile = {...file, buffer: file.buffer.buffer}
-            contentStore.set(cid, storageFile)
+            const attachment = await getContent(cid)
+            const storageAttachment = {...attachment, buffer: attachment.buffer.buffer}
+            contentStore.set(cid, storageAttachment)
             stateChangeHandler()
         } catch (e) {
             console.log(e)
@@ -166,13 +166,13 @@ export default state => {
         posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
         stateChangeHandler() //todo: optimize
         if (isServerNode) {
-            if (post.files) {
-                post.files.map(async file => {
-                    if (!contentStore.get(file.cid)) {
+            if (post.attachments) {
+                post.attachments.map(async attachment => {
+                    if (!contentStore.get(attachment.cid)) {
                         try {
-                            await getAndStoreContent(file.cid) //stateChangeHandler is fired inside; think if it is good solution
+                            await getAndStoreContent(attachment.cid) //stateChangeHandler is fired inside; think if it is good solution
                         } catch(e) {
-                            console.log("timeout (10s) on waiting the file", file)
+                            console.log("timeout (10s) on waiting the attachment", attachment)
                         }
                     }
                 })

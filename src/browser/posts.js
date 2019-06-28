@@ -37,14 +37,14 @@ const binaryToUrl = (binary, type) => {
     return url
 }
 
-const ImageFile = ({file, state, dispatch}) =>
-    state.contentStore.has(file.cid)
+const Image = ({attachment, state, dispatch}) =>
+    state.contentStore.has(attachment.cid)
         ? e('img', {
-            src: binaryToUrl(state.contentStore.get(file.cid).buffer, file.type),
+            src: binaryToUrl(state.contentStore.get(attachment.cid).buffer, attachment.type),
             style: {maxHeight: 400, paddingRight: 10} // todo: find a cleaner way to align them
         })
         : e('div', {
-            onClick: dispatch.downloadFile(file.cid, state),
+            onClick: dispatch.downloadAttachment(attachment.cid, state),
             style: {
                 height: 400,
                 width: 300,
@@ -57,25 +57,29 @@ const ImageFile = ({file, state, dispatch}) =>
             }
         },
         [
-            e('p', null, file.type),
-            e('p', null, format(file.size)),
-            e('p', null, state.fileIsLoading[file.cid] === 'loading'
+            e('p', null, attachment.type),
+            e('p', null, format(attachment.size)),
+            e('p', null, state.attachmentIsLoading[attachment.cid] === 'loading'
                 ? 'Loading'
-                : state.fileIsLoading[file.cid] === 'fail'
+                : state.attachmentIsLoading[attachment.cid] === 'fail'
                 ? 'Failed to load'
                 : 'Click to load')
         ])
 
-const Files = ({files, state, dispatch}) =>
-    e('p', {style: {display: 'flex', flexDirection: 'row'}}, files
-        .filter(file => file.type === 'image/png' || file.type === 'image/jpeg')
-        .map(file => e(ImageFile, {file, state, dispatch})))
+const Attachments = ({attachments, state, dispatch}) =>
+    e('p', {style: {display: 'flex', flexDirection: 'row'}}, attachments
+        .filter(attachment => attachment.type === 'image/png' || attachment.type === 'image/jpeg')
+        .map(attachment => e(Image, {attachment, state, dispatch})))
 
 const Post = ({post, state, dispatch}) =>
     e('div', null, [
-        e('p', {style: {fontSize: 10}}, post.pid),
-        e('p', null, post.body),
-        ...(post.files ? [e(Files, {files: post.files, state, dispatch})] : [])
+        e('p', {style: {fontSize: 12}}, [
+            e('span', null, post.pid.substring(0, 8)),
+            ' ',
+            e('span', null, new Date(post.timestamp).toISOString())
+        ]),
+        e('p', null, post.body.text),
+        ...(post.attachments ? [e(Attachments, {attachments: post.attachments, state, dispatch})] : [])
     ])
 
 const Posts = ({state, dispatch}) =>
@@ -84,14 +88,14 @@ const Posts = ({state, dispatch}) =>
 export default connect(
     state => ({state}),
     dispatch => ({dispatch: {
-        downloadFile: (cid, state) => async () => {
-            dispatch({type: 'file load start', cid})
+        downloadAttachment: (cid, state) => async () => {
+            dispatch({type: 'attachment load start', cid})
             try {
                 await state.getAndStoreContent(cid)
-                dispatch({type: 'file load success', cid})
+                dispatch({type: 'attachment load success', cid})
             } catch (error) {
                 console.log(error);
-                dispatch({type: 'file load fail', cid})
+                dispatch({type: 'attachment load fail', cid})
             }
         }
     }})
