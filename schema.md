@@ -43,7 +43,7 @@ Outer post:
     {
         inner: json:innerPost
  
-        proofKey: string:bs58:32 // public key for verifying signatures on this post and on followups
+        proofKey: string:bs58:32 // public key for verifying signatures on this post and on follow-ups
         proofSignature: string:bs58:64 // signature to avoid the proofKey being used on another post
         directKey: string:bs58:32 // public key for encrypting directs
         proofs: [{
