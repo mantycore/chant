@@ -30,3 +30,32 @@ For development, browser node can be created by simply opening dist/index.html i
 A browser node exposes a number of structures to the window object, the most important being pr (PeerRelay instance
 for sending messages), peers (a Set of peer nodes), posts (an array of posts) and contentStore (a Map of texts
 and attachments, indexed by (mostly) IPFS compatible CIDs.
+
+# Architecture
+
+<table>
+    <tr>
+        <td>interaction</td>
+        <td colspan="2">chant post semantics</td>
+    </tr>      
+    <tr>
+        <td>content encoding</td>
+        <td colspan="2">chant post format (<a href="/schema.md">psalm</a>)</td>
+    </tr>   
+    <tr>
+        <td>content routing</td>
+        <td colspan="2">chant message protocol</td>
+    </tr>   
+    <tr>
+        <td>basic routing</td>
+        <td colspan="2"><a href="https://github.com/xuset/peer-relay">peer-relay</a> (forked and modified)</td>
+    </tr>   
+    <tr>
+        <td rowspan="2">transport</td>
+        <td rowspan="2">WebSocket</td>
+        <td><a href="https://github.com/feross/simple-peer">simple-peer</a></td>
+    </tr>
+    <tr>
+        <td>WebRTC</td>
+    </tr>
+</table>
