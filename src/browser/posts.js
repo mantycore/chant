@@ -74,7 +74,7 @@ const Attachments = ({attachments, state, dispatch}) =>
 const Post = ({post, state, dispatch}) =>
     e('div', null, [
         e('p', {style: {fontSize: 12}}, [
-            e('span', null, post.pid.substring(0, 8)),
+            e('span', {style: {fontFamily: 'monospace'}}, post.pid.substring(0, 8)),
             ' ',
             e('span', null, new Date(post.timestamp).toISOString())
         ]),
