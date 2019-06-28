@@ -3,6 +3,9 @@ import { Buffer } from 'buffer'
 import { createPost, processFiles } from './createPost.js'
 import BSON from 'bson'
 
+const has = (set, nid) =>
+    Array.from(set.values()).reduce((acc, cur) => acc || cur.equals(nid), false)
+
 export default state => {
     const {isServerNode, pr} = state
     const peers = new Set()
@@ -130,20 +133,24 @@ export default state => {
         }
     }
 
-    /*setInterval(async () => {
+    setInterval(async () => {
         for (const peer of peers.values()) {
             try {
                 await ping(peer)
             } catch (error) {
-                peers.delete(peer)    
+                peers.delete(peer)
+                stateChangeHandler()
             }
         }
-    }, 10000)*/
+    }, 10000)
 
     let postInitialized = false
     pr.on('peer', async id => {
         console.log('PEER', id.toString('hex', 0, 2))
-        peers.add(id)
+        if (!has(peers, id)) {
+            peers.add(id)
+            stateChangeHandler()
+        }
         if (!postInitialized) {
             try {
                 const newPosts = await getPosts(id)
@@ -213,6 +220,10 @@ export default state => {
     */
 
     pr.on('message', async (message, from) => {
+        if (!has(peers, from)) {
+            peers.add(from)
+            stateChangeHandler()
+        }
         if (message.type !== 'ping' && message.type !== 'pong') {
             const {payload1: omit, ...messageSansPayload} = message
             console.log('RECV', from.toString('hex', 0, 2), messageSansPayload) //JSON.stringify(messageSansPayload)

@@ -83,7 +83,10 @@ const Post = ({post, state, dispatch}) =>
     ])
 
 const Posts = ({state, dispatch}) =>
-    e('div', null, state.posts.map(post => e(Post, {post, state, dispatch})))
+    e('div', null, [
+        e('div', null, [state.peers.size, ' ', 'peer(s) online']),
+        e('div', null, state.posts.map(post => e(Post, {post, state, dispatch})))
+    ])
 
 export default connect(
     state => ({state}),
