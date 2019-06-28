@@ -39,9 +39,9 @@ Project:
         links: [string:bs58:pid] //??? maybe also external links?
         version: number //?
         // ... ... crypto ... ...
-        proofKey: string:bs58:32
-        proofSignature: string:bs58:64
-        directSignature: string:bs58:32
+        proofKey: string:bs58:32 // public key for verifying signatures on this post and on followups
+        proofSignature: string:bs58:64 // signature to avoid the proofKey being used on another post
+        directKey: string:bs58:32 // public key for encrypting directs
     }
     
 Direct (asymmetrically encrypted)
@@ -59,6 +59,8 @@ Symmetrically encrypted
 
     {
         ciphertext: string:bs58 //?
+        publicKey: string:bs58:32
+        
         subchant: string:bs58:hash //?
         pid: string:bs58:pid
         timestamp: number:epoch
