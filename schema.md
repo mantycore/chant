@@ -81,7 +81,7 @@ Symmetrically encrypted
 
 Derivative fields:
 
-- pid (_f_ of the plaintext hash and maybe on peer-realy node id)
+- pid (_f_ of the plaintext hash and maybe on peer-realy node id. NOT cid, because even identical posts by different peers must have different pids)
 - proofKey (_f_ of the plaintext hash and private key + salt)
 - proofSingature (_f_ of the plaintext hash and private key + salt)
 - directKey (_f_ of the plaintext hash and private key + salt)
