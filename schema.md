@@ -23,7 +23,7 @@ Inner post:
             cid: string:cid
             text: string
         }
-        files: [{
+        attachments: [{ // possibly MODIFY name
             cid: string:cid
             type: string:mime
             name: string
