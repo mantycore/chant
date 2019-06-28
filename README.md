@@ -40,7 +40,7 @@ and attachments, indexed by (mostly) IPFS compatible CIDs.
     </tr>      
     <tr>
         <td>content encoding</td>
-        <td colspan="2">chant post format (psalm)</td>
+        <td colspan="2">chant post format (<a href="/schema.md">psalm</a>)</td>
     </tr>   
     <tr>
         <td>content routing</td>
