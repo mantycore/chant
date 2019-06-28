@@ -1,29 +1,13 @@
 # Post object type/schema/format (codename Psalm)
 
-## Current:
-
-    {
-        body: string
-        bodyCid: string:cid
-        files: [{
-            cid: string:cid
-            type: string:mime
-            name: string
-            size: number
-        }]
-        pid: string:hex,isodate
-        timestamp: string:date
-    }
-
-## Project:
 Inner post:
 
     {
-        body: { // MODIFY
+        body: {
             cid: string:cid
             text: string
         }
-        attachments: [{ // possibly MODIFY name
+        attachments: [{
             cid: string:cid
             type: string:mime
             name: string
@@ -34,14 +18,14 @@ Inner post:
 
         links: [string:bs58:pid] // possibly ADD
 
-        timestamp: number:epoch // MODIFY
-        version: number // ADD, decide on the format
+        timestamp: number:epoch
+        version: number
     }
     
 Outer post:    
 
     {
-        inner: json:innerPost
+        #include innerPost
  
         proofKey: string:bs58:32 // public key for verifying signatures on this post and on follow-ups
         proofSignature: string:bs58:64 // signature to avoid the proofKey being used on another post
@@ -88,6 +72,6 @@ Derivative fields:
 - proofs (_f_ of the plaintext hashes of both messages and private key + salt, also pid of the original message)
 - ciphertext (_f_ of the plaintext, plus see below)
 
-I guess _both_ inner post and outer post (and also encrypted post) must have timestamp and version fields.
+I guess _both_ plaintext post and encrypted post must have timestamp and version fields.
 
 Ciphertext in current version is based on the outer post, so all other signatures are inside the secretbox.
