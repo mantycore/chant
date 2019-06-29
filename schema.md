@@ -26,7 +26,10 @@ Outer post:
 
     {
         #include innerPost
- 
+        
+        // it is not very necessary to use bs58 encoding for the signatures, as they are not used
+        // as names and generally are not displayed much. Maybe it is better to use standard
+        // base64 encoding; or to switch to binary format?
         proofKey: string:bs58:32 // public key for verifying signatures on this post and on follow-ups
         proofSignature: string:bs58:64 // signature to avoid the proofKey being used on another post
         directKey: string:bs58:32 // public key for encrypting directs
