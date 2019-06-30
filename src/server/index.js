@@ -1,7 +1,7 @@
 import process from 'process'
 import Client from 'peer-relay'
 //var toCID = require('./src/cid.js')
-import messageHandler from './messageHandler.js'
+import messageHandler from 'Common/messageHandler.js'
 import {setup, stateChangeHandler} from './database.js'
 
 var needsHelp = process.argv.indexOf('--help') !== -1 ||

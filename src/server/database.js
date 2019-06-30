@@ -1,4 +1,4 @@
-import { Database } from '../async.await.sqlite3.js'
+import { Database } from 'Tools/async.await.sqlite3.js'
 
 let db;
 

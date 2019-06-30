@@ -3,7 +3,8 @@ const path = require('path')
 
 const resolve = {
     alias: {
-        Common: path.resolve(__dirname, 'src/')
+        Common: path.resolve(__dirname, 'src/common/'),
+        Tools: path.resolve(__dirname, 'tools/') //TODO: think about better solution
     }
 }
 
@@ -21,7 +22,7 @@ module.exports = [
         resolve,
         module: myModule,
         target: 'node',
-        entry: './src/server.js',
+        entry: './src/server/index.js',
         output: {
             filename: 'server.js'
         },
