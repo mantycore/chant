@@ -2,12 +2,13 @@ import process from 'process'
 import Client from 'peer-relay'
 //var toCID = require('./src/cid.js')
 import messageHandler from './messageHandler.js'
+import {setup, stateChangeHandler} from './database.js'
 
 var needsHelp = process.argv.indexOf('--help') !== -1 ||
                 process.argv.indexOf('-h') !== -1 ||
                 process.argv.length < 3
 
-if (!needsHelp) {
+async function main() {
   var opts = {
     port: parseInt(process.argv[2]),
     bootstrap: process.argv.length === 4 ? [ process.argv[3] ] : []
@@ -17,9 +18,15 @@ if (!needsHelp) {
     pr: new Client(opts),
     isServerNode: true,
   }
+  await setup(state)
 
   messageHandler(state)
+  state.onStateChange(stateChangeHandler)
 
+}
+
+if (!needsHelp) {
+    main()
 } else {
   console.error(`\
     ${process.argv[1]} port [bootstrap_urls...]

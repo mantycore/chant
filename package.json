@@ -24,6 +24,7 @@
     "react-dom": "^16.8.6",
     "react-redux": "^7.1.0",
     "redux": "^4.0.1",
+    "sqlite3": "^4.0.9",
     "tweetnacl": "^1.0.1",
     "ws": ">=3.3.1"
   }

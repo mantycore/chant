@@ -9,8 +9,8 @@ const has = (set, nid) =>
 export default state => {
     const {isServerNode, pr} = state
     const peers = new Set()
-    const contentStore = new Map()
-    const posts = []
+    const contentStore = state.contentStore || new Map()
+    const posts = state.posts || []
     const messagesProcessed = new Set()
 
     const generatePId = () => `${pr.id.toString('hex')}:${new Date().toISOString()}`
@@ -45,7 +45,7 @@ export default state => {
         return mid
     }
 
-    let stateChangeHandler = () => {}
+    let stateChangeHandler = () => {} // TODO: replace with messages
     const onStateChange = handler => stateChangeHandler = handler
 
     // --- REPLIES ---
@@ -98,7 +98,7 @@ export default state => {
         console.log(post)
         posts.push(post)
         posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        stateChangeHandler()
+        stateChangeHandler('put post', {post})
 
         broadcast({type: 'put post', post})
     }
@@ -127,7 +127,7 @@ export default state => {
             const attachment = await getContent(cid)
             const storageAttachment = {...attachment, buffer: attachment.buffer.buffer}
             contentStore.set(cid, storageAttachment)
-            stateChangeHandler()
+            stateChangeHandler('put attachment', {cid, attachment: storageAttachment})
         } catch (e) {
             console.log(e)
         }
@@ -139,7 +139,7 @@ export default state => {
                 await ping(peer)
             } catch (error) {
                 peers.delete(peer)
-                stateChangeHandler()
+                stateChangeHandler('delete peer', {nid: peer})
             }
         }
     }, 10000)
@@ -149,7 +149,7 @@ export default state => {
         console.log('PEER', id.toString('hex', 0, 2))
         if (!has(peers, id)) {
             peers.add(id)
-            stateChangeHandler()
+            stateChangeHandler('put peer', {nid: id})
         }
         if (!postInitialized) {
             try {
@@ -171,7 +171,7 @@ export default state => {
     const storePost = post => {
         posts.push(post)
         posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        stateChangeHandler() //todo: optimize
+        stateChangeHandler('put post', {post}) //todo: optimize
         if (isServerNode) {
             if (post.attachments) {
                 post.attachments.map(async attachment => {
@@ -222,7 +222,7 @@ export default state => {
     pr.on('message', async (message, from) => {
         if (!has(peers, from)) {
             peers.add(from)
-            stateChangeHandler()
+            stateChangeHandler('put peer', {nid: from})
         }
         if (message.type !== 'ping' && message.type !== 'pong') {
             const {payload1: omit, ...messageSansPayload} = message

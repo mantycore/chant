@@ -9,7 +9,7 @@ const PROTOCOL_VERSION = 0
 
 const createPost = async (body, attachments, nid) => {
     const timestamp = new Date().getTime() // millisecond from epoch
-    
+
     const cid = await toCID(body)
 
     const post = {
