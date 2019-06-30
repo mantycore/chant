@@ -17,7 +17,7 @@ const PostForm = ({state}) => {
         }
         await state.putPost(post)
         setFilesToLoad([])
-        bodyRes.current.value = ''
+        bodyRef.current.value = ''
     }
 
     const onDragOver = e => {

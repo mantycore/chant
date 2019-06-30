@@ -12,10 +12,47 @@
             flex-direction: column;
             height: 100vh;
         }
+        #top {
+            font-family: monospace;
+            padding: 10px 20px;
+            display: flex;
+        }
+        #tags {
+            flex-grow: 1;
+        }
+        #tags span {
+            padding-right: 10px;
+        }
+        #tags a {
+            text-decoration: none;
+            font-weight: bold;
+            color: #888;
+        }
+        #status {
+            color: #888;
+        }
+        .post, #post_form {
+            width: 60vw;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .post {
+            margin-bottom: 30px;
+        }
         #posts {
             flex-grow: 1;
             overflow-y: scroll;
             /*overflow-x: hidden;*/
+        }
+        .post .meta a {
+            text-decoration: none;
+            color: #bbb;
+            font-family: monospace;
+        }
+        .post .meta {
+            font-family: monospace;
+            display: flex;
+            color: #bbb;
         }
         #post_form {
             display: flex;

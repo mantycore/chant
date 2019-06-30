@@ -1,6 +1,9 @@
 import React from 'react'
 import e from './createElement.js'
 import { connect } from 'react-redux'
+import MarkdownIt from 'markdown-it'
+
+const md = new MarkdownIt()
 
 const format = size =>
     size > Math.pow(1024, 4)
@@ -72,13 +75,23 @@ const Attachments = ({attachments, state, dispatch}) =>
         .map(attachment => e(Image, {attachment, state, dispatch})))
 
 const Post = ({post, state, dispatch}) =>
-    e('div', null, [
-        e('p', {style: {fontSize: 12}}, [
-            e('span', {style: {fontFamily: 'monospace'}}, post.pid.substring(0, 8)),
+    e('div', {className: 'post'}, [
+        e('div', {className: 'meta'}, [
+            e('span', {style: {flexGrow: 1}}, 
+                e('a', {
+                    href: `#/${post.pid}`
+                }, [
+                    post.pid.substring(0, 8),
+                    ' ',
+                    new Date(post.timestamp).toISOString()
+                ])),
+            'Edit',
             ' ',
-            e('span', null, new Date(post.timestamp).toISOString())
+            'Delete',
+            ' ',
+            'Direct'
         ]),
-        e('p', null, post.body.text),
+        e('span', {dangerouslySetInnerHTML: {__html: md.render(post.body.text)}}),
         ...(post.attachments ? [e(Attachments, {attachments: post.attachments, state, dispatch})] : [])
     ])
 
