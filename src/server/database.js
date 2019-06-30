@@ -10,10 +10,8 @@ async function setup(state) {
     try {
         state.contentStore = new Map((await db.all('SELECT * FROM attachments'))
             .map(({cid, buffer, rest}) => {
-                console.log(cid, buffer, rest)
                 return [cid, {cid, buffer, ...JSON.parse(rest)}]
             }))
-        console.log(state.contentStore)
     } catch (err) {
         console.log(err)
     }

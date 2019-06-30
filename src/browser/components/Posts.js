@@ -2,7 +2,7 @@ import React from 'react'
 import e from './createElement.js'
 import { connect } from 'react-redux'
 
-const format = size => 
+const format = size =>
     size > Math.pow(1024, 4)
     ? `${(size/Math.pow(1024, 4)).toLocaleString("en", {maximumFractionDigits: 1})} TiB`
     : size > Math.pow(1024, 3)
@@ -83,8 +83,7 @@ const Post = ({post, state, dispatch}) =>
     ])
 
 const Posts = ({state, dispatch}) =>
-    e('div', null, [
-        e('div', null, [state.peers.size, ' ', 'peer(s) online']),
+    e('div', {id: 'posts'}, [
         e('div', null, state.posts.map(post => e(Post, {post, state, dispatch})))
     ])
 

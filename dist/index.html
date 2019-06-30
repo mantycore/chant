@@ -4,6 +4,14 @@
 	<meta charset="utf-8">
 	<title></title>
 	<style>
+        #main {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #posts {
+            overflow: scroll;
+        }
 		#files {
 			font-size: 10px;
 		}
@@ -24,11 +32,6 @@
 	</style>
 </head>
 <body>
-	<textarea id="body"></textarea>
-	<button id="submit">Post</button>
-	<div id="files"></div>
-	<div id="drop_zone">Drop files here</div>
-	<input type="file" id="drop_zone_helper" multiple style="display:none"/> 
 	<div id="main"></div>
 	<script src="main.js"></script>
 </body>

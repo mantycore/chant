@@ -1,7 +1,6 @@
 import PeerRelay from 'peer-relay'
 import messageHandler from 'Common/messageHandler.js'
 import { store } from './reactRoot.js'
-import handleUpload from './upload.js'
 //import browserCrypto from './browserCrypto.js'
 
 const state = {
@@ -16,4 +15,3 @@ window.chant = state
 store.dispatch({type: 'init', state})
 state.onStateChange(() => store.dispatch({type: 'update', state}))
 
-handleUpload(state)
