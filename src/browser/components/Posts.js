@@ -82,10 +82,18 @@ const Post = ({post, state, dispatch}) =>
         ...(post.attachments ? [e(Attachments, {attachments: post.attachments, state, dispatch})] : [])
     ])
 
-const Posts = ({state, dispatch}) =>
-    e('div', {id: 'posts'}, [
-        e('div', null, state.posts.map(post => e(Post, {post, state, dispatch})))
+const Posts = ({state, dispatch}) => {
+    let posts = [...state.posts].reverse()
+    if (state.postsMode === 'tag') {
+        posts = posts.filter(post => post.tags && post.tags.includes(state.tag))
+    } else if (state.postsMode === 'thread') {
+        posts = [state.opost, ...state.posts.filter(post =>
+            post.opid === state.opost.pid)]
+    }
+    return e('div', {id: 'posts'}, [
+        e('div', null, posts.map(post => e(Post, {post, state, dispatch})))
     ])
+}
 
 export default connect(
     state => ({state}),

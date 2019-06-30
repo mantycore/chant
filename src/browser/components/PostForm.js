@@ -4,15 +4,20 @@ import { connect } from 'react-redux'
 
 const PostForm = ({state}) => {
     const [filesToLoad, setFilesToLoad] = useState([])
-    console.log("FILES TO LOAD", filesToLoad)
     const bodyRef = useRef(null)// instead of controlled attribute
     const helperRef = useRef(null)
 
     const submit = async e => {
         const body = bodyRef.current.value
-        await state.putPost({body, filesToLoad})
+        let post = {body, filesToLoad}
+        if (state.postsMode === 'thread') {
+            post.opid = state.opost.pid
+        } else if (state.postsMode === 'tag') {
+            post.tags = [state.tag]
+        }
+        await state.putPost(post)
         setFilesToLoad([])
-        bodyRed.current.value = ''
+        bodyRes.current.value = ''
     }
 
     const onDragOver = e => {
@@ -22,7 +27,6 @@ const PostForm = ({state}) => {
     }
 
     const onDrop = e => {
-        console.log("onDrop")
         e.stopPropagation()
         e.preventDefault()
         setFilesToLoad(e.dataTransfer.files)
@@ -36,13 +40,15 @@ const PostForm = ({state}) => {
         setFilesToLoad(e.target.files)
     }
 
-    return e('div', {}, [
+    return e('div', {id: 'post_form'}, [
         e('textarea', {ref: bodyRef}),
         e('button', {onClick: submit}, 'Post'),
         e('div', {id: 'files'}, Array.from(filesToLoad).map(file =>
             e('p', {}, [file.name, file.type, file.size].map(field =>
                 e('span', {}, field))))),
-        e('div', {id: 'drop_zone', onDragOver, onDrop, onClick: proxy}, 'Drop files here'),
+        e('div',
+            {id: 'drop_zone', onDragOver, onDrop, onClick: proxy},
+            'Drop files here'),
         e('input', {
             type: "file",
             ref: helperRef,

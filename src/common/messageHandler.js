@@ -81,13 +81,19 @@ export default state => {
         return cid
     }
 
-    const putPost = async({body, filesToLoad}) => {
+    const putPost = async({body, filesToLoad, opid, tags}) => {
         if (!filesToLoad && body.match(/^\s+$/)) {
            return
         }
 
         const [filesFull, attachments] = await processFiles(filesToLoad)
-        const post = await createPost(body, attachments, pr.id)
+        const post = await createPost({
+            body,
+            attachments,
+            nid: pr.id,
+            opid,
+            tags
+        })
 
         filesFull.forEach(file => {
             contentStore.set(file.cid, file)

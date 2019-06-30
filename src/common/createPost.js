@@ -7,7 +7,7 @@ import toCID from './cid.js'
 
 const PROTOCOL_VERSION = 0
 
-const createPost = async (body, attachments, nid) => {
+const createPost = async ({body, attachments, nid, opid, tags}) => {
     const timestamp = new Date().getTime() // millisecond from epoch
 
     const cid = await toCID(body)
@@ -19,6 +19,12 @@ const createPost = async (body, attachments, nid) => {
         //opid
         //links
         version: PROTOCOL_VERSION
+    }
+    if (opid) {
+        Object.assign(post, {opid})
+    }
+    if (tags) {
+        Object.assign(post, {tags})
     }
     if (attachments.length > 0) {
         Object.assign(post, {attachments})

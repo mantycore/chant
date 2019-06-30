@@ -4,13 +4,21 @@
 	<meta charset="utf-8">
 	<title></title>
 	<style>
-        #main {
+        body {
+            margin: 0;
+        }
+        #app {
             display: flex;
             flex-direction: column;
             height: 100vh;
         }
         #posts {
-            overflow: scroll;
+            flex-grow: 1;
+            overflow-y: scroll;
+            /*overflow-x: hidden;*/
+        }
+        #post_form {
+            display: flex;
         }
 		#files {
 			font-size: 10px;

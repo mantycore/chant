@@ -14,4 +14,5 @@ window.chant = state
 
 store.dispatch({type: 'init', state})
 state.onStateChange(() => store.dispatch({type: 'update', state}))
-
+window.addEventListener('hashchange', (event) =>
+    store.dispatch({type: 'hashchange', event}))
