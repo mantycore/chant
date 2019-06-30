@@ -85,11 +85,11 @@ const Post = ({post, state, dispatch}) =>
                     ' ',
                     new Date(post.timestamp).toISOString()
                 ])),
-            'Edit',
+            'Update',
             ' ',
-            'Delete',
+            e('span', {onClick: dispatch.revoke(post, state)}, 'Revoke'),
             ' ',
-            'Direct'
+            e('span', {}, 'Direct')
         ]),
         e('span', {dangerouslySetInnerHTML: {__html: md.render(post.body.text)}}),
         ...(post.attachments ? [e(Attachments, {attachments: post.attachments, state, dispatch})] : [])
@@ -120,6 +120,7 @@ export default connect(
                 console.log(error);
                 dispatch({type: 'attachment load fail', cid})
             }
-        }
+        },
+        revoke: (post, state) => () => state.revoke(post) //if it is safe to pass post instead of pid?
     }})
 )(Posts)

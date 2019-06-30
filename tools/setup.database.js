@@ -17,6 +17,7 @@ async function main () {
         latter_pid TEXT NOT NULL,
         pid TEXT NOT NULL,
         signature TEXT NOT NULL,
+        type TEXT NOT NULL,
         PRIMARY KEY (latter_pid, pid)
     )`)
     await db.run('CREATE INDEX proofs_latter_pid_index ON proofs(latter_pid)')

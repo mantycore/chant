@@ -7,18 +7,27 @@ import toCID from './cid.js'
 
 const PROTOCOL_VERSION = 0
 
-const createPost = async ({body, attachments, nid, opid, tags}) => {
+const inner = post => {
+    const innerPost = {...post}
+    delete innerPost.pid
+    delete innerPost.proofs
+    delete innerPost.proofKey
+    delete innerPost.proofSignature
+    delete innerPost.directKey
+    return innerPost
+}
+
+const createPost = async ({body, attachments, nid, opid, tags, proofs}) => {
     const timestamp = new Date().getTime() // millisecond from epoch
 
-    const cid = await toCID(body)
-
     const post = {
-        body: {cid, text: body},
         timestamp,
-        //tags: [],
-        //opid
         //links
         version: PROTOCOL_VERSION
+    }
+    if (body) {
+        const cid = await toCID(body)
+        Object.assign(post, {cid: await toCID(body), text: body})
     }
     if (opid) {
         Object.assign(post, {opid})
@@ -26,7 +35,7 @@ const createPost = async ({body, attachments, nid, opid, tags}) => {
     if (tags) {
         Object.assign(post, {tags})
     }
-    if (attachments.length > 0) {
+    if (attachments && attachments.length > 0) {
         Object.assign(post, {attachments})
     }
 
@@ -38,6 +47,15 @@ const createPost = async ({body, attachments, nid, opid, tags}) => {
     const pid = bs58.encode(nacl.hash(BSON.serialize({post, nid})))
     const [proofKey, proofSignature] = crypto.proof.signOrigin(bsonPost).map(Buffer).map(bs58.encode)
     const directKey = bs58.encode(Buffer(crypto.direct.signOrigin(bsonPost)))
+
+    if (proofs) {
+        Object.assign(post, {proofs: proofs.map(proof => ({
+            signature: bs58.encode(Buffer(crypto.proof.signDerived(
+                bsonPost, BSON.serialize(inner(proof.post))))),
+            type: proof.type,
+            pid: proof.post.pid
+        }))})
+    }
 
     Object.assign(post, {
         pid,
@@ -76,4 +94,4 @@ const processFiles = async(filesToLoad) => {
     return [filesFull, attachments]
 }
 
-export {processFiles, createPost}
+export {processFiles, createPost, inner}

@@ -1,7 +1,10 @@
 import toCID from './cid.js'
 import { Buffer } from 'buffer'
-import { createPost, processFiles } from './createPost.js'
+import { createPost, processFiles, inner } from './createPost.js'
 import BSON from 'bson'
+
+import crypto from './crypto.js'
+import bs58 from 'bs58'
 
 const has = (set, nid) =>
     Array.from(set.values()).reduce((acc, cur) => acc || cur.equals(nid), false)
@@ -79,6 +82,27 @@ export default state => {
         contentStore.set(cid, payload)
         broadcast({type: 'put content', payload})
         return cid
+    }
+
+    const revoke = async origin => {
+        const post = await createPost({
+            nid: pr.id,
+            proofs: [{type: 'delete', post: origin}]
+        })
+
+        console.log(post)
+        console.log(crypto.proof.verify(
+            BSON.serialize(inner(post)),
+            bs58.decode(post.proofs[0].signature),
+            BSON.serialize(inner(origin)),
+            bs58.decode(origin.proofSignature),
+            bs58.decode(origin.proofKey)
+        ))
+        //posts.push(post)
+        //posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        //stateChangeHandler('put post', {post})
+
+        //broadcast({type: 'put post', post})
     }
 
     const putPost = async({body, filesToLoad, opid, tags}) => {
@@ -203,6 +227,8 @@ export default state => {
         getContent,
         putPost,
         repliesPending,
+
+        revoke,
 
         getAndStoreContent,
 

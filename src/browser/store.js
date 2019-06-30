@@ -8,6 +8,7 @@ const initialState = {
     contentStore: new Map(),
     getAndStoreContent: () => {},
     putPost: () => {},
+    revoke: () => {},
     attachmentIsLoading: {},
 
     postsMode: 'tag',
@@ -59,6 +60,7 @@ function reducer(state = initialState, action) {
                 copy(draft, action)
                 draft.getAndStoreContent = action.state.getAndStoreContent
                 draft.putPost = action.state.putPost
+                draft.revoke = action.state.revoke
                 break
         }
     })
