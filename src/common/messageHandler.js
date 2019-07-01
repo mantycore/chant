@@ -159,39 +159,42 @@ export default state => {
         broadcast({type: 'put post', post})
     }
 
-    const putPost = async({body, filesToLoad, opid, tags}) => {
+    const putPost = async({body, filesToLoad, opid, tags, to}) => {
         if (!filesToLoad && body.match(/^\s+$/)) {
            return
         }
 
-        const [filesFull, attachments] = await processFiles(filesToLoad)
-        const post = await createPost({
-            body,
-            attachments,
-            nid: pr.id,
-            opid,
-            tags
-        })
+        if (to) {
+            console.log("not implemented")
+            //todo: encrypted files and post body for directs
+            //const directKey = bs58.decode(toPost.directKey).directKey
+            //const encrypt = buffer => crypto.direct.encrypt(buffer, directKey)
+            //const [filesFull, attachments] = await processFiles(filesToLoad, encrypt)
 
-        if (post.body) {
-            contentStore.set(post.body.cid, {type: 'text/plain', text: body, cid: post.body.cid}) // todo: regularize with files?
+            //const decrypted = crypto.direct.decrypt(encrypted, Buffer.from(microjson(inner(toPost))))
+        } else {
+            const [filesFull, attachments] = await processFiles(filesToLoad)
+
+            const post = await createPost({
+                body,
+                attachments,
+                nid: pr.id,
+                opid,
+                tags,
+            })
+
+
+            if (post.body) {
+                contentStore.set(post.body.cid, {type: 'text/plain', text: body, cid: post.body.cid}) // todo: regularize with files?
+            }
+
+            filesFull.forEach(file => {
+                contentStore.set(file.cid, file)
+            })
+
+            putPostToStore(post)
+            broadcast({type: 'put post', post})
         }
-
-        filesFull.forEach(file => {
-            contentStore.set(file.cid, file)
-        })
-
-        //console.log(post)
-        console.log("SAVE CHECK")
-        console.log(post.directKey)
-        console.log(microjson(inner(post)))
-        console.log(bs58.encode( Buffer.from(microjson(inner(post))) ))
-        console.log(bs58.encode(crypto.direct.signOrigin( Buffer.from(microjson(inner(post))) )))
-        console.log(bs58.decode(post.directKey).equals(Buffer.from(crypto.direct.signOrigin( Buffer.from(microjson(inner(post))) ))))
-
-
-        putPostToStore(post)
-        broadcast({type: 'put post', post})
     }
 
     // --- GETTERS ---
