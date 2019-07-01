@@ -12,6 +12,7 @@ import base64 from 'base64-js'
 const has = (set, nid) =>
     Array.from(set.values()).reduce((acc, cur) => acc || cur.equals(nid), false)
 
+const asBuffer = post => Buffer.from(microjson(inner(post)))
 
 export default state => {
 
@@ -24,38 +25,94 @@ export default state => {
     const postsAggregated = []
     const aggregate = post => { //closed on postsAggregated
         let postAggregated;
-        const updateProof = post.proofs && post.proofs.find(proof => proof.type === 'put' || proof.type === 'delete')
-        // there should be no more than one
-        if (updateProof) {
-            //case 1: post has put/delete proofs, so there must be an original in pa
-            postAggregated = postsAggregated.find(pa => pa.pid === updateProof.pid) // TODO: or else
-            postAggregated.posts.push(post)
-            postAggregated.posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-            postAggregated.latest = postAggregated.posts[0]
+        let plainPost;
+        let directSide;
+
+        if (post.to) {
+            const nonce = bs58.decode(post.pid).slice(0, 24)
+            const ciphertext = base64.toByteArray(post.ciphertext)
+            let secretKey = crypto.direct.decryptKeyAsSender(base64.toByteArray(post.senderKey), nonce)
+            const my = secretKey !== null
+            if (my) {
+                plainPost = JSON.parse(Buffer.from(
+                    nacl.secretbox.open(ciphertext, nonce, secretKey)
+                ).toString())
+                directSide = 'my'
+            } else {
+                let origin;
+                let encryptedKey;
+                post.to.forEach(recipient => {
+                    const originCandidate = postsAggregated.find(pa => pa.pid === recipient.pid)
+                    if (originCandidate && originCandidate.my) {
+                        origin = originCandidate
+                        encryptedKey = base64.toByteArray(recipient.key)
+                    }
+                })
+                if (origin) {
+                    secretKey = crypto.direct.decryptKeyAsRecipient(encryptedKey, asBuffer(origin.origin))
+                    plainPost = JSON.parse(Buffer.from(
+                        nacl.secretbox.open(ciphertext, nonce, secretKey)
+                    ).toString())
+                    directSide = 'their'
+                } else {
+                    plainPost = null
+                    directSide = 'unknown'
+                }
+            }
         } else {
-            //case 2: post has no proofs, so it must be new
+            plainPost = post
+        }
+        if (directSide !== 'unknown') {
+            const updateProof = plainPost.proofs && plainPost.proofs.find(proof => proof.type === 'put' || proof.type === 'delete')
+            // there should be no more than one
+            if (updateProof) {
+                //case 1: post has put/delete proofs, so there must be an original in pa
+                postAggregated = postsAggregated.find(pa => pa.pid === updateProof.pid) // TODO: or else
+                postAggregated.posts.push(plainPost)
+                postAggregated.posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                postAggregated.latest = postAggregated.posts[0]
+            } else {
+                //case 2: post has no proofs, so it must be new
 
-            console.log("LOAD CHECK")
-            console.log(post.directKey)
-            console.log(microjson(inner(post)))
-            console.log(bs58.encode( Buffer.from(microjson(inner(post))) ))
-            console.log(bs58.encode(crypto.direct.signOrigin( Buffer.from(microjson(inner(post))) )))
-            console.log(bs58.decode(post.directKey).equals(Buffer.from(crypto.direct.signOrigin( Buffer.from(microjson(inner(post))) ))))
+                /*console.log("LOAD CHECK")
+                console.log(plainPost.directKey)
+                console.log(microjson(inner(plainPost)))
+                console.log(bs58.encode( Buffer.from(microjson(inner(plainPost))) ))
+                console.log(bs58.encode(crypto.direct.signOrigin( Buffer.from(microjson(inner(plainPost))) )))
+                console.log(bs58.decode(plainPost.directKey).equals(Buffer.from(crypto.direct.signOrigin( Buffer.from(microjson(inner(plainPost))) ))))
+                */
 
+                postAggregated = {
+                    pid: plainPost.pid,
+                    posts: [plainPost],
+                    origin: plainPost,
+                    latest: plainPost,
+                    my: bs58.decode(plainPost.directKey).equals(      // Buffer
+                        Buffer.from(                             // Buffer
+                            crypto.direct.signOrigin(            // Uint8Array
+                                asBuffer(plainPost))))                // Buffer
+                }
+                if (directSide) {
+                    Object.assign(postAggregated, {to: post.to, encrypted: directSide})
+                }
+                postsAggregated.push(postAggregated)
+            }
+        } else {
+            const minimalPost = {
+                pid: post.pid,
+                timestamp: post.timestamp,
+                version: post.version
+            }
             postAggregated = {
                 pid: post.pid,
-                posts: [post],
-                origin: post,
-                latest: post,
-                my: bs58.decode(post.directKey).equals(      // Buffer
-                    Buffer.from(                             // Buffer
-                        crypto.direct.signOrigin(            // Uint8Array
-                            Buffer.from(                     // Buffer
-                                microjson(inner(post))) )) ) // string, object
+                posts: [minimalPost],
+                origin: minimalPost,
+                latest: minimalPost,
+                my: false,
+                to: post.to,
+                encrypted: 'unknown'
             }
-            postsAggregated.push(postAggregated)
         }
-        
         postsAggregated.sort(((a, b) => new Date(b.origin.timestamp) - new Date(a.origin.timestamp)))
         return postAggregated
     }
@@ -167,7 +224,6 @@ export default state => {
         }
 
         if (to) {
-            //console.log("not implemented")
             const [filesFull, attachments] = await processFiles(filesToLoad)
             const post = await createPost({
                 body,
@@ -204,15 +260,17 @@ export default state => {
 
             const encryptedPost = {
                 ciphertext: base64.fromByteArray(ciphertext),
-                to,
-                secretKeyForSender: base64.fromByteArray(secretKey.encryptedForSender),
-                secretKeyForRecipient: base64.fromByteArray(secretKey.encryptedForRecipient),
+                to: [{
+                    pid: to,
+                    key: base64.fromByteArray(secretKey.encryptedForRecipient)
+                }],
+                senderKey: base64.fromByteArray(secretKey.encryptedForSender),
                 timestamp: post.timestamp,
                 pid: post.pid,
                 version: post.version
             }
 
-            console.log(encryptedPost)
+            //console.log(encryptedPost)
 
             // how to know if the sender of the post is me? try calling
             //crypto.direct.decryptSecretKey(base64.toByteArray(encryptedPost.secretKeyForSender), nonce1)
@@ -220,11 +278,11 @@ export default state => {
 
             // const nonce1 = bs58.decode(post.pid).slice(1, 25);
             // console.log(crypto.direct.decryptSecretKey(base64.toByteArray(encryptedPost.secretKeyForSender), nonce1))
-            console.log(JSON.parse(Buffer.from(nacl.secretbox.open(
+            /*console.log(JSON.parse(Buffer.from(nacl.secretbox.open(
                 base64.toByteArray(encryptedPost.ciphertext),
                 nonce1,
                 crypto.direct.decryptSecretKey(base64.toByteArray(encryptedPost.secretKeyForSender), nonce1)
-            )).toString()))
+            )).toString()))*/
 
             //todo: encrypted files and post body for directs
             //const directKey = bs58.decode(toPost.directKey).directKey
@@ -232,6 +290,8 @@ export default state => {
             //const [filesFull, attachments] = await processFiles(filesToLoad, encrypt)
 
             //const decrypted = crypto.direct.decrypt(encrypted, Buffer.from(microjson(inner(toPost))))
+            putPostToStore(encryptedPost)
+            broadcast({type: 'put post', post: encryptedPost})
         } else {
             const [filesFull, attachments] = await processFiles(filesToLoad)
 

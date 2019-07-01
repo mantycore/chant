@@ -15,6 +15,7 @@ const inner = post => {
     delete innerPost.proofKey
     delete innerPost.proofSignature
     delete innerPost.directKey
+    delete innerPost.contentMap
     return innerPost
 }
 
@@ -43,7 +44,6 @@ const createPost = async ({body, attachments, nid, opid, tags, proofs}) => {
     /*------------------------
        inner post is complete
       ------------------------*/
-
     const bsonPost = Buffer.from(microjson(post)) // is it good enough?
     const pid = bs58.encode(nacl.hash(Buffer.from(microjson(({post, nid})))))
     const [proofKey, proofSignature] = crypto.proof.signOrigin(bsonPost).map(Buffer).map(bs58.encode)

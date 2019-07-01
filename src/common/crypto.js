@@ -11,8 +11,8 @@ const concat = args => {
     })
     return result
 }
-let passphrase = BSON.serialize("Owls are not that they seem")
-//let passphrase = nacl.randomBytes(512)
+//let passphrase = BSON.serialize("Owls are not that they seem")
+let passphrase = nacl.randomBytes(512)
 const salt = new Uint8Array([
     195, 43, 34, 160, 25, 196,
     174, 125, 48, 181, 174, 196,
@@ -69,10 +69,10 @@ const crypto = {
             }
         },
 
-        decryptSecretKey: (encryptedForSender, nonce) => 
+        decryptKeyAsSender: (encryptedForSender, nonce) => 
             nacl.secretbox.open(encryptedForSender, nonce, hashedPassphrase()),
 
-        decrypt: (ciphertext, originalMessage) => {
+        decryptKeyAsRecipient: (ciphertext, originalMessage) => {
             const senderPublicKey = ciphertext.slice(0, 32)
             const box = ciphertext.slice(32)
             return nacl.box.open(
