@@ -19,10 +19,24 @@ const salt = new Uint8Array([
     32, 70, 187, 210, 82, 61,
     131, 89, 228, 119, 150, 55])
 const saltMessage = message => nacl.hash(concat([passphrase, salt, message])).slice(0, 32)
-
+const hashedPassphrase = () => nacl.hash(concat([passphrase, salt])).slice(0, 32)
 const messageToSignPair = message => nacl.sign.keyPair.fromSeed(saltMessage(message))
 const messageToBoxPair = message => nacl.box.keyPair.fromSecretKey(saltMessage(message))
 const hashTogether = (sender, recipient) => nacl.hash(concat([sender, recipient])).slice(0, 24)
+
+const encryptWithAnEphemeralSenderKey = (message, recipientPublicKey) => {
+    const senderSecretKey = nacl.randomBytes(32)
+    const senderPublicKey = nacl.box.keyPair.fromSecretKey(senderSecretKey).publicKey
+    return concat([
+        senderPublicKey,
+        nacl.box(
+            message,
+            hashTogether(senderPublicKey, recipientPublicKey),
+            recipientPublicKey,
+            senderSecretKey
+        )
+    ]);
+}
 
 const crypto = {
     setPassphrase: newPassphrase => { passphrase = newPassphrase },
@@ -44,19 +58,19 @@ const crypto = {
     direct: {
         signOrigin: message => messageToBoxPair(message).publicKey,
 
-        encrypt: (message, recipientPublicKey) => {
-            const senderSecretKey = nacl.randomBytes(32)
-            const senderPublicKey = nacl.box.keyPair.fromSecretKey(senderSecretKey).publicKey
-            return concat([
-                senderPublicKey,
-                nacl.box(
-                    message,
-                    hashTogether(senderPublicKey, recipientPublicKey),
-                    recipientPublicKey,
-                    senderSecretKey
-                )
-            ]);
+        secretKey: (recipientPublicKey, nonce) => {
+            const secretKey = nacl.randomBytes(32)
+            const encryptedForSender = nacl.secretbox(secretKey, nonce, hashedPassphrase())
+            const encryptedForRecipient = encryptWithAnEphemeralSenderKey(secretKey, recipientPublicKey)
+            return {
+                itself: secretKey,
+                encryptedForSender,
+                encryptedForRecipient
+            }
         },
+
+        decryptSecretKey: (encryptedForSender, nonce) => 
+            nacl.secretbox.open(encryptedForSender, nonce, hashedPassphrase()),
 
         decrypt: (ciphertext, originalMessage) => {
             const senderPublicKey = ciphertext.slice(0, 32)

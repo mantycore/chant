@@ -83,13 +83,14 @@ const processFiles = async(filesToLoad) => {
         const arrayBuffers = arrayBufferReaders.map(event => event.target.result)  // change to Buffers, check if the result is the same
         const cids = await Promise.all(arrayBuffers.map(toCID))
 
-        const buffers = arrayBuffers.map(arrayBuffer => Buffer.from(arrayBuffer))
-
         //const dataURLReaders = await Promise.all(Array.from(filesToLoad).map(pFileReader('readAsDataURL')))
         //const dataURLs = dataURLReaders.map(event => event.target.result)
 
         //filesFull = Array.from(filesToLoad).map((file, i) => ({dataURL: dataURLs[i], cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
-        filesFull = Array.from(filesToLoad).map((file, i) => ({buffer: buffers[i], cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
+       
+        const buffers = arrayBuffers.map(arrayBuffer => Buffer.from(arrayBuffer))
+            filesFull = Array.from(filesToLoad).map((file, i) => ({buffer: buffers[i], cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
+       
         attachments = Array.from(filesToLoad).map((file, i) => ({cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
     }
     return [filesFull, attachments]

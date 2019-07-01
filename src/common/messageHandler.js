@@ -6,6 +6,8 @@ import BSON from 'bson'
 import crypto from './crypto.js'
 import bs58 from 'bs58'
 import microjson from './microjson.js'
+import nacl from 'tweetnacl'
+import base64 from 'base64-js'
 
 const has = (set, nid) =>
     Array.from(set.values()).reduce((acc, cur) => acc || cur.equals(nid), false)
@@ -165,7 +167,65 @@ export default state => {
         }
 
         if (to) {
-            console.log("not implemented")
+            //console.log("not implemented")
+            const [filesFull, attachments] = await processFiles(filesToLoad)
+            const post = await createPost({
+                body,
+                attachments,
+                nid: pr.id,
+                opid,
+                tags
+            })
+            const nonce = bs58.decode(post.pid).slice(0, 24)
+            const toPost = posts.find(curPost => curPost.pid === to)
+            const recipientDirectKey = bs58.decode(toPost.directKey)
+            const secretKey = crypto.direct.secretKey(recipientDirectKey, nonce)
+
+            const contentMap = {}
+
+            if (post.body) {
+                const encryptedBody = nacl.secretbox(Buffer.from(body), nonce, secretKey.itself)
+                const cid = await toCID(encryptedBody)
+                contentStore.set(post.body.cid, {type: 'application/octet-stream', buffer: encryptedBody, cid})
+                contentMap[post.body.cid] = cid
+            }
+
+            for (const file of filesFull) {
+                //{buffer: buffers[i], cid: cids[i], type: file.type, name: file.name, size: file.size}
+                const encryptedAttachment = nacl.secretbox(file.buffer, nonce, secretKey.itself)
+                const cid = await toCID(encryptedAttachment)
+                contentStore.set(cid, {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length})
+                contentMap[file.cid] = cid
+            }
+
+            Object.assign(post, {contentMap}) // counts as a part of outer post
+
+            const ciphertext = nacl.secretbox(Buffer.from(microjson(post)), nonce, secretKey.itself) //BSON instead of Buffer.from(microjson(post)?
+
+            const encryptedPost = {
+                ciphertext: base64.fromByteArray(ciphertext),
+                to,
+                secretKeyForSender: base64.fromByteArray(secretKey.encryptedForSender),
+                secretKeyForRecipient: base64.fromByteArray(secretKey.encryptedForRecipient),
+                timestamp: post.timestamp,
+                pid: post.pid,
+                version: post.version
+            }
+
+            console.log(encryptedPost)
+
+            // how to know if the sender of the post is me? try calling
+            //crypto.direct.decryptSecretKey(base64.toByteArray(encryptedPost.secretKeyForSender), nonce1)
+            // null (failure to decrypt) indicates that this is from someone's else
+
+            // const nonce1 = bs58.decode(post.pid).slice(1, 25);
+            // console.log(crypto.direct.decryptSecretKey(base64.toByteArray(encryptedPost.secretKeyForSender), nonce1))
+            console.log(JSON.parse(Buffer.from(nacl.secretbox.open(
+                base64.toByteArray(encryptedPost.ciphertext),
+                nonce1,
+                crypto.direct.decryptSecretKey(base64.toByteArray(encryptedPost.secretKeyForSender), nonce1)
+            )).toString()))
+
             //todo: encrypted files and post body for directs
             //const directKey = bs58.decode(toPost.directKey).directKey
             //const encrypt = buffer => crypto.direct.encrypt(buffer, directKey)
@@ -180,7 +240,7 @@ export default state => {
                 attachments,
                 nid: pr.id,
                 opid,
-                tags,
+                tags
             })
 
 
