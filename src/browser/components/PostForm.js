@@ -18,6 +18,9 @@ const PostForm = ({state}) => {
         await state.putPost(post)
         setFilesToLoad([])
         bodyRef.current.value = ''
+        //hack
+        const postDiv = document.getElementById('posts')
+        postDiv.scrollTop = postDiv.scrollHeight - postDiv.clientHeight; 
     }
 
     const onDragOver = e => {

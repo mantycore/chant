@@ -13,6 +13,6 @@ messageHandler(state)
 window.chant = state
 
 store.dispatch({type: 'init', state})
-state.onStateChange(() => store.dispatch({type: 'update', state}))
+state.onStateChange(({type, payload}) => store.dispatch({type: 'update', state, mhType: type, mhPayload: payload}))
 window.addEventListener('hashchange', (event) =>
     store.dispatch({type: 'hashchange', event}))

@@ -22,6 +22,22 @@ function copy(draft, action) {
     draft.peers = new Set(action.state.peers)
 }
 
+function handleUrl(draft) {
+    draft.opost = null
+    draft.tag = null
+    const path = window.location.hash.match('#(.*)')[1].split('/')
+    if (path[1] === '~') {
+        draft.postsMode = 'tilde'
+    } else if (bs58.decode(path[1]).length === 64) {
+        draft.postsMode = 'thread'
+        draft.opost = draft.postsAggregated.find(post => post.pid === path[1])
+        //TODO: or else!
+    } else {
+        draft.postsMode = 'tag'
+        draft.tag = path[1]
+    }
+}
+
 function reducer(state = initialState, action) {
     console.log("RDCR", action)
     const newState = produce(state, draft => {
@@ -36,28 +52,20 @@ function reducer(state = initialState, action) {
                 draft.attachmentIsLoading[action.cid] = 'loaded'
                 break
 
-            case 'hashchange': {
-                draft.opost = null
-                draft.tag = null
-                const path = window.location.hash.match('#(.*)')[1].split('/')
-                if (path[1] === '~') {
-                    draft.postsMode = 'tilde'
-                } else if (bs58.decode(path[1]).length === 64) {
-                    draft.postsMode = 'thread'
-                    draft.opost = state.postsAggregated.find(post => post.pid === path[1])
-                    //TODO: or else!
-                } else {
-                    draft.postsMode = 'tag'
-                    draft.tag = path[1]
-                }
+            case 'hashchange':
+                handleUrl(draft)
                 break
-            }
 
             case 'update':
                 copy(draft, action)
+                // hacky, improve
+                if (action.mhType === 'posts initialized') {
+                    handleUrl(draft)
+                }
                 break
             case 'init':
                 copy(draft, action)
+                //handleUrl(draft)
                 draft.getAndStoreContent = action.state.getAndStoreContent
                 draft.putPost = action.state.putPost
                 draft.revoke = action.state.revoke

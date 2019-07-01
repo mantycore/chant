@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useRef, useEffect} from 'react'
 import e from './createElement.js'
 import { connect } from 'react-redux'
 import MarkdownIt from 'markdown-it'
@@ -110,14 +110,20 @@ const Post = ({post, state, dispatch}) => {
 
 const Posts = ({state, dispatch}) => {
     let posts = [...state.postsAggregated].reverse()
+    let oPost = null
     if (state.postsMode === 'tag') {
         posts = posts.filter(post => post.latest.tags && post.latest.tags.includes(state.tag))
     } else if (state.postsMode === 'thread') {
-        posts = [state.opost, ...state.postsAggregated.filter(post =>
-            post.latest.opid === state.opost.pid)]
+        oPost = state.opost;
+        posts = state.postsAggregated.filter(post =>
+            post.latest.opid === state.opost.pid)
     }
+    console.log(oPost, posts);
+    //const ref = useRef(null)
+    //useEffect((e) => { console.log(ref); ref.current.scrollTop = ref.current.scrollHeight - ref.current.clientHeight; }, [posts])
     return e('div', {id: 'posts'}, [
-        e('div', null, posts.map(post => e(Post, {post, state, dispatch})))
+        ...(oPost ? [e('div', {id: 'opost'}, e(Post, {post: oPost, state, dispatch}))] : []),
+        e('div', {}, posts.map(post => e(Post, {post, state, dispatch})))
     ])
 }
 

@@ -40,6 +40,7 @@
         .post {
             /* padding-bottom: 6px; */
             border-bottom: 1px dotted #bbb;
+            padding: 0 10px;
         }
         .post.my {
             border-bottom: 1px dotted #6a6;
@@ -49,6 +50,9 @@
             overflow-y: scroll;
             /*overflow-x: hidden;*/
         }
+        #opost .post {
+            background-color: #eee;
+        }
         .post .meta a {
             text-decoration: none;
             color: #bbb;
@@ -57,7 +61,8 @@
         .post.revoked {
             padding: 3px 0;
             background-color: #bbb;
-            margin-bottom: 1em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
             border-bottom: 1px dotted #a44;
         }
         .post.revoked:hover .meta, .post.revoked:hover .meta a {
@@ -76,6 +81,9 @@
             opacity: 100;
             visibility: visible;
             transition: opacity 200ms ease-in;
+        }
+        .post {
+            padding: 0 10px;
         }
         .post .body :first-child {
             margin-top: 0;

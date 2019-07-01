@@ -228,6 +228,7 @@ export default state => {
                     //stateChangeHandler()
                 }
                 postInitialized = true
+                stateChangeHandler({type: 'posts initialized'})
             } catch (error) {
                 // do nothing
             }
