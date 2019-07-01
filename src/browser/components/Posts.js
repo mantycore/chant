@@ -132,6 +132,14 @@ const Posts = ({state, dispatch}) => {
         oPost = state.opost;
         posts = state.postsAggregated.filter(post =>
             post.latest.opid === state.opost.pid)
+    } else if (state.postsMode === 'direct') {
+        const findReplies = post => {
+            const replies = state.postsAggregated.filter(pa =>
+                pa.to && pa.to.filter(to => to.pid === post.pid).length > 0)
+            return replies.concat(...replies.map(findReplies))
+        }
+        oPost = state.opost // sort
+        posts = findReplies(oPost)
     }
     console.log(oPost, posts);
     //const ref = useRef(null)
