@@ -33,11 +33,13 @@
         }
         .post, #post_form {
             width: 60vw;
+            max-width: 800px;
             margin-left: auto;
             margin-right: auto;
         }
         .post {
-            margin-bottom: 30px;
+            /* padding-bottom: 6px; */
+            border-bottom: 1px dotted #bbb;
         }
         #posts {
             flex-grow: 1;
@@ -49,10 +51,32 @@
             color: #bbb;
             font-family: monospace;
         }
+        .post.revoked {
+            padding: 3px 0;
+            background-color: #bbb;
+            margin-bottom: 1em;
+            border-bottom: 1px dotted #a44;
+        }
+        .post.revoked:hover .meta, .post.revoked:hover .meta a {
+            color: #a44
+        }
+
         .post .meta {
+            /* margin-top: 3px; */
+            opacity: 0;
             font-family: monospace;
             display: flex;
             color: #bbb;
+            transition: opacity 100ms ease-out;
+        }
+        .post:hover .meta {
+            opacity: 100;
+            visibility: visible;
+            transition: opacity 200ms ease-in;
+        }
+        .post .body :first-child {
+            margin-top: 0;
+            /* margin-top: 3px; */
         }
         #post_form {
             display: flex;

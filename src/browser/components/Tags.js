@@ -8,9 +8,9 @@ const Tags = ({tags}) =>
            e('a', {href: `#/${name}/`, title: count}, `/${name}/`))))
 
 export default connect(state => ({
-    tags: [['~', state.posts.length], ...Object.entries(state.posts.reduce((acc, cur) => {
-        if ('tags' in cur) {
-            cur.tags.forEach(tag => {
+    tags: [['~', state.postsAggregated.length], ...Object.entries(state.postsAggregated.reduce((acc, cur) => {
+        if ('tags' in cur.latest) {
+            cur.latest.tags.forEach(tag => {
                 if (tag in acc) {
                     acc[tag] += 1
                 } else {

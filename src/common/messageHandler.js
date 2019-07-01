@@ -10,10 +10,40 @@ const has = (set, nid) =>
     Array.from(set.values()).reduce((acc, cur) => acc || cur.equals(nid), false)
 
 export default state => {
+
     const {isServerNode, pr} = state
     const peers = new Set()
     const contentStore = state.contentStore || new Map()
+
+    // TODO: move to a separate module -------------------------------------------------------------
     const posts = state.posts || []
+    const postsAggregated = []
+    const aggregate = post => { //closed on postsAggregated
+        let postAggregated;
+        const updateProof = post.proofs && post.proofs.find(proof => proof.type === 'put' || proof.type === 'delete')
+        // there should be no more than one
+        if (updateProof) {
+            //case 1: post has put/delete proofs, so there must be an original in pa
+            postAggregated = postsAggregated.find(pa => pa.pid === updateProof.pid) // TODO: or else
+            postAggregated.posts.push(post)
+            postAggregated.posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            postAggregated.latest = postAggregated.posts[0]
+        } else {
+            //case 2: post has no proofs, so it must be new
+            postAggregated = {
+                pid: post.pid,
+                posts: [post],
+                latest: post
+            }
+            postsAggregated.push(postAggregated)
+        }
+        
+        postsAggregated.sort(((a, b) => new Date(b.latest.timestamp) - new Date(a.latest.timestamp)))
+        return postAggregated
+    }
+    posts.forEach(post => aggregate(post))
+    // TODO: move to a separate module -------------------------------------------------------------
+
     const messagesProcessed = new Set()
 
     const generatePId = () => `${pr.id.toString('hex')}:${new Date().toISOString()}`
@@ -84,25 +114,30 @@ export default state => {
         return cid
     }
 
+    const putPostToStore = post => {
+        posts.push(post)
+        const postAggregated = aggregate(post)
+        stateChangeHandler('put post', {post, postAggregated})
+    }
+
     const revoke = async origin => {
         const post = await createPost({
             nid: pr.id,
-            proofs: [{type: 'delete', post: origin}]
+            proofs: [{type: 'delete', post: origin}],
+            opid: origin.opid,
+            tags: origin.tags
         })
 
-        console.log(post)
+        /*console.log(post)
         console.log(crypto.proof.verify(
             BSON.serialize(inner(post)),
             bs58.decode(post.proofs[0].signature),
             BSON.serialize(inner(origin)),
             bs58.decode(origin.proofSignature),
             bs58.decode(origin.proofKey)
-        ))
-        //posts.push(post)
-        //posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        //stateChangeHandler('put post', {post})
-
-        //broadcast({type: 'put post', post})
+        ))*/
+        putPostToStore(post)
+        broadcast({type: 'put post', post})
     }
 
     const putPost = async({body, filesToLoad, opid, tags}) => {
@@ -119,17 +154,16 @@ export default state => {
             tags
         })
 
+        if (post.body) {
+            contentStore.set(post.body.cid, {type: 'text/plain', text: body, cid: post.body.cid}) // todo: regularize with files?
+        }
+
         filesFull.forEach(file => {
             contentStore.set(file.cid, file)
         })
 
-        contentStore.set(post.body.cid, {type: 'text/plain', text: body, cid: post.body.cid}) // todo: regularize with files?
-
         console.log(post)
-        posts.push(post)
-        posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        stateChangeHandler('put post', {post})
-
+        putPostToStore(post)
         broadcast({type: 'put post', post})
     }
 
@@ -199,9 +233,8 @@ export default state => {
     })
 
     const storePost = post => {
-        posts.push(post)
-        posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        stateChangeHandler('put post', {post}) //todo: optimize
+        putPostToStore(post) //TODO: simplify calls and naming scheme
+
         if (isServerNode) {
             if (post.attachments) {
                 post.attachments.map(async attachment => {
@@ -221,6 +254,7 @@ export default state => {
         peers,
         contentStore,
         posts,
+        postsAggregated,
         messagesProcessed,
 
         putContent,

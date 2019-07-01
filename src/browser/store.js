@@ -4,7 +4,7 @@ import bs58 from 'bs58'
 
 const initialState = {
     peers: new Set(),
-    posts: [],
+    postsAggregated: [],
     contentStore: new Map(),
     getAndStoreContent: () => {},
     putPost: () => {},
@@ -17,7 +17,7 @@ const initialState = {
 }
 
 function copy(draft, action) {
-    draft.posts = [...action.state.posts]
+    draft.postsAggregated = [...action.state.postsAggregated]
     draft.contentStore = new Map(action.state.contentStore)
     draft.peers = new Set(action.state.peers)
 }
@@ -44,7 +44,7 @@ function reducer(state = initialState, action) {
                     draft.postsMode = 'tilde'
                 } else if (bs58.decode(path[1]).length === 64) {
                     draft.postsMode = 'thread'
-                    draft.opost = state.posts.find(post => post.pid === path[1])
+                    draft.opost = state.postsAggregated.find(post => post.pid === path[1])
                     //TODO: or else!
                 } else {
                     draft.postsMode = 'tag'

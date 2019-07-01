@@ -27,7 +27,7 @@ const createPost = async ({body, attachments, nid, opid, tags, proofs}) => {
     }
     if (body) {
         const cid = await toCID(body)
-        Object.assign(post, {cid: await toCID(body), text: body})
+        Object.assign(post, {body: {cid: await toCID(body), text: body}})
     }
     if (opid) {
         Object.assign(post, {opid})

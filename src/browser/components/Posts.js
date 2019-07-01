@@ -51,7 +51,7 @@ const Image = ({attachment, state, dispatch}) =>
             style: {
                 height: 400,
                 width: 300,
-                paddingRight: 10,
+                marginRight: 10,
                 backgroundColor: '#aaa',
                 display: 'flex',
                 flexDirection: 'column',
@@ -70,41 +70,50 @@ const Image = ({attachment, state, dispatch}) =>
         ])
 
 const Attachments = ({attachments, state, dispatch}) =>
-    e('p', {style: {display: 'flex', flexDirection: 'row'}}, attachments
+    e('div', {style: {display: 'flex', flexDirection: 'row', marginBottom: 16}}, attachments
         .filter(attachment => attachment.type === 'image/png' || attachment.type === 'image/jpeg')
         .map(attachment => e(Image, {attachment, state, dispatch})))
 
-const Post = ({post, state, dispatch}) =>
-    e('div', {className: 'post'}, [
+const Post = ({post, state, dispatch}) => {
+    console.log('POST', post)
+    const updateProof = post.proofs && post.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
+    const revoked = updateProof && updateProof.type === 'delete'
+    const pid = updateProof ? updateProof.pid : post.pid
+    return e('div', {className: ['post', ...(revoked ? ['revoked'] : [])].join(' ')}, [
         e('div', {className: 'meta'}, [
             e('span', {style: {flexGrow: 1}}, 
                 e('a', {
-                    href: `#/${post.pid}`
+                    href: `#/${pid}`
                 }, [
-                    post.pid.substring(0, 8),
+                    pid.substring(0, 8),
                     ' ',
                     new Date(post.timestamp).toISOString()
                 ])),
-            'Update',
-            ' ',
-            e('span', {onClick: dispatch.revoke(post, state)}, 'Revoke'),
-            ' ',
-            e('span', {}, 'Direct')
+            ...(revoked ? ['POST REVOKED'] : [ //TODO: see history?
+                'Update',
+                e('span', {}, ' '),
+                e('span', {onClick: dispatch.revoke(post, state)}, 'Revoke'),
+                e('span', {}, ' '),
+                e('span', {}, 'Direct')
+            ])
         ]),
-        e('span', {dangerouslySetInnerHTML: {__html: md.render(post.body.text)}}),
-        ...(post.attachments ? [e(Attachments, {attachments: post.attachments, state, dispatch})] : [])
+        ...(revoked ? [] : [
+            ...(post.body ? [e('div', {className: 'body', dangerouslySetInnerHTML: {__html: md.render(post.body.text)}})] : []),
+            ...(post.attachments ? [e(Attachments, {attachments: post.attachments, state, dispatch})] : [])
+        ])
     ])
+}
 
 const Posts = ({state, dispatch}) => {
-    let posts = [...state.posts].reverse()
+    let posts = [...state.postsAggregated].reverse()
     if (state.postsMode === 'tag') {
-        posts = posts.filter(post => post.tags && post.tags.includes(state.tag))
+        posts = posts.filter(post => post.latest.tags && post.latest.tags.includes(state.tag))
     } else if (state.postsMode === 'thread') {
-        posts = [state.opost, ...state.posts.filter(post =>
-            post.opid === state.opost.pid)]
+        posts = [state.opost, ...state.postsAggregated.filter(post =>
+            post.latest.opid === state.opost.pid)]
     }
     return e('div', {id: 'posts'}, [
-        e('div', null, posts.map(post => e(Post, {post, state, dispatch})))
+        e('div', null, posts.map(post => e(Post, {post: post.latest, state, dispatch})))
     ])
 }
 
