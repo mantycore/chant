@@ -4,6 +4,7 @@ import crypto from './crypto.js'
 import bs58 from 'bs58'
 import nacl from 'tweetnacl'
 import toCID from './cid.js'
+import microjson from './microjson.js'
 
 const PROTOCOL_VERSION = 0
 
@@ -43,15 +44,15 @@ const createPost = async ({body, attachments, nid, opid, tags, proofs}) => {
        inner post is complete
       ------------------------*/
 
-    const bsonPost = BSON.serialize(post)
-    const pid = bs58.encode(nacl.hash(BSON.serialize({post, nid})))
+    const bsonPost = Buffer.from(microjson(post)) // is it good enough?
+    const pid = bs58.encode(nacl.hash(Buffer.from(microjson(({post, nid})))))
     const [proofKey, proofSignature] = crypto.proof.signOrigin(bsonPost).map(Buffer).map(bs58.encode)
     const directKey = bs58.encode(Buffer(crypto.direct.signOrigin(bsonPost)))
 
     if (proofs) {
         Object.assign(post, {proofs: proofs.map(proof => ({
             signature: bs58.encode(Buffer(crypto.proof.signDerived(
-                bsonPost, BSON.serialize(inner(proof.post))))),
+                bsonPost, Buffer.from(microjson(post)) ))),
             type: proof.type,
             pid: proof.post.pid
         }))})

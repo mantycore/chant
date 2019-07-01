@@ -74,37 +74,52 @@ const Attachments = ({attachments, state, dispatch}) =>
         .filter(attachment => attachment.type === 'image/png' || attachment.type === 'image/jpeg')
         .map(attachment => e(Image, {attachment, state, dispatch})))
 
-const Post = ({post, state, dispatch}) => {
+const MiniPost = ({post, state, dispatch}) => {
+
+}
+
+const Post = ({post, state, dispatch, mini = false}) => {
     const updateProof = post.latest.proofs && post.latest.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
     const revoked = updateProof && updateProof.type === 'delete'
-    return e('div', {className: [
-            'post',
-            ...(revoked ? ['revoked'] : []),
-            ...(post.my ? ['my'] : [])
-        ].join(' ')}, [
-        e('div', {className: 'meta'}, [
-            e('span', {style: {flexGrow: 1}}, 
-                e('a', {
-                    href: `#/${post.pid}`
-                }, [
-                    post.pid.substring(0, 8),
-                    ' ',
-                    new Date(post.latest.timestamp).toISOString() //TODO: latest AND initial timestamp for modified posts
-                ])),
-            ...(revoked ? ['POST REVOKED'] : [ //TODO: see history?
-                ...(post.my ? [
-                    'Update',
+    const thread = state.postsAggregated.filter(threadPost =>
+            threadPost.latest.opid === post.pid)
+
+    return e('div', {}, [
+        e('div', {className: [
+                'post',
+                ...(revoked ? ['revoked'] : []),
+                ...(post.my ? ['my'] : [])
+            ].join(' ')}, [
+            e('div', {className: 'meta'}, [
+                e('span', {style: {flexGrow: 1}}, 
+                    e('a', {
+                        href: `#/${post.pid}`
+                    }, [
+                        post.pid.substring(0, 8),
+                        ' ',
+                        new Date(post.latest.timestamp).toISOString() //TODO: latest AND initial timestamp for modified posts
+                    ])),
+                ...(revoked ? ['POST REVOKED'] : [ //TODO: see history?
+                    ...(post.my ? [
+                        e('span', {className: 'action', onClick: dispatch.update(post.origin, state)}, 'Update'),
+                        '\u00A0',
+                        e('span', {className: 'action', onClick: dispatch.revoke(post.origin, state)}, 'Revoke'),
+                    ] : []),
                     '\u00A0',
-                    e('span', {onClick: dispatch.revoke(post.origin, state)}, 'Revoke'),
-                ] : []),
-                '\u00A0',
-                e('span', {}, 'Direct')
+                    e('span', {}, e('a', {href: `#/${post.pid}/direct`}, 'Direct'))
+                ])
+            ]),
+            ...(revoked ? [] : [
+                ...(post.latest.body ? [e('div', {className: 'body', dangerouslySetInnerHTML: {__html: md.render(post.latest.body.text)}})] : []),
+                ...(post.latest.attachments ? [e(Attachments, {attachments: post.latest.attachments, state, dispatch})] : []),
             ])
         ]),
-        ...(revoked ? [] : [
-            ...(post.latest.body ? [e('div', {className: 'body', dangerouslySetInnerHTML: {__html: md.render(post.latest.body.text)}})] : []),
-            ...(post.latest.attachments ? [e(Attachments, {attachments: post.latest.attachments, state, dispatch})] : [])
-        ])
+        ...(!mini && thread.length > 0 ? [e('div', {className: 'thread'}, thread.length > 3 ? [
+                e(Post, {post: thread[0], state, dispatch, mini: 'true'}),
+                e('div', {className: 'more'}, e('a', {href: `#/${post.pid}`}, `${thread.length - 2} more post(s)`)),
+                e(Post, {post: thread[thread.length-1], state, dispatch, mini: 'true'}),
+            ] : [thread.map(threadPost => e(Post, {post: threadPost, state, dispatch, mini: 'true'}))]
+            )] : [])
     ])
 }
 
@@ -122,7 +137,7 @@ const Posts = ({state, dispatch}) => {
     //const ref = useRef(null)
     //useEffect((e) => { console.log(ref); ref.current.scrollTop = ref.current.scrollHeight - ref.current.clientHeight; }, [posts])
     return e('div', {id: 'posts'}, [
-        ...(oPost ? [e('div', {id: 'opost'}, e(Post, {post: oPost, state, dispatch}))] : []),
+        ...(oPost ? [e('div', {id: 'opost'}, e(Post, {post: oPost, state, dispatch, mini: true}))] : []),
         e('div', {}, posts.map(post => e(Post, {post, state, dispatch})))
     ])
 }
@@ -140,6 +155,7 @@ export default connect(
                 dispatch({type: 'attachment load fail', cid})
             }
         },
-        revoke: (post, state) => () => state.revoke(post) //if it is safe to pass post instead of pid?
+        revoke: (post, state) => () => state.revoke(post), //if it is safe to pass post instead of pid?
+        update: (post, state) => () => state.revoke(post)
     }})
 )(Posts)

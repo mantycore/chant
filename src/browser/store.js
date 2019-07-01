@@ -29,9 +29,14 @@ function handleUrl(draft) {
     if (path[1] === '~') {
         draft.postsMode = 'tilde'
     } else if (bs58.decode(path[1]).length === 64) {
-        draft.postsMode = 'thread'
         draft.opost = draft.postsAggregated.find(post => post.pid === path[1])
         //TODO: or else!
+        if (path[2] === 'direct') {
+            draft.postsMode = 'direct'
+        } else {
+            draft.postsMode = 'thread'    
+        }
+        
     } else {
         draft.postsMode = 'tag'
         draft.tag = path[1]

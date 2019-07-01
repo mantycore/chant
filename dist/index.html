@@ -31,11 +31,25 @@
         #status {
             color: #888;
         }
-        .post, #post_form_outer {
+        .post, .thread, #post_form_outer {
             width: 60vw;
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
+        }
+        .thread .post, .thread .more {
+            width: auto;
+            box-sizing: border;
+            margin-left: 50px;
+
+        }
+        .thread .more {
+            font-style: italic;
+            padding-left: 10px;
+        }
+        .thread .more a {
+            text-decoration: none;
+            color: #bbb;
         }
         .post {
             /* padding-bottom: 6px; */
@@ -52,6 +66,9 @@
         }
         #opost .post {
             background-color: #eee;
+        }
+        .post .meta .action {
+            cursor: pointer;
         }
         .post .meta a {
             text-decoration: none;

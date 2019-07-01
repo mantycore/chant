@@ -5,9 +5,11 @@ import BSON from 'bson'
 
 import crypto from './crypto.js'
 import bs58 from 'bs58'
+import microjson from './microjson.js'
 
 const has = (set, nid) =>
     Array.from(set.values()).reduce((acc, cur) => acc || cur.equals(nid), false)
+
 
 export default state => {
 
@@ -30,12 +32,24 @@ export default state => {
             postAggregated.latest = postAggregated.posts[0]
         } else {
             //case 2: post has no proofs, so it must be new
+
+            console.log("LOAD CHECK")
+            console.log(post.directKey)
+            console.log(microjson(inner(post)))
+            console.log(bs58.encode( Buffer.from(microjson(inner(post))) ))
+            console.log(bs58.encode(crypto.direct.signOrigin( Buffer.from(microjson(inner(post))) )))
+            console.log(bs58.decode(post.directKey).equals(Buffer.from(crypto.direct.signOrigin( Buffer.from(microjson(inner(post))) ))))
+
             postAggregated = {
                 pid: post.pid,
                 posts: [post],
                 origin: post,
                 latest: post,
-                my: bs58.decode(post.directKey).equals(Buffer.from(crypto.direct.signOrigin(BSON.serialize(inner(post)))))
+                my: bs58.decode(post.directKey).equals(      // Buffer
+                    Buffer.from(                             // Buffer
+                        crypto.direct.signOrigin(            // Uint8Array
+                            Buffer.from(                     // Buffer
+                                microjson(inner(post))) )) ) // string, object
             }
             postsAggregated.push(postAggregated)
         }
@@ -120,6 +134,7 @@ export default state => {
         if (post.opid === null) {
             delete post.opid // hacky, improve
         }
+        posts.push(post)
         const postAggregated = aggregate(post)
         stateChangeHandler('put post', {post, postAggregated})
     }
@@ -166,7 +181,15 @@ export default state => {
             contentStore.set(file.cid, file)
         })
 
-        console.log(post)
+        //console.log(post)
+        console.log("SAVE CHECK")
+        console.log(post.directKey)
+        console.log(microjson(inner(post)))
+        console.log(bs58.encode( Buffer.from(microjson(inner(post))) ))
+        console.log(bs58.encode(crypto.direct.signOrigin( Buffer.from(microjson(inner(post))) )))
+        console.log(bs58.decode(post.directKey).equals(Buffer.from(crypto.direct.signOrigin( Buffer.from(microjson(inner(post))) ))))
+
+
         putPostToStore(post)
         broadcast({type: 'put post', post})
     }
@@ -275,7 +298,9 @@ export default state => {
 
         Buffer,
         toCID,
-        BSON
+        BSON,
+        microjson,
+        crypto
     })
 
     /*

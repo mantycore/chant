@@ -10,6 +10,9 @@ const PostForm = ({state}) => {
     const submit = async e => {
         const body = bodyRef.current.value
         let post = {body, filesToLoad}
+        if (state.postsMode === 'direct') {
+            post.to = state.opost.pid
+        }
         if (state.postsMode === 'thread') {
             post.opid = state.opost.pid
         } else if (state.postsMode === 'tag') {
