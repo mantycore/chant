@@ -117,7 +117,9 @@ export default state => {
     }
 
     const putPostToStore = post => {
-        posts.push(post)
+        if (post.opid === null) {
+            delete post.opid // hacky, improve
+        }
         const postAggregated = aggregate(post)
         stateChangeHandler('put post', {post, postAggregated})
     }
