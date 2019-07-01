@@ -40,21 +40,27 @@ const PostForm = ({state}) => {
         setFilesToLoad(e.target.files)
     }
 
-    return e('div', {id: 'post_form'}, [
-        e('textarea', {ref: bodyRef}),
-        e('button', {onClick: submit}, 'Post'),
-        e('div', {id: 'files'}, Array.from(filesToLoad).map(file =>
-            e('p', {}, [file.name, file.type, file.size].map(field =>
-                e('span', {}, field))))),
-        e('div',
-            {id: 'drop_zone', onDragOver, onDrop, onClick: proxy},
-            'Drop files here'),
-        e('input', {
-            type: "file",
-            ref: helperRef,
-            onChange: helperChange,
-            multiple: true,
-            style: {display: 'none'}})
+    return e('div', {id: 'post_form_outer'}, [
+        ...(Array.from(filesToLoad).length > 0 ? [
+                e('div', {id: 'files'}, Array.from(filesToLoad).map(file =>
+                    e('p', {}, [file.name, file.type, file.size].map(field =>
+                        e('span', {}, field)))))
+        ] : []),
+
+        e('div', {id: 'post_form'}, [
+
+            e('div',
+                {id: 'drop_zone', onDragOver, onDrop, onClick: proxy},
+                'Drop files or click to upload'),
+            e('textarea', {ref: bodyRef}),
+            e('button', {onClick: submit}, 'Post'),
+            e('input', {
+                type: "file",
+                ref: helperRef,
+                onChange: helperChange,
+                multiple: true,
+                style: {display: 'none'}})
+        ])
     ])
 }
 

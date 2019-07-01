@@ -12,6 +12,7 @@ const concat = args => {
     return result
 }
 let passphrase = BSON.serialize("Owls are not that they seem")
+//let passphrase = nacl.randomBytes(512)
 const salt = new Uint8Array([
     195, 43, 34, 160, 25, 196,
     174, 125, 48, 181, 174, 196,

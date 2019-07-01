@@ -33,12 +33,14 @@ export default state => {
             postAggregated = {
                 pid: post.pid,
                 posts: [post],
-                latest: post
+                origin: post,
+                latest: post,
+                my: bs58.decode(post.directKey).equals(Buffer.from(crypto.direct.signOrigin(BSON.serialize(inner(post)))))
             }
             postsAggregated.push(postAggregated)
         }
         
-        postsAggregated.sort(((a, b) => new Date(b.latest.timestamp) - new Date(a.latest.timestamp)))
+        postsAggregated.sort(((a, b) => new Date(b.origin.timestamp) - new Date(a.origin.timestamp)))
         return postAggregated
     }
     posts.forEach(post => aggregate(post))

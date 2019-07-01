@@ -31,7 +31,7 @@
         #status {
             color: #888;
         }
-        .post, #post_form {
+        .post, #post_form_outer {
             width: 60vw;
             max-width: 800px;
             margin-left: auto;
@@ -40,6 +40,9 @@
         .post {
             /* padding-bottom: 6px; */
             border-bottom: 1px dotted #bbb;
+        }
+        .post.my {
+            border-bottom: 1px dotted #6a6;
         }
         #posts {
             flex-grow: 1;
@@ -78,9 +81,17 @@
             margin-top: 0;
             /* margin-top: 3px; */
         }
+
         #post_form {
             display: flex;
         }
+        #post_form textarea {
+            flex-grow: 1
+        }
+        #post_form button {
+            width: 70px;
+        }
+
 		#files {
 			font-size: 10px;
 		}
@@ -91,12 +102,12 @@
 			border: 2px dashed #bbb;
 			padding: 2px;
 			color: #bbb;
-			width: 400px;
+			width: 50px;
 			height: 50px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-
+            font-size: 12px;
 		}
 	</style>
 </head>

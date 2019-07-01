@@ -75,31 +75,35 @@ const Attachments = ({attachments, state, dispatch}) =>
         .map(attachment => e(Image, {attachment, state, dispatch})))
 
 const Post = ({post, state, dispatch}) => {
-    console.log('POST', post)
-    const updateProof = post.proofs && post.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
+    const updateProof = post.latest.proofs && post.latest.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
     const revoked = updateProof && updateProof.type === 'delete'
-    const pid = updateProof ? updateProof.pid : post.pid
-    return e('div', {className: ['post', ...(revoked ? ['revoked'] : [])].join(' ')}, [
+    return e('div', {className: [
+            'post',
+            ...(revoked ? ['revoked'] : []),
+            ...(post.my ? ['my'] : [])
+        ].join(' ')}, [
         e('div', {className: 'meta'}, [
             e('span', {style: {flexGrow: 1}}, 
                 e('a', {
-                    href: `#/${pid}`
+                    href: `#/${post.pid}`
                 }, [
-                    pid.substring(0, 8),
+                    post.pid.substring(0, 8),
                     ' ',
-                    new Date(post.timestamp).toISOString()
+                    new Date(post.latest.timestamp).toISOString() //TODO: latest AND initial timestamp for modified posts
                 ])),
             ...(revoked ? ['POST REVOKED'] : [ //TODO: see history?
-                'Update',
-                e('span', {}, ' '),
-                e('span', {onClick: dispatch.revoke(post, state)}, 'Revoke'),
-                e('span', {}, ' '),
+                ...(post.my ? [
+                    'Update',
+                    '\u00A0',
+                    e('span', {onClick: dispatch.revoke(post.origin, state)}, 'Revoke'),
+                ] : []),
+                '\u00A0',
                 e('span', {}, 'Direct')
             ])
         ]),
         ...(revoked ? [] : [
-            ...(post.body ? [e('div', {className: 'body', dangerouslySetInnerHTML: {__html: md.render(post.body.text)}})] : []),
-            ...(post.attachments ? [e(Attachments, {attachments: post.attachments, state, dispatch})] : [])
+            ...(post.latest.body ? [e('div', {className: 'body', dangerouslySetInnerHTML: {__html: md.render(post.latest.body.text)}})] : []),
+            ...(post.latest.attachments ? [e(Attachments, {attachments: post.latest.attachments, state, dispatch})] : [])
         ])
     ])
 }
@@ -113,7 +117,7 @@ const Posts = ({state, dispatch}) => {
             post.latest.opid === state.opost.pid)]
     }
     return e('div', {id: 'posts'}, [
-        e('div', null, posts.map(post => e(Post, {post: post.latest, state, dispatch})))
+        e('div', null, posts.map(post => e(Post, {post, state, dispatch})))
     ])
 }
 
