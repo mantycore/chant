@@ -72,7 +72,7 @@ export default state => {
                         getAndStoreContent(cidEncrypted).then(result => {
                             console.log("getAndStoreContent result", result)
                             const {cid, attachment} = result
-                            const contents = [plainPost.body, ...plainPost.attachments]
+                            const contents = [plainPost.body, ...(plainPost.attachments ? plainPost.attachments : [])]
                             console.log("Trying to find plain content in contents:", cidPlain, contents)
                             const content = contents.find(c => c.cid === cidPlain)
                             const decryptedAttachment = Buffer.from(nacl.secretbox.open(attachment.buffer, nonce, secretKey))
@@ -159,7 +159,7 @@ export default state => {
                 if (!conversation) {
                     //possibly error
                     const [_, first, __, second] = plainPost.conversationId.split('/')
-                    conversation = {id: plainPost.conversationId, posts: [], latest: 0, fresh: true, first, second, headless: true}
+                    conversation = {id: plainPost.conversationId, posts: [], latest: 0, fresh: true, firstPid, secondPid, headless: true}
                     console.log('Headless conversation', conversation)
                     conversations.push(conversation)
                 }

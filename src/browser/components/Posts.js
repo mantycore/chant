@@ -73,12 +73,14 @@ const MiniPost = ({post, state, dispatch}) => {
 
 }
 
-const Post = ({post, state, dispatch, mini = false}) => {
+const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
     const updateProof = post.latest.proofs && post.latest.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
     const revoked = updateProof && updateProof.type === 'delete'
-    const thread = state.postsAggregated.filter(threadPost =>
+    const thread = conversation
+        ? conversation.posts.slice(1)
+        : state.postsAggregated.filter(threadPost =>
             threadPost.latest.opid === post.pid)
-
+    console.log(post.pid, conversation, conversation ? `#${conversation.id}` : `#/${post.pid}`)
     return e('div', {}, [
         e('div', {className: [
                 'post',
@@ -88,7 +90,7 @@ const Post = ({post, state, dispatch, mini = false}) => {
             e('div', {className: 'meta'}, [
                 e('span', {style: {flexGrow: 1}}, 
                     e('a', {
-                        href: `#/${post.pid}`
+                        href: conversation ? `#${conversation.id}` : `#/${post.pid}`
                     }, [
                         post.pid.substring(0, 8),
                         ' ',
@@ -102,6 +104,7 @@ const Post = ({post, state, dispatch, mini = false}) => {
                     ] : []),
                     '\u00A0',
                     e('span', {}, e('a', {href: `#/${post.pid}/direct`}, 'Direct')),
+                    '\u00A0',
                     e('span', {className: 'action', onClick: () => { console.log(post) }}, 'Dump'),
                 ])
             ]),
@@ -111,10 +114,12 @@ const Post = ({post, state, dispatch, mini = false}) => {
             ])
         ]),
         ...(!mini && thread.length > 0 ? [e('div', {className: 'thread'}, thread.length > 3 ? [
-                e(Post, {post: thread[0], state, dispatch, mini: 'true'}),
-                e('div', {className: 'more'}, e('a', {href: `#/${post.pid}`}, `${thread.length - 2} more post(s)`)),
-                e(Post, {post: thread[thread.length-1], state, dispatch, mini: 'true'}),
-            ] : [thread.map(threadPost => e(Post, {post: threadPost, state, dispatch, mini: 'true'}))]
+                e(Post, {post: thread[0], state, dispatch, mini: 'true', conversation}),
+                e('div', {className: 'more'}, e('a', {
+                    href: conversation ? `#${conversation.id}` : `#/${post.pid}`
+                }, `${thread.length - 2} more post(s)`)),
+                e(Post, {post: thread[thread.length-1], state, dispatch, mini: 'true', conversation}),
+            ] : [thread.map(threadPost => e(Post, {post: threadPost, state, dispatch, mini: 'true', conversation}))]
             )] : [])
     ])
 }
@@ -133,6 +138,15 @@ const Posts = ({state, dispatch}) => {
 
     let posts = [...state.postsAggregated]
     let oPost = null
+    if (state.postsMode === 'directs list') {
+        //roundabout due to conversations strucure, rewrite
+        return e('div', {id: 'posts'}, state.conversations.map(conversation => {
+            const first = conversation.posts.find(post => post.pid === conversation.firstPid)
+            return [
+                e(Post, {post: first, state, dispatch, mini: false, conversation}),
+            ]
+        }))
+    }
     if (state.postsMode === 'tag') {
         posts = posts.filter(post => post.latest.tags && post.latest.tags.includes(state.tag))
     } else if (state.postsMode === 'thread') {
@@ -141,7 +155,8 @@ const Posts = ({state, dispatch}) => {
             post.latest.opid === state.opost.pid)
     } else if (state.postsMode === 'direct') {
         oPost = state.opost // sort
-        posts = findReplies(oPost)
+        posts = []
+        //posts = findReplies(oPost)
     } else if (state.postsMode === 'direct conversation') {
         const conversation = state.conversations.find(conversation => conversation.id === state.conversationId)
         if (conversation) {

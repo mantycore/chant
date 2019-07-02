@@ -6,6 +6,7 @@ const initialState = {
     peers: new Set(),
     postsAggregated: [],
     contentStore: new Map(),
+    conversations: [],
     getAndStoreContent: () => {},
     putPost: () => {},
     revoke: () => {},
@@ -27,12 +28,14 @@ function handleUrl(draft) {
     draft.opost = null
     draft.tag = null
     const path = window.location.hash.match('#(.*)')[1].split('/')
-    if (path[1] === '~') {
+    if (path[0] === 'directs') {
+        draft.postsMode = 'directs list'
+    } else if (path[1] === '~') {
         draft.postsMode = 'tilde'
-    } else if (bs58.decode(path[1]).length === 64) {
+    } else if (path[1] && bs58.decode(path[1]).length === 64) {
         draft.opost = draft.postsAggregated.find(post => post.pid === path[1])
         //TODO: or else!
-        if (path[2] === 'direct') {
+        if (path[2] && path[2] === 'direct') {
             if (path[3] && bs58.decode(path[3]).length === 64) {
                 draft.postsMode = 'direct conversation'
                 draft.conversationId = path.slice(0, 4).join('/')
