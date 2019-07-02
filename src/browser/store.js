@@ -104,7 +104,6 @@ function reducer(state = initialState, action) {
                 break
         }
     })
-    console.log(newState)
     return newState
 }
 

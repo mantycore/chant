@@ -67,13 +67,10 @@ export default state => {
             // Encrypted content
             if (directSide !== 'unknown') {
                 Object.entries(plainPost.contentMap).forEach(([cidPlain, cidEncrypted]) => {
-                    console.log(`Trying to get content cid # ${cidPlain} from store`)
                     if (!contentStore.has(cidPlain)) {
                         getAndStoreContent(cidEncrypted).then(result => {
-                            console.log("getAndStoreContent result", result)
                             const {cid, attachment} = result
                             const contents = [plainPost.body, ...(plainPost.attachments ? plainPost.attachments : [])]
-                            console.log("Trying to find plain content in contents:", cidPlain, contents)
                             const content = contents.find(c => c.cid === cidPlain)
                             const decryptedAttachment = Buffer.from(nacl.secretbox.open(attachment.buffer, nonce, secretKey))
                             contentStore.set(cidPlain, {...content, buffer: decryptedAttachment})
@@ -304,8 +301,6 @@ export default state => {
                 const cid = await toCID(encryptedBody)
                 contentStore.set(cid, {type: 'application/octet-stream', buffer: encryptedBody, cid})
                 contentStore.set(post.body.cid, {type: 'text/plain', text: body, cid: post.body.cid, private: true}) // todo: regularize with files?
-                console.log("Stored encrypted body cid #", cid)
-                console.log("Stored decrypted body cid #", post.body.cid)
                 contentMap[post.body.cid] = cid
             }
 
@@ -315,8 +310,6 @@ export default state => {
                 const cid = await toCID(encryptedAttachment)
                 contentStore.set(cid, {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length})
                 contentStore.set(file.cid, {...file, private: true})
-                console.log("Stored encrypted attachment cid #", cid)
-                console.log("Stored decrypted attachment cid #", file.cid)
                 contentMap[file.cid] = cid
             }
 
@@ -395,15 +388,13 @@ export default state => {
 
     const getAndStoreContent = async (cid) => {
         try {
-            console.log("Trying to get content cid #", cid)
             const attachment = await getContent(cid)
             const storageAttachment = {...attachment, buffer: attachment.buffer} //BSON: buffer(Binary).buffer; msgpack: just buffer
             contentStore.set(cid, storageAttachment)
             stateChangeHandler('put attachment', {cid, attachment: storageAttachment})
-            console.log({cid, attachment: storageAttachment})
             return {cid, attachment: storageAttachment}
         } catch (e) {
-            console.log(e)
+            console.log("Exception durig getting content file #", cid, e)
             throw e
         }
     }

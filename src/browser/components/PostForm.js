@@ -18,11 +18,13 @@ const PostForm = ({state, dispatch}) => {
             ]),
             e('div', {className: 'initiation-message'},
 `This is your secret code. Please copy it, either electronically or by hand
-(preferably both) and store it in secure locations. The code is the key to
-all aspects of your identity in the Anoma Chant. If you lose it, you will not
-have access to direct messages directed at your posts created with it, and you
+(preferably both), and store it in secure locations. The code is the key to
+all aspects of your identity on the Anoma Chant. If you lose it, you will not
+have access to direct messages at the posts you created with it, and you
 will be not able to prove that you are their author. The secret code is stored
-only in the localStorage of your browser and cannot be restored by any outside party.`),
+only in the localStorage of your browser (you can revisit it by opening your
+browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0Cmd\u00A0+\u00A0Option\u00A0+\u00A0J, and entering
+"localStorage.getItem('Secret code')") and cannot be restored by any outside party.`),
         ])
     }
     if (state.postsMode === 'directs list') {

@@ -80,7 +80,6 @@ const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
         ? conversation.posts.slice(1)
         : state.postsAggregated.filter(threadPost =>
             threadPost.latest.opid === post.pid)
-    console.log(post.pid, conversation, conversation ? `#${conversation.id}` : `#/${post.pid}`)
     return e('div', {}, [
         e('div', {className: [
                 'post',
@@ -98,14 +97,14 @@ const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
                     ])),
                 ...(revoked ? ['POST REVOKED'] : [ //TODO: see history?
                     ...(post.my ? [
-                        e('span', {className: 'action', onClick: dispatch.update(post.origin, state)}, 'Update'),
-                        '\u00A0',
+                        /*e('span', {className: 'action', onClick: dispatch.update(post.origin, state)}, 'Update'),
+                        '\u00A0',*/
                         e('span', {className: 'action', onClick: dispatch.revoke(post.origin, state)}, 'Revoke'),
                     ] : []),
                     '\u00A0',
                     e('span', {}, e('a', {href: `#/${post.pid}/direct`}, 'Direct')),
-                    '\u00A0',
-                    e('span', {className: 'action', onClick: () => { console.log(post) }}, 'Dump'),
+                    /*'\u00A0',
+                    e('span', {className: 'action', onClick: () => { console.log(post) }}, 'Dump'),*/
                 ])
             ]),
             ...(revoked ? [] : [
@@ -186,7 +185,7 @@ export default connect(
                 dispatch({type: 'attachment load fail', cid})
             }
         },
-        revoke: (post, state) => () => state.revoke(post), //if it is safe to pass post instead of pid?
+        revoke: (post, state) => () => window.confirm("Really revoke the post?") && state.revoke(post), //if it is safe to pass post instead of pid?
         update: (post, state) => () => state.revoke(post)
     }})
 )(Posts)
