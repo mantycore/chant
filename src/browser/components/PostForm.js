@@ -2,13 +2,22 @@ import React, {useState, useRef} from 'react'
 import e from './createElement.js'
 import { connect } from 'react-redux'
 
-const PostForm = ({state}) => {
+const PostForm = ({state, dispatch}) => {
     const [filesToLoad, setFilesToLoad] = useState([])
     const bodyRef = useRef(null)// instead of controlled attribute
     const helperRef = useRef(null)
     let placeholder, disabled, encrypted;
      
     let protoPost = {}
+    if (state.postsMode === 'initiation') {
+        return e('div', {id: 'post_form_outer'},
+            e('div', {id: 'post_form'}, [
+                e('button', {onClick: dispatch.changePassword}, 'Change'),
+                e('textarea', {className: 'encrypted', value: state.masterPassword, disabled: !state.paswordEditable, onChange: dispatch.editPassword}),
+                e('button', {onClick: dispatch.acceptPassword}, 'Accept'),
+            ])
+        )
+    }
     if (state.postsMode === 'directs list') {
         placeholder = `⚿ List of your direct conversations ⚿`
         disabled = true
@@ -107,7 +116,9 @@ const PostForm = ({state}) => {
 
 export default connect(
     state => ({state}),
-    //dispatch => ({dispatch: {
-    //    redirectTo: pid => dispatch({type: 'direct redirect', pid})
-    //}})
+    dispatch => ({dispatch: {
+        editPassword: () => dispatch({type: 'edit password'})
+        changePassword: value => dispatch({type: 'change password', value})
+        acceptPassword: () => dispatch({type: 'accept password'})
+    }})
 )(PostForm)

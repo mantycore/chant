@@ -82,6 +82,25 @@ function reducer(state = initialState, action) {
                 draft.getAndStoreContent = action.state.getAndStoreContent
                 draft.putPost = action.state.putPost
                 draft.revoke = action.state.revoke
+                draft.crypto = action.state.crypto
+                if action.state.initiation {
+                    draft.postMode = 'initiation'
+                    draft.secretCode = action.state.secretCode
+                    state.paswordEditable = false
+                }
+                break
+            case 'edit password':
+                state.paswordEditable = true
+                break
+            case 'change password':
+                draft.secretCode = action.value
+                break
+            case 'accept password':
+                //ouch, effects
+                localStorage.set('Secret code', draft.secretCode)
+                draft.crypto.setPassphrase(draft.secretCode)
+                
+                draft.postsMode = 'tag'
                 break
         }
     })
