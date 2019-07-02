@@ -29,6 +29,12 @@ async function stateChangeHandler(type, payload) {
             break
         }
         case 'put attachment': {
+            if (payload.attachment.private) {
+                // Do not save decrypted content.
+                // Currently nodes that can write to database can't decrypt posts,
+                // but this is a possibility in future.
+                return
+            }
             const {buffer, ...rest} = payload.attachment
             await db.run(`
                 INSERT

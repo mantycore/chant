@@ -11,6 +11,7 @@
   "license": "ISC",
   "devDependencies": {
     "raw-loader": "^3.0.0",
+    "sloc": "^0.2.1",
     "webpack": "^4.35.0",
     "webpack-cli": "^3.3.5"
   },
@@ -20,6 +21,7 @@
     "ipfs-unixfs": "^0.1.16",
     "ipld-dag-pb": "^0.17.4",
     "markdown-it": "^8.4.2",
+    "msgpack-lite": "^0.1.26",
     "peer-relay": "mantycore/peer-relay",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",

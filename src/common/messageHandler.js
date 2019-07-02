@@ -2,6 +2,7 @@ import toCID from './cid.js'
 import { Buffer } from 'buffer'
 import { createPost, processFiles, inner } from './createPost.js'
 import BSON from 'bson'
+import msgpack from 'msgpack-lite'
 
 import crypto from './crypto.js'
 import bs58 from 'bs58'
@@ -23,6 +24,9 @@ export default state => {
     // TODO: move to a separate module -------------------------------------------------------------
     const posts = state.posts || []
     const postsAggregated = []
+    const conversations = []
+
+    // 3 (Ayah), closed on postsAggregated, conversations
     const aggregate = post => { //closed on postsAggregated
         let postAggregated;
         let plainPost;
@@ -58,6 +62,25 @@ export default state => {
                     plainPost = null
                     directSide = 'unknown'
                 }
+            }
+
+            // Encrypted content
+            if (directSide !== 'unknown') {
+                Object.entries(plainPost.contentMap).forEach(([cidPlain, cidEncrypted]) => {
+                    console.log(`Trying to get content cid # ${cidPlain} from store`)
+                    if (!contentStore.has(cidPlain)) {
+                        getAndStoreContent(cidEncrypted).then(result => {
+                            console.log("getAndStoreContent result", result)
+                            const {cid, attachment} = result
+                            const contents = [plainPost.body, ...plainPost.attachments]
+                            console.log("Trying to find plain content in contents:", cidPlain, contents)
+                            const content = contents.find(c => c.cid === cidPlain)
+                            const decryptedAttachment = Buffer.from(nacl.secretbox.open(attachment.buffer, nonce, secretKey))
+                            contentStore.set(cidPlain, {...content, buffer: decryptedAttachment})
+                            stateChangeHandler('put attachment', {cid: cidPlain, attachment: {...content, buffer: decryptedAttachment}, private: true})
+                        })
+                    }
+                })
             }
         } else {
             plainPost = post
@@ -113,7 +136,43 @@ export default state => {
                 encrypted: 'unknown'
             }
         }
-        postsAggregated.sort(((a, b) => new Date(b.origin.timestamp) - new Date(a.origin.timestamp)))
+        postsAggregated.sort(((a, b) => new Date(a.origin.timestamp) - new Date(b.origin.timestamp))) //ascending
+
+        if (postAggregated.encrypted && postAggregated.encrypted !== 'unknown') {
+            if (!plainPost.conversationId) { //this is the second post (first reply) in the conversation
+                const oPost = postsAggregated.find(pa => pa.pid === post.to[0].pid)
+                // TODO:  this must be changed if the multeperson conversation will be implemented
+                // possibly to an array of oPosts?
+                const conversation = {
+                    id: `/${oPost.pid}/direct/${post.pid}`,
+                    firstPid: oPost.pid,
+                    secondPid: postAggregated.pid,
+                    posts: [oPost, postAggregated],
+                    latest: postAggregated.latest.timestamp,
+                    fresh: postAggregated.encrypted === 'their'
+                }
+                if (!conversations.find(c => c.id === conversation.id)) {
+                    conversations.push(conversation)
+                }
+            } else {
+                const conversation = conversations.find(c => c.id === plainPost.conversationId)
+                if (!conversation) {
+                    //possibly error
+                    const [_, first, __, second] = plainPost.conversationId.split('/')
+                    conversation = {id: plainPost.conversationId, posts: [], latest: 0, fresh: true, first, second, headless: true}
+                    console.log('Headless conversation', conversation)
+                    conversations.push(conversation)
+                }
+                if (!conversation.posts.includes(postAggregated)) {
+                    conversation.posts.push(postAggregated)
+                    conversation.posts.sort(((a, b) => new Date(a.origin.timestamp) - new Date(b.origin.timestamp)))
+                    conversation.latest = conversation.posts[conversation.posts.length - 1].latest.timestamp // NB
+                    conversation.fresh = postAggregated.encrypted === 'their'
+                }
+            }
+        }
+        conversations.sort(((a, b) => new Date(b.latest) - new Date(a.latest))) // descending
+
         return postAggregated
     }
     posts.forEach(post => aggregate(post))
@@ -140,13 +199,13 @@ export default state => {
         return mid
     }
 
-    const broadcast = message => { // closed on peers and pr
+    const broadcast = (message, binary = false) => { // closed on peers and pr
         const newMessage = Object.assign({}, message)
         let mid // TODO: think about better solution
         for (const peer of peers.values()) {
             // TODO: add already processed nodes
             if (!message.origin || !(peer.equals(message.origin))) {
-                mid = pr_send(peer, newMessage)
+                mid = pr_send(peer, newMessage, binary)
                 Object.assign(newMessage, {mid})
             }
         }
@@ -243,7 +302,10 @@ export default state => {
             if (post.body) {
                 const encryptedBody = nacl.secretbox(Buffer.from(body), nonce, secretKey.itself)
                 const cid = await toCID(encryptedBody)
-                contentStore.set(post.body.cid, {type: 'application/octet-stream', buffer: encryptedBody, cid})
+                contentStore.set(cid, {type: 'application/octet-stream', buffer: encryptedBody, cid})
+                contentStore.set(post.body.cid, {type: 'text/plain', text: body, cid: post.body.cid, private: true}) // todo: regularize with files?
+                console.log("Stored encrypted body cid #", cid)
+                console.log("Stored decrypted body cid #", post.body.cid)
                 contentMap[post.body.cid] = cid
             }
 
@@ -252,6 +314,9 @@ export default state => {
                 const encryptedAttachment = nacl.secretbox(file.buffer, nonce, secretKey.itself)
                 const cid = await toCID(encryptedAttachment)
                 contentStore.set(cid, {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length})
+                contentStore.set(file.cid, {...file, private: true})
+                console.log("Stored encrypted attachment cid #", cid)
+                console.log("Stored decrypted attachment cid #", file.cid)
                 contentMap[file.cid] = cid
             }
 
@@ -328,14 +393,18 @@ export default state => {
 
     // --- THINGS THAT USE GETTERS ---
 
-    const getAndStoreContent = async cid => {
+    const getAndStoreContent = async (cid) => {
         try {
+            console.log("Trying to get content cid #", cid)
             const attachment = await getContent(cid)
-            const storageAttachment = {...attachment, buffer: attachment.buffer.buffer}
+            const storageAttachment = {...attachment, buffer: attachment.buffer} //BSON: buffer(Binary).buffer; msgpack: just buffer
             contentStore.set(cid, storageAttachment)
             stateChangeHandler('put attachment', {cid, attachment: storageAttachment})
+            console.log({cid, attachment: storageAttachment})
+            return {cid, attachment: storageAttachment}
         } catch (e) {
             console.log(e)
+            throw e
         }
     }
 
@@ -399,6 +468,7 @@ export default state => {
         posts,
         postsAggregated,
         messagesProcessed,
+        conversations,
 
         putContent,
         getContent,
@@ -439,7 +509,11 @@ export default state => {
             const {payload1: omit, ...messageSansPayload} = message
             console.log('RECV', from.toString('hex', 0, 2), messageSansPayload) //JSON.stringify(messageSansPayload)
         }
-        const forwardedMessage = Object.assign({}, message, {origin: message.origin ? Buffer.from(message.origin.data) : from})
+        const forwardedMessage = Object.assign({}, message, {origin: message.origin ? (
+            'data' in message.origin
+            ? Buffer.from(message.origin.data) // origin deserialized from text
+            : message.origin // from bson
+        ) : from})
         {
             const umid = `${forwardedMessage.origin.toString('hex')}:${message.mid}`
             if (messagesProcessed.has(umid)) {
@@ -475,7 +549,7 @@ export default state => {
                 if (payload) {
                     pr_send(forwardedMessage.origin, {type: 'content found', payload, inReplyTo: message.mid}, /*binary*/ true)
                 } else {
-                    broadcast(forwardedMessage)
+                    broadcast(forwardedMessage, true)
                 }
                 break
             }

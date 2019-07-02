@@ -14,7 +14,8 @@ const PostForm = ({state}) => {
             post.to = state.opost.pid
         }
         if (state.postsMode === 'direct conversation') {
-            post.to = state.opost.my ? state.opost2.pid : state.opost.pid
+            const conversation = state.conversations.find(conv => conv.id === state.conversationId)
+            post.to = conversation.posts[0].my ? conversation.secondPid : conversation.firstPid // can fail if the conversation is malformed
             // think about it. What if both sides are mine?
             post.conversationId = state.conversationId
         }

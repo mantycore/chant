@@ -33,14 +33,9 @@ function Uint8ToB64String(u8a){
   return c.join("");
 }
 
-const binaryToUrl = (binary, type) => {
-    console.log(binary, type)
-    const url = `data:${type};base64,${btoa(Uint8ToB64String(binary))}`
-    console.log('URL', url)
-    return url
-}
+const binaryToUrl = (binary, type) => `data:${type};base64,${btoa(Uint8ToB64String(binary))}`
 
-const Image = ({attachment, state, dispatch}) =>
+const Image = ({attachment, state, dispatch}) => 
     state.contentStore.has(attachment.cid)
         ? e('img', {
             src: binaryToUrl(state.contentStore.get(attachment.cid).buffer, attachment.type),
@@ -106,7 +101,8 @@ const Post = ({post, state, dispatch, mini = false}) => {
                         e('span', {className: 'action', onClick: dispatch.revoke(post.origin, state)}, 'Revoke'),
                     ] : []),
                     '\u00A0',
-                    e('span', {}, e('a', {href: `#/${post.pid}/direct`}, 'Direct'))
+                    e('span', {}, e('a', {href: `#/${post.pid}/direct`}, 'Direct')),
+                    e('span', {className: 'action', onClick: () => { console.log(post) }}, 'Dump'),
                 ])
             ]),
             ...(revoked ? [] : [
@@ -135,7 +131,7 @@ const Posts = ({state, dispatch}) => {
     const findConversation = conversationId => state.postsAggregated.filter(pa =>
         pa.conversationId === conversationId)
 
-    let posts = [...state.postsAggregated].reverse()
+    let posts = [...state.postsAggregated]
     let oPost = null
     if (state.postsMode === 'tag') {
         posts = posts.filter(post => post.latest.tags && post.latest.tags.includes(state.tag))
@@ -147,10 +143,12 @@ const Posts = ({state, dispatch}) => {
         oPost = state.opost // sort
         posts = findReplies(oPost)
     } else if (state.postsMode === 'direct conversation') {
-        oPost = state.opost
-        const replies = [state.opost2]
-            .concat(findConversation(state.conversationId))
-        //sort
+        const conversation = state.conversations.find(conversation => conversation.id === state.conversationId)
+        if (conversation) {
+            [oPost, ...posts] = conversation.posts
+        } else {
+            return e('div', {id: 'error'}, "Conversation is not found or is not accessible")
+        }
     }
     //const ref = useRef(null)
     //useEffect((e) => { console.log(ref); ref.current.scrollTop = ref.current.scrollHeight - ref.current.clientHeight; }, [posts])

@@ -31,7 +31,11 @@
         #status {
             color: #888;
         }
-        .post, .thread, #post_form_outer {
+        #error {
+            flex-grow: 1;
+            color: #a44;
+        }
+        #error, .post, .thread, #post_form_outer {
             width: 60vw;
             max-width: 800px;
             margin-left: auto;
@@ -58,6 +62,7 @@
         }
         .post.my {
             border-bottom: 1px dotted #6a6;
+            border-left: 1px dotted #6a6;
         }
         #posts {
             flex-grow: 1;

@@ -18,6 +18,7 @@ const initialState = {
 
 function copy(draft, action) {
     draft.postsAggregated = [...action.state.postsAggregated]
+    draft.conversations = [...action.state.conversations]
     draft.contentStore = new Map(action.state.contentStore)
     draft.peers = new Set(action.state.peers)
 }
@@ -34,7 +35,6 @@ function handleUrl(draft) {
         if (path[2] === 'direct') {
             if (path[3] && bs58.decode(path[3]).length === 64) {
                 draft.postsMode = 'direct conversation'
-                draft.opost2 = draft.postsAggregated.find(post => post.pid === path[3])
                 draft.conversationId = path.slice(0, 4).join('/')
             } else {
                 draft.postsMode = 'direct'
