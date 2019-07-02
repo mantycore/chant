@@ -123,7 +123,18 @@ const Post = ({post, state, dispatch, mini = false}) => {
     ])
 }
 
+
+
 const Posts = ({state, dispatch}) => {
+    const findReplies = post => state.postsAggregated.filter(pa =>
+        pa.to && pa.to.filter(to => to.pid === post.pid).length > 0)
+    /*const findRepliesRecursively = post => {
+        const replies = findReplies(post)
+        return replies.concat(...replies.map(findRepliesRecursively))
+    }*/
+    const findConversation = conversationId => state.postsAggregated.filter(pa =>
+        pa.conversationId === conversationId)
+
     let posts = [...state.postsAggregated].reverse()
     let oPost = null
     if (state.postsMode === 'tag') {
@@ -133,15 +144,14 @@ const Posts = ({state, dispatch}) => {
         posts = state.postsAggregated.filter(post =>
             post.latest.opid === state.opost.pid)
     } else if (state.postsMode === 'direct') {
-        const findReplies = post => {
-            const replies = state.postsAggregated.filter(pa =>
-                pa.to && pa.to.filter(to => to.pid === post.pid).length > 0)
-            return replies.concat(...replies.map(findReplies))
-        }
         oPost = state.opost // sort
         posts = findReplies(oPost)
+    } else if (state.postsMode === 'direct conversation') {
+        oPost = state.opost
+        const replies = [state.opost2]
+            .concat(findConversation(state.conversationId))
+        //sort
     }
-    console.log(oPost, posts);
     //const ref = useRef(null)
     //useEffect((e) => { console.log(ref); ref.current.scrollTop = ref.current.scrollHeight - ref.current.clientHeight; }, [posts])
     return e('div', {id: 'posts'}, [

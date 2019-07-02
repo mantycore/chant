@@ -218,23 +218,24 @@ export default state => {
         broadcast({type: 'put post', post})
     }
 
-    const putPost = async({body, filesToLoad, opid, tags, to}) => {
+    const putPost = async({body, filesToLoad, opid, tags, to, conversationId}) => {
         if (!filesToLoad && body.match(/^\s+$/)) {
            return
         }
+        const [filesFull, attachments] = await processFiles(filesToLoad)
+        const post = await createPost({
+            body,
+            attachments,
+            nid: pr.id,
+            opid,
+            tags,
+            conversationId
+        })
 
         if (to) {
-            const [filesFull, attachments] = await processFiles(filesToLoad)
-            const post = await createPost({
-                body,
-                attachments,
-                nid: pr.id,
-                opid,
-                tags
-            })
             const nonce = bs58.decode(post.pid).slice(0, 24)
-            const toPost = posts.find(curPost => curPost.pid === to)
-            const recipientDirectKey = bs58.decode(toPost.directKey)
+            const toPost = postsAggregated.find(curPost => curPost.pid === to)
+            const recipientDirectKey = bs58.decode(toPost.origin.directKey)
             const secretKey = crypto.direct.secretKey(recipientDirectKey, nonce)
 
             const contentMap = {}
@@ -292,18 +293,8 @@ export default state => {
             //const decrypted = crypto.direct.decrypt(encrypted, Buffer.from(microjson(inner(toPost))))
             putPostToStore(encryptedPost)
             broadcast({type: 'put post', post: encryptedPost})
+            return encryptedPost.pid
         } else {
-            const [filesFull, attachments] = await processFiles(filesToLoad)
-
-            const post = await createPost({
-                body,
-                attachments,
-                nid: pr.id,
-                opid,
-                tags
-            })
-
-
             if (post.body) {
                 contentStore.set(post.body.cid, {type: 'text/plain', text: body, cid: post.body.cid}) // todo: regularize with files?
             }
@@ -314,6 +305,7 @@ export default state => {
 
             putPostToStore(post)
             broadcast({type: 'put post', post})
+            return post.pid
         }
     }
 

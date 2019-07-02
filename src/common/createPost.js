@@ -19,7 +19,7 @@ const inner = post => {
     return innerPost
 }
 
-const createPost = async ({body, attachments, nid, opid, tags, proofs}) => {
+const createPost = async ({body, attachments, nid, opid, tags, proofs, conversationId}) => {
     const timestamp = new Date().getTime() // millisecond from epoch
 
     const post = {
@@ -36,6 +36,9 @@ const createPost = async ({body, attachments, nid, opid, tags, proofs}) => {
     }
     if (tags) {
         Object.assign(post, {tags})
+    }
+    if (conversationId) {
+        Object.assign(post, {conversationId})
     }
     if (attachments && attachments.length > 0) {
         Object.assign(post, {attachments})

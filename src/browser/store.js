@@ -32,11 +32,16 @@ function handleUrl(draft) {
         draft.opost = draft.postsAggregated.find(post => post.pid === path[1])
         //TODO: or else!
         if (path[2] === 'direct') {
-            draft.postsMode = 'direct'
+            if (path[3] && bs58.decode(path[3]).length === 64) {
+                draft.postsMode = 'direct conversation'
+                draft.opost2 = draft.postsAggregated.find(post => post.pid === path[3])
+                draft.conversationId = path.slice(0, 4).join('/')
+            } else {
+                draft.postsMode = 'direct'
+            }
         } else {
-            draft.postsMode = 'thread'    
+            draft.postsMode = 'thread'
         }
-        
     } else {
         draft.postsMode = 'tag'
         draft.tag = path[1]

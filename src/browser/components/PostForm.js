@@ -13,12 +13,24 @@ const PostForm = ({state}) => {
         if (state.postsMode === 'direct') {
             post.to = state.opost.pid
         }
+        if (state.postsMode === 'direct conversation') {
+            post.to = state.opost.my ? state.opost2.pid : state.opost.pid
+            // think about it. What if both sides are mine?
+            post.conversationId = state.conversationId
+        }
         if (state.postsMode === 'thread') {
             post.opid = state.opost.pid
         } else if (state.postsMode === 'tag') {
             post.tags = [state.tag]
         }
-        await state.putPost(post)
+        
+        const pid = await state.putPost(post)
+
+        if (state.postsMode === 'direct') {
+            const path = window.location.hash.match('#(.*)')[1].split('/')
+            path[3] = pid
+            window.location.hash = path.slice(0,4).join('/')
+        }
         setFilesToLoad([])
         bodyRef.current.value = ''
         //hack
@@ -70,4 +82,9 @@ const PostForm = ({state}) => {
     ])
 }
 
-export default connect(state => ({state}))(PostForm)
+export default connect(
+    state => ({state}),
+    //dispatch => ({dispatch: {
+    //    redirectTo: pid => dispatch({type: 'direct redirect', pid})
+    //}})
+)(PostForm)
