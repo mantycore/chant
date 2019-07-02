@@ -1,5 +1,6 @@
 import nacl from 'tweetnacl'
 import BSON from 'bson'
+import { Buffer } from 'buffer'
 
 const concat = args => {
     const len = args.reduce((acc, cur) => acc + cur.byteLength, 0)
@@ -39,7 +40,7 @@ const encryptWithAnEphemeralSenderKey = (message, recipientPublicKey) => {
 }
 
 const crypto = {
-    setPassphrase: newPassphrase => { passphrase = newPassphrase },
+    setPassphrase: newPassphrase => { passphrase = nacl.hash(Buffer.from(newPassphrase)) },
     proof: {
         signOrigin: message => {
             const keyPair = messageToSignPair(message)

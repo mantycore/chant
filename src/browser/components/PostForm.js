@@ -9,14 +9,21 @@ const PostForm = ({state, dispatch}) => {
     let placeholder, disabled, encrypted;
      
     let protoPost = {}
-    if (state.postsMode === 'initiation') {
-        return e('div', {id: 'post_form_outer'},
+    if (state.initiation) {
+        return e('div', {id: 'post_form_outer'}, [
             e('div', {id: 'post_form'}, [
-                e('button', {onClick: dispatch.changePassword}, 'Change'),
-                e('textarea', {className: 'encrypted', value: state.masterPassword, disabled: !state.paswordEditable, onChange: dispatch.editPassword}),
+                e('button', {onClick: dispatch.unlockPassword}, 'Enter your own'),
+                e('input', {type: 'text', className: 'encrypted', value: state.secretCode, disabled: !state.passwordEditable, onChange: dispatch.changePassword}),
                 e('button', {onClick: dispatch.acceptPassword}, 'Accept'),
-            ])
-        )
+            ]),
+            e('div', {className: 'initiation-message'},
+`This is your secret code. Please copy it, either electronically or by hand
+(preferably both) and store it in secure locations. The code is the key to
+all aspects of your identity in the Anoma Chant. If you lose it, you will not
+have access to direct messages directed at your posts created with it, and you
+will be not able to prove that you are their author. The secret code is stored
+only in the localStorage of your browser and cannot be restored by any outside party.`),
+        ])
     }
     if (state.postsMode === 'directs list') {
         placeholder = `⚿ List of your direct conversations ⚿`
@@ -117,8 +124,8 @@ const PostForm = ({state, dispatch}) => {
 export default connect(
     state => ({state}),
     dispatch => ({dispatch: {
-        editPassword: () => dispatch({type: 'edit password'})
-        changePassword: value => dispatch({type: 'change password', value})
+        unlockPassword: () => dispatch({type: 'unlock password'}),
+        changePassword: value => dispatch({type: 'change password', value}),
         acceptPassword: () => dispatch({type: 'accept password'})
     }})
 )(PostForm)

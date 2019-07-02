@@ -1,7 +1,7 @@
 import PeerRelay from 'peer-relay'
 import messageHandler from 'Common/messageHandler.js'
 import { store } from './reactRoot.js'
-import browserCrypto from './browserCrypto.js'
+import { pass } from './browserCrypto.js'
 
 const state = {
     pr: new PeerRelay({bootstrap: ['ws://localhost:7001']}),
@@ -12,11 +12,12 @@ messageHandler(state)
 
 window.chant = state
 
-const secretCode = localStorage.get('Secret code')
+const secretCode = localStorage.getItem('Secret code')
 if (!secretCode) {
     state.initiation = true
-    state.secretCode = browserCrypto.pass()
+    state.secretCode = pass()
 } else {
+    state.crypto.setPassphrase(secretCode)
     state.secretCode = secretCode
 }
 
