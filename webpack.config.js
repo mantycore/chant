@@ -26,9 +26,9 @@ module.exports = [
         output: {
             filename: 'server.js'
         },
-        optimization: {
+        /*optimization: {
             minimize: false
-        },
+        },*/
         externals: { 'sqlite3':'commonjs sqlite3', }
     },
     {
