@@ -170,7 +170,9 @@ const Posts = ({state, dispatch}) => {
             ]
         }))
     }
-    if (state.postsMode === 'tag') {
+    if (state.postsMode === 'tilde') {
+        posts = posts.filter(post => !post.latest.opid && !post.encrypted)
+    } else if (state.postsMode === 'tag') {
         posts = posts.filter(post => post.latest.tags && post.latest.tags.includes(state.tag))
     } else if (state.postsMode === 'thread') {
         oPost = state.opost;
