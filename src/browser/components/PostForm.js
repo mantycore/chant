@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 
 const PostForm = ({state, dispatch}) => {
     const [filesToLoad, setFilesToLoad] = useState([])
-    const bodyRef = useRef(null)// instead of controlled attribute
+    //const bodyRef = useRef(null)// instead of controlled attribute
     const helperRef = useRef(null)
     let placeholder, disabled, encrypted;
      
@@ -59,21 +59,26 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
         encrypted = false
     }
 
-
     const submit = async e => {
-        const body = bodyRef.current.value
-        let post = {body, filesToLoad}
-        Object.assign(post, protoPost)
+        const body = state.postBeingEdited.body //bodyRef.current.value
         
-        const pid = await state.putPost(post)
+        if (state.postBeingEdited.mode === 'patch') {
+            let post = {body} // so far, only post body can be updated
+            await state.updatePost(post, state.postBeingEdited.post.origin, 'patch')
+        } else {
+            let post = {body, filesToLoad}
+            Object.assign(post, protoPost)
+            const pid = await state.putPost(post)
 
-        if (state.postsMode === 'direct') {
-            const path = window.location.hash.match('#(.*)')[1].split('/')
-            path[3] = pid
-            window.location.hash = path.slice(0,4).join('/')
+            if (state.postsMode === 'direct') {
+                const path = window.location.hash.match('#(.*)')[1].split('/')
+                path[3] = pid
+                window.location.hash = path.slice(0,4).join('/')
+            }
         }
         setFilesToLoad([])
-        bodyRef.current.value = ''
+        dispatch.submitSuccess()
+        //bodyRef.current.value = ''
         //hack
         const postDiv = document.getElementById('posts')
         postDiv.scrollTop = postDiv.scrollHeight - postDiv.clientHeight; 
@@ -113,11 +118,20 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
         ] : []),
 
         e('div', {id: 'post_form'}, [
-
-            e('div',
+            state.postBeingEdited.mode === 'patch'
+            ? e('button', {onClick: dispatch.cancelUpdate}, 'Cancel')
+            : e('div',
                 {id: 'drop_zone', onDragOver, onDrop, onClick: proxy},
                 'Drop files or click to upload'),
-            e('textarea', {...(encrypted ? {className: 'encrypted'} : {}), placeholder, disabled, ref: bodyRef, onKeyPress}),
+            e('textarea', {
+                ...(encrypted ? {className: 'encrypted'} : {}),
+                placeholder,
+                disabled,
+                //ref: bodyRef,
+                onKeyPress,
+                onChange: dispatch.bodyChange,
+                value: state.postBeingEdited.body
+            }),
             e('button', {onClick: submit}, 'Post'),
             e('input', {
                 type: "file",
@@ -133,7 +147,11 @@ export default connect(
     state => ({state}),
     dispatch => ({dispatch: {
         unlockPassword: () => dispatch({type: 'unlock password'}),
-        changePassword: value => dispatch({type: 'change password', value}),
-        acceptPassword: () => dispatch({type: 'accept password'})
+        changePassword: event => dispatch({type: 'change password', event}),
+        acceptPassword: () => dispatch({type: 'accept password'}),
+
+        bodyChange: event => dispatch({type: 'post body change', event}),
+        submitSuccess: () => dispatch({type: 'post submit success'}),
+        cancelUpdate: () => dispatch({type: 'cancel post update'}),
     }})
 )(PostForm)

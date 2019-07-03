@@ -14,7 +14,13 @@ const initialState = {
 
     postsMode: 'tag',
     opost: null,
-    tag: 'd'
+    tag: 'd',
+
+    postBeingEdited: {
+        body: '',
+        mode: 'put',
+        post: null
+    }
 }
 
 function copy(draft, action) {
@@ -81,8 +87,11 @@ function reducer(state = initialState, action) {
                 copy(draft, action)
                 //handleUrl(draft)
                 draft.getAndStoreContent = action.state.getAndStoreContent
+
                 draft.putPost = action.state.putPost
                 draft.revoke = action.state.revoke
+                draft.updatePost = action.state.updatePost
+
                 draft.crypto = action.state.crypto
                 if (action.state.initiation) {
                     draft.initiation = true
@@ -103,6 +112,22 @@ function reducer(state = initialState, action) {
 
                 draft.initiation = false
                 break
+
+            case 'update post':
+                draft.postBeingEdited.body = action.post.result.body.text
+                draft.postBeingEdited.mode = 'patch'
+                draft.postBeingEdited.post = action.post
+                break
+            case 'post body change':
+                draft.postBeingEdited.body = action.event.target.value
+                break
+            case 'cancel post update':
+            case 'post submit success':
+                draft.postBeingEdited.body = ''
+                draft.postBeingEdited.mode = 'put'
+                draft.postBeingEdited.post = null
+                break
+
         }
     })
     return newState

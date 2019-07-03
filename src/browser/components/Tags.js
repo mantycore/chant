@@ -9,8 +9,8 @@ const Tags = ({tags}) =>
 
 export default connect(state => ({
     tags: [['~', state.postsAggregated.length], ...Object.entries(state.postsAggregated.reduce((acc, cur) => {
-        if ('tags' in cur.latest) {
-            cur.latest.tags.forEach(tag => {
+        if ('tags' in cur.result) {
+            cur.result.tags.forEach(tag => {
                 if (tag in acc) {
                     acc[tag] += 1
                 } else {

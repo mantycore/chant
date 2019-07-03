@@ -15,6 +15,14 @@ const has = (set, nid) =>
 
 const asBuffer = post => Buffer.from(microjson(inner(post)))
 
+const verify = (post, proof, original) => crypto.proof.verify(
+    Buffer.from(microjson(inner(post))),
+    bs58.decode(proof.signature),
+    Buffer.from(microjson(inner(original))),
+    bs58.decode(original.proofSignature),
+    bs58.decode(original.proofKey))
+
+
 export default state => {
 
     const {isServerNode, pr} = state
@@ -83,14 +91,64 @@ export default state => {
             plainPost = post
         }
         if (directSide !== 'unknown') {
-            const updateProof = plainPost.proofs && plainPost.proofs.find(proof => proof.type === 'put' || proof.type === 'delete')
+            const updateProof = plainPost.proofs && plainPost.proofs.find(proof =>
+                proof.type === 'put' ||
+                proof.type === 'patch' ||
+                proof.type === 'delete')
             // there should be no more than one
             if (updateProof) {
                 //case 1: post has put/delete proofs, so there must be an original in pa
                 postAggregated = postsAggregated.find(pa => pa.pid === updateProof.pid) // TODO: or else
                 postAggregated.posts.push(plainPost)
-                postAggregated.posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                postAggregated.latest = postAggregated.posts[0]
+                postAggregated.posts.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+                //postAggregated.latest = postAggregated.posts[postAggregated.posts.length - 1]
+
+                // curently this is the code for body updating only.
+                // it doesn't support attachemnt addition or deletion,
+                // and may or may not support other operations.
+                // generally, primitive values are updated correctly,
+                // but arrays can be put but not patched.
+                // TODO: massive rewrite?
+                const result = {
+                    ...inner(postAggregated.origin),
+                    proofs: postsAggregated.proofs,
+                    contentMap: postAggregated.contentMap
+                }
+                for (const postVersion of postAggregated.posts) {
+                    const versionProof = postVersion.proofs && postVersion.proofs.find(curProof => curProof.pid === postAggregated.pid)
+                    if (versionProof) { //there is no proof only if this is origin
+                        if (verify(postVersion, versionProof, postAggregated.origin)) {
+                            switch (versionProof.type) {
+                                case 'patch':
+                                    Object.assign(result, inner(postVersion))
+                                    result.proofs = postVersion.proofs //are always replaced whole!
+                                    if (result.contentMap || postVersion.contentMap) {
+                                        result.contentMap = postVersion.contentMap && Object.keys(postVersion.contentMap).length > 0
+                                            ? postVersion.contentMap
+                                            : result.contentMap // replaced only if the patch has new content map
+                                    }
+                                    Object.keys(result).forEach(key => {
+                                        if (result[key] === '$delete') {
+                                            delete result[key] // somewhat hacky
+                                        }
+                                    })
+                                    break
+                                case 'put':
+                                    result = {...inner(postVersion)}
+                                    result.proofs = postVersion.proofs //are always replaced whole!
+                                    if (postVersion.contentMap) {
+                                        result.contentMap = postVersion.contentMap
+                                    }
+                                    break
+                                case 'delete':
+                                    result = {revoked: true}
+                            }
+                        } else {
+                            console.error('Counterfeit proof in the post history', postVersion, versionProof, postAggregated.origin)
+                        }
+                    }
+                }
+                postAggregated.result = result
             } else {
                 //case 2: post has no proofs, so it must be new
 
@@ -106,7 +164,8 @@ export default state => {
                     pid: plainPost.pid,
                     posts: [plainPost],
                     origin: plainPost,
-                    latest: plainPost,
+                    //latest: plainPost,
+                    result: plainPost,
                     my: bs58.decode(plainPost.directKey).equals(      // Buffer
                         Buffer.from(                             // Buffer
                             crypto.direct.signOrigin(            // Uint8Array
@@ -127,7 +186,8 @@ export default state => {
                 pid: post.pid,
                 posts: [minimalPost],
                 origin: minimalPost,
-                latest: minimalPost,
+                //latest: minimalPost,
+                result: minimalPost,
                 my: false,
                 to: post.to,
                 encrypted: 'unknown'
@@ -145,7 +205,7 @@ export default state => {
                     firstPid: oPost.pid,
                     secondPid: postAggregated.pid,
                     posts: [oPost, postAggregated],
-                    latest: postAggregated.latest.timestamp,
+                    latest: postAggregated.result.timestamp,
                     fresh: postAggregated.encrypted === 'their'
                 }
                 if (!conversations.find(c => c.id === conversation.id)) {
@@ -257,9 +317,7 @@ export default state => {
     const revoke = async origin => {
         const post = await createPost({
             nid: pr.id,
-            proofs: [{type: 'delete', post: origin}],
-            opid: origin.opid,
-            tags: origin.tags
+            proofs: [{type: 'delete', post: origin}]
         })
 
         /*console.log(post)
@@ -270,6 +328,27 @@ export default state => {
             bs58.decode(origin.proofSignature),
             bs58.decode(origin.proofKey)
         ))*/
+        putPostToStore(post)
+        broadcast({type: 'put post', post})
+    }
+
+    const updatePost = async (update, origin, mode) => {
+        let post;
+        if (mode === 'patch') {
+            post = await createPost({
+                nid: pr.id,
+                ...update,
+                proofs: [{type: 'patch', post: origin}]
+            })
+        } else if (mode === 'put') { // untested, written just in case
+            const params = {
+                nid: pr.id,
+                ...(Object.assign(update, inner(origin)))
+            }
+            params.proofs = params.proogs || []
+            params.proofs.push({type: 'put', post: origin})
+            post = await createPost()
+        }
         putPostToStore(post)
         broadcast({type: 'put post', post})
     }
@@ -478,6 +557,7 @@ export default state => {
         repliesPending,
 
         revoke,
+        updatePost,
 
         getAndStoreContent,
 

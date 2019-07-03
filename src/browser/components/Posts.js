@@ -74,6 +74,7 @@ const Attachments = ({attachments, state, dispatch}) =>
         .filter(attachment => attachment.type === 'image/png' || attachment.type === 'image/jpeg')
         .map(attachment => e(Image, {attachment, state, dispatch})))
 
+//TODO: handle this in aggregate
 const verify = (post, proof, original) => crypto.proof.verify(
     Buffer.from(microjson(inner(post))),
     bs58.decode(proof.signature),
@@ -82,11 +83,11 @@ const verify = (post, proof, original) => crypto.proof.verify(
     bs58.decode(original.proofKey))
 
 const renderBody = (post, state) => {
-    let html = md.render(post.latest.body.text)
-    if (post.latest.proofs) {
-        post.latest.proofs.filter(proof => proof.type === 'hand').forEach(proof => {
+    let html = md.render(post.result.body.text)
+    if (post.result.proofs) {
+        post.result.proofs.filter(proof => proof.type === 'hand').forEach(proof => {
             const original = state.posts.find(p => p.pid === proof.pid)
-            const genuine = verify(post.latest, proof, original)
+            const genuine = verify(post.result, proof, original)
             if (genuine) {
                 html = html.replace(new RegExp(`~${proof.pid}`, 'g'), `<a href="#/${proof.pid}" class="mark genuine">$&</a>`)
             } else {
@@ -98,12 +99,12 @@ const renderBody = (post, state) => {
 }
 
 const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
-    const updateProof = post.latest.proofs && post.latest.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
-    const revoked = updateProof && updateProof.type === 'delete'
+    const updateProof = post.result.proofs && post.result.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
+    const revoked = post.result.revoked
     const thread = conversation
         ? conversation.posts.slice(1)
         : state.postsAggregated.filter(threadPost =>
-            threadPost.latest.opid === post.pid)
+            threadPost.result.opid === post.pid)
     return e('div', {}, [
         e('div', {className: [
                 'post',
@@ -117,12 +118,12 @@ const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
                     }, [
                         post.pid.substring(0, 8),
                         ' ',
-                        new Date(post.latest.timestamp).toISOString() //TODO: latest AND initial timestamp for modified posts
+                        new Date(post.result.timestamp).toISOString() //TODO: latest AND initial timestamp for modified posts
                     ])),
                 ...(revoked ? ['POST REVOKED'] : [ //TODO: see history?
                     ...(post.my ? [
-                        /*e('span', {className: 'action', onClick: dispatch.update(post.origin, state)}, 'Update'),
-                        '\u00A0',*/
+                        e('span', {className: 'action', onClick: dispatch.update(post, state)}, 'Update'),
+                        '\u00A0',
                         e('span', {className: 'action', onClick: dispatch.revoke(post.origin, state)}, 'Revoke'),
                     ] : []),
                     '\u00A0',
@@ -132,8 +133,8 @@ const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
                 ])
             ]),
             ...(revoked ? [] : [
-                ...(post.latest.body ? [e('div', {className: 'body', dangerouslySetInnerHTML: {__html: renderBody(post, state)}})] : []),
-                ...(post.latest.attachments ? [e(Attachments, {attachments: post.latest.attachments, state, dispatch})] : []),
+                ...(post.result.body ? [e('div', {className: 'body', dangerouslySetInnerHTML: {__html: renderBody(post, state)}})] : []),
+                ...(post.result.attachments ? [e(Attachments, {attachments: post.result.attachments, state, dispatch})] : []),
             ])
         ]),
         ...(!mini && thread.length > 0 ? [e('div', {className: 'thread'}, thread.length > 3 ? [
@@ -171,13 +172,13 @@ const Posts = ({state, dispatch}) => {
         }))
     }
     if (state.postsMode === 'tilde') {
-        posts = posts.filter(post => !post.latest.opid && !post.encrypted)
+        posts = posts.filter(post => !post.result.opid && !post.encrypted)
     } else if (state.postsMode === 'tag') {
-        posts = posts.filter(post => post.latest.tags && post.latest.tags.includes(state.tag))
+        posts = posts.filter(post => post.result.tags && post.result.tags.includes(state.tag))
     } else if (state.postsMode === 'thread') {
         oPost = state.opost;
         posts = state.postsAggregated.filter(post =>
-            post.latest.opid === state.opost.pid)
+            post.result.opid === state.opost.pid)
     } else if (state.postsMode === 'direct') {
         oPost = state.opost // sort
         posts = []
@@ -212,6 +213,6 @@ export default connect(
             }
         },
         revoke: (post, state) => () => window.confirm("Really revoke the post?") && state.revoke(post), //if it is safe to pass post instead of pid?
-        update: (post, state) => () => state.revoke(post)
+        update: (post, state) => () => dispatch({type: 'update post', post})
     }})
 )(Posts)
