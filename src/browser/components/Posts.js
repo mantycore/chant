@@ -87,7 +87,8 @@ const renderBody = (post, state) => {
     if (post.result.proofs) {
         post.result.proofs.filter(proof => proof.type === 'hand').forEach(proof => {
             const original = state.posts.find(p => p.pid === proof.pid)
-            const genuine = verify(post.result, proof, original)
+            const from = state.posts.find(p => p.pid === proof.from)
+            const genuine = verify(from, proof, original)
             if (genuine) {
                 html = html.replace(new RegExp(`~${proof.pid}`, 'g'), `<a href="#/${proof.pid}" class="mark genuine">$&</a>`)
             } else {
@@ -128,8 +129,8 @@ const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
                     ] : []),
                     '\u00A0',
                     e('span', {}, e('a', {href: `#/${post.pid}/direct`}, 'Direct')),
-                    /*'\u00A0',
-                    e('span', {className: 'action', onClick: () => { console.log(post) }}, 'Dump')*/
+                    '\u00A0',
+                    e('span', {className: 'action', onClick: () => { console.log(post) }}, 'Dump')
                 ])
             ]),
             ...(revoked ? [] : [

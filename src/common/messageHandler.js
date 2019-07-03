@@ -109,11 +109,18 @@ export default state => {
                 // generally, primitive values are updated correctly,
                 // but arrays can be put but not patched.
                 // TODO: massive rewrite?
-                const result = {
+                let result = {
                     ...inner(postAggregated.origin),
-                    proofs: postsAggregated.proofs,
-                    contentMap: postAggregated.contentMap
+                    ...(postAggregated.origin.proofs ? {proofs: [...postAggregated.origin.proofs]} : {}),
+                    ...(postAggregated.origin.contentMap ? {contentMap: {...postAggregated.origin.contentMap}} : {})
                 }
+
+                if (result.proofs) {
+                    for (const proof of result.proofs) {
+                        Object.assign(proof, {from: postAggregated.pid})
+                    }
+                }
+
                 for (const postVersion of postAggregated.posts) {
                     const versionProof = postVersion.proofs && postVersion.proofs.find(curProof => curProof.pid === postAggregated.pid)
                     if (versionProof) { //there is no proof only if this is origin
@@ -121,7 +128,15 @@ export default state => {
                             switch (versionProof.type) {
                                 case 'patch':
                                     Object.assign(result, inner(postVersion))
-                                    result.proofs = postVersion.proofs //are always replaced whole!
+
+                                    result.proofs = result.proofs || []
+                                    for (const p of postVersion.proofs) {
+                                        if (!postAggregated.origin.proofs || !postAggregated.origin.proofs.find(pp => pp.pid === p.pid)) {
+                                            // todo: decide if it is necessary or safe to push updating proofs
+                                            result.proofs.push({...p, from: postVersion.pid})
+                                        }
+                                    }
+                                    
                                     if (result.contentMap || postVersion.contentMap) {
                                         result.contentMap = postVersion.contentMap && Object.keys(postVersion.contentMap).length > 0
                                             ? postVersion.contentMap
@@ -141,7 +156,7 @@ export default state => {
                                     }
                                     break
                                 case 'delete':
-                                    result = {revoked: true}
+                                    Object.assign(result, {revoked: true})
                             }
                         } else {
                             console.error('Counterfeit proof in the post history', postVersion, versionProof, postAggregated.origin)
@@ -223,7 +238,7 @@ export default state => {
                 if (!conversation.posts.includes(postAggregated)) {
                     conversation.posts.push(postAggregated)
                     conversation.posts.sort(((a, b) => new Date(a.origin.timestamp) - new Date(b.origin.timestamp)))
-                    conversation.latest = conversation.posts[conversation.posts.length - 1].latest.timestamp // NB
+                    conversation.latest = conversation.posts[conversation.posts.length - 1].result.timestamp // NB
                     conversation.fresh = postAggregated.encrypted === 'their'
                 }
             }
@@ -520,6 +535,7 @@ export default state => {
                 postInitialized = true
                 stateChangeHandler({type: 'posts initialized'})
             } catch (error) {
+                console.log("Error during saving a post", error)
                 // do nothing
             }
         }
