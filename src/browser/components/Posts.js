@@ -2,6 +2,11 @@ import React, {useRef, useEffect} from 'react'
 import e from './createElement.js'
 import { connect } from 'react-redux'
 import MarkdownIt from 'markdown-it'
+import { Buffer } from 'buffer'
+import bs58 from 'bs58'
+import crypto from 'Common/crypto.js'
+import microjson from 'Common/microjson.js'
+import { inner } from 'Common/createPost.js' // TODO: move to another location, combine with Buffer and microjson
 
 const md = new MarkdownIt()
 
@@ -69,8 +74,27 @@ const Attachments = ({attachments, state, dispatch}) =>
         .filter(attachment => attachment.type === 'image/png' || attachment.type === 'image/jpeg')
         .map(attachment => e(Image, {attachment, state, dispatch})))
 
-const MiniPost = ({post, state, dispatch}) => {
+const verify = (post, proof, original) => crypto.proof.verify(
+    Buffer.from(microjson(inner(post))),
+    bs58.decode(proof.signature),
+    Buffer.from(microjson(inner(original))),
+    bs58.decode(original.proofSignature),
+    bs58.decode(original.proofKey))
 
+const renderBody = (post, state) => {
+    let html = md.render(post.latest.body.text)
+    if (post.latest.proofs) {
+        post.latest.proofs.filter(proof => proof.type === 'hand').forEach(proof => {
+            const original = state.posts.find(p => p.pid === proof.pid)
+            const genuine = verify(post.latest, proof, original)
+            if (genuine) {
+                html = html.replace(new RegExp(`~${proof.pid}`, 'g'), '<span class="mark genuine">$&</span>')
+            } else {
+                html = html.replace(new RegExp(`~${proof.pid}`, 'g'), '<span class="mark counterfeit">$&</span>')
+            }
+        })
+    }
+    return html
 }
 
 const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
@@ -104,11 +128,11 @@ const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
                     '\u00A0',
                     e('span', {}, e('a', {href: `#/${post.pid}/direct`}, 'Direct')),
                     /*'\u00A0',
-                    e('span', {className: 'action', onClick: () => { console.log(post) }}, 'Dump'),*/
+                    e('span', {className: 'action', onClick: () => { console.log(post) }}, 'Dump')*/
                 ])
             ]),
             ...(revoked ? [] : [
-                ...(post.latest.body ? [e('div', {className: 'body', dangerouslySetInnerHTML: {__html: md.render(post.latest.body.text)}})] : []),
+                ...(post.latest.body ? [e('div', {className: 'body', dangerouslySetInnerHTML: {__html: renderBody(post, state)}})] : []),
                 ...(post.latest.attachments ? [e(Attachments, {attachments: post.latest.attachments, state, dispatch})] : []),
             ])
         ]),

@@ -279,12 +279,23 @@ export default state => {
            return
         }
         const [filesFull, attachments] = await processFiles(filesToLoad)
+
+        let proofs = null
+        const signaturesMarkup = body.match(/~[a-zA-Z0-9]{64,88}/g)
+        if (signaturesMarkup) {
+            proofs = signaturesMarkup
+                .map(s => s.substring(1))
+                .map(pid => posts.find(post => post.pid === pid))
+                .map(post => ({type: 'hand', post}))
+        }
+
         const post = await createPost({
             body,
             attachments,
             nid: pr.id,
             opid,
             tags,
+            proofs,
             conversationId
         })
 

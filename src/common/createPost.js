@@ -53,12 +53,24 @@ const createPost = async ({body, attachments, nid, opid, tags, proofs, conversat
     const directKey = bs58.encode(Buffer(crypto.direct.signOrigin(bsonPost)))
 
     if (proofs) {
-        Object.assign(post, {proofs: proofs.map(proof => ({
-            signature: bs58.encode(Buffer(crypto.proof.signDerived(
-                bsonPost, Buffer.from(microjson(post)) ))),
-            type: proof.type,
-            pid: proof.post.pid
-        }))})
+        Object.assign(post, {proofs: proofs.map(proof => {
+            const result = ({
+                signature: bs58.encode(Buffer(crypto.proof.signDerived(
+                    bsonPost, Buffer.from(microjson(inner(proof.post))) ))),
+                type: proof.type,
+                pid: proof.post.pid
+            })
+            const verification = crypto.proof.verify(
+                bsonPost,
+                bs58.decode(result.signature),
+                Buffer.from(microjson(inner(proof.post))),
+                bs58.decode(proof.post.proofSignature),
+                bs58.decode(proof.post.proofKey)
+            )
+            // TODO: warn if the signature is invalid
+            return result
+        }
+        )})
     }
 
     Object.assign(post, {

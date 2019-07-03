@@ -18,6 +18,7 @@ const initialState = {
 }
 
 function copy(draft, action) {
+    draft.posts = [...action.state.posts]
     draft.postsAggregated = [...action.state.postsAggregated]
     draft.conversations = [...action.state.conversations]
     draft.contentStore = new Map(action.state.contentStore)
