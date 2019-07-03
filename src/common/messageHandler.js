@@ -213,7 +213,7 @@ export default state => {
         if (postAggregated.encrypted && postAggregated.encrypted !== 'unknown') {
             if (!plainPost.conversationId) { //this is the second post (first reply) in the conversation
                 const oPost = postsAggregated.find(pa => pa.pid === post.to[0].pid)
-                // TODO:  this must be changed if the multeperson conversation will be implemented
+                // TODO:  this must be changed if the multiperson conversation will be implemented
                 // possibly to an array of oPosts?
                 const conversation = {
                     id: `/${oPost.pid}/direct/${post.pid}`,
@@ -349,18 +349,30 @@ export default state => {
 
     const updatePost = async (update, origin, mode) => {
         let post;
+
+        let proofs = []
+        if (update.body) {
+            const signaturesMarkup = update.body.match(/~[a-zA-Z0-9]{64,88}/g)
+            if (signaturesMarkup) {
+                proofs = signaturesMarkup
+                    .map(s => s.substring(1))
+                    .map(pid => posts.find(post => post.pid === pid))
+                    .map(post => ({type: 'hand', post}))
+            }
+        }
+
         if (mode === 'patch') {
             post = await createPost({
                 nid: pr.id,
                 ...update,
-                proofs: [{type: 'patch', post: origin}]
+                proofs: [{type: 'patch', post: origin}].concat(proofs)
             })
         } else if (mode === 'put') { // untested, written just in case
             const params = {
                 nid: pr.id,
                 ...(Object.assign(update, inner(origin)))
             }
-            params.proofs = params.proogs || []
+            params.proofs = (params.proofs || []).concat(proofs)
             params.proofs.push({type: 'put', post: origin})
             post = await createPost()
         }
