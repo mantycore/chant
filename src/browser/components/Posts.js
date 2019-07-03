@@ -88,9 +88,9 @@ const renderBody = (post, state) => {
             const original = state.posts.find(p => p.pid === proof.pid)
             const genuine = verify(post.latest, proof, original)
             if (genuine) {
-                html = html.replace(new RegExp(`~${proof.pid}`, 'g'), '<span class="mark genuine">$&</span>')
+                html = html.replace(new RegExp(`~${proof.pid}`, 'g'), `<a href="#/${proof.pid}" class="mark genuine">$&</a>`)
             } else {
-                html = html.replace(new RegExp(`~${proof.pid}`, 'g'), '<span class="mark counterfeit">$&</span>')
+                html = html.replace(new RegExp(`~${proof.pid}`, 'g'), `<a href="#/${proof.pid}" class="mark counterfeit">$&</a>`)
             }
         })
     }
