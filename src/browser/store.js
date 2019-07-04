@@ -20,7 +20,9 @@ const initialState = {
         body: '',
         mode: 'put',
         post: null
-    }
+    },
+
+    displaySplash: true
 }
 
 function copy(draft, action) {
@@ -34,7 +36,12 @@ function copy(draft, action) {
 function handleUrl(draft) {
     draft.opost = null
     draft.tag = null
-    const path = window.location.hash.match('#(.*)')[1].split('/')
+    const matchData = window.location.hash.match('#(.*)')
+    if (!matchData) {
+        window.location.hash = "#/4ZtbyWyXQvtypNdUaGCUqpYKB3VjjC291QA8RGxLzEqhL1qyozfiQvbgkhRxLhMMcweqQSzdapcYfRZuXsYHMiDQ"
+        return
+    }
+    const path = matchData[1].split('/')
     if (path[0] === 'directs') {
         draft.postsMode = 'directs list'
     } else if (path[1] === '~') {
@@ -52,9 +59,11 @@ function handleUrl(draft) {
         } else {
             draft.postsMode = 'thread'
         }
-    } else {
+    } else if (path[1]) {
         draft.postsMode = 'tag'
         draft.tag = path[1]
+    } else {
+        window.location.hash = "#/4ZtbyWyXQvtypNdUaGCUqpYKB3VjjC291QA8RGxLzEqhL1qyozfiQvbgkhRxLhMMcweqQSzdapcYfRZuXsYHMiDQ"
     }
 }
 
@@ -80,6 +89,7 @@ function reducer(state = initialState, action) {
                 copy(draft, action)
                 // hacky, improve
                 if (action.mhType === 'posts initialized') {
+                    draft.displaySplash = false
                     handleUrl(draft)
                 }
                 break
