@@ -537,19 +537,21 @@ export default state => {
         if (!postInitialized) {
             try {
                 const newPosts = await getPosts(id)
-                for (const post of newPosts) {
+                for (const [index, post] of newPosts.entries()) {
+                    console.log('started', index)
                     if (!posts.find(localPost => localPost.pid == post.pid)) {
                         storePost(post)
                     }
                     //posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
                     //stateChangeHandler()
                 }
-                postInitialized = true
-                stateChangeHandler({type: 'posts initialized'})
             } catch (error) {
                 console.log("Error during saving a post", error)
                 // do nothing
             }
+            postInitialized = true
+            console.log('posts initialized')
+            stateChangeHandler({type: 'posts initialized'})
         }
     })
 
@@ -640,8 +642,8 @@ export default state => {
                     storePost(message.post)
                 }
                 //message.post.body = await getContent(message.post.bodyCid)
-                break
             }
+            break
 
             case 'put content': { //not used for now
                 const cid = await toCID(message.payload);
@@ -651,8 +653,8 @@ export default state => {
                      // TODO: optimize: do not sent the post to nodes we know already have it
                      // TODO: optimize: send only to server nodes? or, better, send to all nodes, but only server nodes should store it.
                 }
-                break
             }
+            break
 
             case 'get content': { // todo: split to query (~= head) and get
                 const payload = contentStore.get(message.cid)
@@ -661,30 +663,33 @@ export default state => {
                 } else {
                     broadcast(forwardedMessage, true)
                 }
-                break
             }
+            break
+
             case 'content found': {
                 handleReply(message, message.payload)
-                break
             }
+            break
 
             case 'ping': {
                 pr_send(from, {type: 'pong', inReplyTo: message.mid})
-                break
             }
+            break
+
             case 'pong': 
                 handleReply(message)
-                break
+            break
 
             case 'get posts': {
                 pr_send(forwardedMessage.origin, {type: 'put posts', posts, inReplyTo: message.mid})
                 broadcast(forwardedMessage)
-                break
             }
+            break
+
             case 'put posts': {
                 handleReply(message, message.posts)
-                break
             }
+            break
         }
     })
 }

@@ -51,13 +51,23 @@ const App = ({state}) => {
 */
 
 
-const App = ({state}) => e('div', {id: 'app'}, [
+/*const App = ({state}) =>  e('div', {id: 'app'}, [
     e('div', {id: 'top'}, [e(Tags), e(Status)]),
     (state.displaySplash
         ? e(Splash)
         : e(Posts)
     ),
     e(PostForm)
-])
+])*/
+const App = ({state}) => (
+    <div id="app">
+        <div id="top"><Tags /><Status /></div>
+        {state.displaySplash
+            ? <Splash />
+            : <Posts />
+        }
+        <PostForm />
+    </div>
+)
 
 export default connect(state => ({state}))(App)

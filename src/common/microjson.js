@@ -1,4 +1,5 @@
-const microjson = entity => {
+// @flow
+const microjson = (entity: any): string => {
     if (typeof entity === 'string' || typeof entity === 'number') {
         return JSON.stringify(entity)
     }

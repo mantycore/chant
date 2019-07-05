@@ -26,8 +26,8 @@ async function stateChangeHandler(type, payload) {
                     INTO posts(pid, opid, timestamp, rest)
                     VALUES (?, ?, ?, ?)`,
                     [pid, opid, timestamp, JSON.stringify(rest)])
-            break
         }
+        break
         case 'put attachment': {
             if (payload.attachment.private) {
                 // Do not save decrypted content.
@@ -41,11 +41,11 @@ async function stateChangeHandler(type, payload) {
                     INTO attachments(cid, timestamp, rest, buffer)
                     VALUES (?, ?, ?, ?)`,
                     [payload.cid, new Date().getTime(), JSON.stringify(rest), buffer])
-            break
         }
+        break
         case 'put peer':
         case 'delete peer':
-            break
+        break
         default:
             console.log('Unknown storage action', type)
     }

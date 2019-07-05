@@ -1,0 +1,9 @@
+{
+	"presets": [
+		["@babel/preset-env",{"exclude": ["transform-async-to-generator", "transform-regenerator"]}],
+		"@babel/preset-react",
+		"@babel/flow"
+	],
+		"plugins": [["module:fast-async", { "spec": true }],
+	]
+}
