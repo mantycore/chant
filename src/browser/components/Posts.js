@@ -5,8 +5,7 @@ import MarkdownIt from 'markdown-it'
 import { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import crypto from 'Common/crypto.js'
-import microjson from 'Common/microjson.js'
-import { inner } from 'Common/createPost.js' // TODO: move to another location, combine with Buffer and microjson
+import asBuffer from 'Psalm/asBuffer.js'
 
 const md = new MarkdownIt()
 
@@ -76,9 +75,9 @@ const Attachments = ({attachments, state, dispatch}) =>
 
 //TODO: handle this in aggregate
 const verify = (post, proof, original) => crypto.proof.verify(
-    Buffer.from(microjson(inner(post))),
+    asBuffer(post),
     bs58.decode(proof.signature),
-    Buffer.from(microjson(inner(original))),
+    asBuffer(original),
     bs58.decode(original.proofSignature),
     bs58.decode(original.proofKey))
 

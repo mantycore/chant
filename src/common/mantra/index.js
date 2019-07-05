@@ -23,14 +23,15 @@ const messagesProcessed = new Set()
     TODO: regularize the scheme
 */
 
+let postInitialized = false
+
 const addHandlers = ({
     pr,
     peers,
     posts,
     getStateChangeHandler,
-    getPostInitialized,
-    setPostInitialized,
-    storePost
+    storePost,
+    contentStore
 }) => {
     pr.on('peer', async id => {
         log.info('PEER', id.toString('hex', 0, 2))
@@ -38,7 +39,7 @@ const addHandlers = ({
             peers.add(id)
             getStateChangeHandler()('put peer', {nid: id})
         }
-        if (!getPostInitialized()) {
+        if (!postInitialized) {
             try {
                 const newPosts = await getPosts(id, pr)
                 for (const post of newPosts) {
@@ -52,7 +53,7 @@ const addHandlers = ({
                 log.error("Error during saving a post", error)
                 // do nothing
             }
-            setPostInitialized(true)
+            postInitialized = true
             log.info('posts initialized')
             getStateChangeHandler()({type: 'posts initialized'})
         }

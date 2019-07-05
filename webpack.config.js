@@ -5,6 +5,7 @@ const resolve = {
     alias: {
         Common: path.resolve(__dirname, 'src/common/'),
         Mantra: path.resolve(__dirname, 'src/common/mantra/'),
+        Psalm: path.resolve(__dirname, 'src/common/psalm/'),
         Tools: path.resolve(__dirname, 'tools/') //TODO: think about better solution
     }
 }
@@ -47,9 +48,9 @@ module.exports = [
         output: {
             filename: 'server.js'
         },
-        /*optimization: {
+        optimization: {
             minimize: false
-        },*/
+        },
         externals: { 'sqlite3':'commonjs sqlite3', }
     },
     {

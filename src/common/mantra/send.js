@@ -1,13 +1,23 @@
+// @flow
+import type { Message, MessageWithId } from 'Mantra/.flow/message.js'
 import log from 'Common/log.js'
 
-const send = (id, message, binary = false, pr) => {
-    const newMessage = Object.assign({}, message)
-    let mid
-    if (message.mid) {
+const send = (
+    id: any,
+    message: Message | MessageWithId,
+    binary: boolean = false,
+    pr: any
+) => {
+    const newMessage: Message | MessageWithId = Object.assign({}, message)
+    let mid: string
+
+    if (typeof message.mid === 'string') {
         mid = message.mid
     } else {
         mid = new Date().toISOString()
-        Object.assign(newMessage, {mid})
+        Object.assign(((newMessage: any): MessageWithId), {mid})
+        // I do not want to create a new object, so
+        // I need to unstafely cast Message to MessageWithId
     }
     if (message.type !== 'ping' && message.type !== 'pong') {
         log.info("SEND", id.toString('hex', 0, 2), message)

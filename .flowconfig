@@ -9,5 +9,6 @@
 [options]
 
 module.name_mapper='^Common' ->'<PROJECT_ROOT>/src/common'
+module.name_mapper='^Mantra' ->'<PROJECT_ROOT>/src/common/mantra'
 
 [strict]
