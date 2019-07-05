@@ -4,7 +4,8 @@ import { store } from './reactRoot.js'
 import { pass } from './browserCrypto.js'
 
 const state = {
-    pr: new PeerRelay({bootstrap: ['wss://chant.anoma.li:7001']}),
+    //pr: new PeerRelay({bootstrap: ['wss://chant.anoma.li:7001']}),
+    pr: new PeerRelay({bootstrap: ['ws://localhost:7001']}),
     isServerNode: false
 }
 

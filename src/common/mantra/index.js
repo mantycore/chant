@@ -3,11 +3,13 @@ import log from 'Common/log.js'
 import send from './send.js'
 import broadcast from './broadcast.js'
 import { handleReply } from './reply.js'
-import { getPosts } from './request/'
+import { getPosts } from './request/get/'
 
 // Set.prototype.has, but for .equals equality
 const has = (set, nid) =>
     Array.from(set.values()).reduce((acc, cur) => acc || cur.equals(nid), false)
+
+const messagesProcessed = new Set()
 
 /*
     messages scheme:
@@ -28,8 +30,7 @@ const addHandlers = ({
     getStateChangeHandler,
     getPostInitialized,
     setPostInitialized,
-    storePost,
-    messagesProcessed
+    storePost
 }) => {
     pr.on('peer', async id => {
         log.info('PEER', id.toString('hex', 0, 2))

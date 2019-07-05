@@ -11,8 +11,8 @@ import nacl from 'tweetnacl'
 import base64 from 'base64-js'
 
 import addHandlers from './mantra/'
-import { waitForReply } from './mantra/reply.js'
-import { getContent } from './mantra/request/'
+import { getContent, ping } from './mantra/request/get/'
+import broadcast from './mantra/broadcast.js'
 
 const asBuffer = post => Buffer.from(microjson(inner(post)))
 
@@ -251,22 +251,18 @@ export default state => {
     posts.forEach(post => aggregate(post))
     // TODO: move to a separate module -------------------------------------------------------------
 
-    const messagesProcessed = new Set()
-
-    const generatePId = () => `${pr.id.toString('hex')}:${new Date().toISOString()}`
+    //const generatePId = () => `${pr.id.toString('hex')}:${new Date().toISOString()}`
+    //obsolete
 
     let stateChangeHandler = () => {} // TODO: replace with messages
     const onStateChange = handler => stateChangeHandler = handler
-
-    // --- REPLIES ---
-
 
     // --- PUTTERS ---
 
     const putContent = async payload => {
         const cid = await toCID(payload)
         contentStore.set(cid, payload)
-        broadcast({type: 'put content', payload})
+        broadcast({type: 'put content', payload}, false, peers, pr)
         return cid
     }
 
@@ -294,7 +290,7 @@ export default state => {
             bs58.decode(origin.proofKey)
         ))*/
         putPostToStore(post)
-        broadcast({type: 'put post', post})
+        broadcast({type: 'put post', post}, false, peers, pr)
     }
 
     const updatePost = async (update, origin, mode) => {
@@ -327,7 +323,7 @@ export default state => {
             post = await createPost()
         }
         putPostToStore(post)
-        broadcast({type: 'put post', post})
+        broadcast({type: 'put post', post}, false, peers, pr)
     }
 
     const putPost = async({body, filesToLoad, opid, tags, to, conversationId}) => {
@@ -417,7 +413,7 @@ export default state => {
 
             //const decrypted = crypto.direct.decrypt(encrypted, Buffer.from(microjson(inner(toPost))))
             putPostToStore(encryptedPost)
-            broadcast({type: 'put post', post: encryptedPost})
+            broadcast({type: 'put post', post: encryptedPost}, false, peers, pr)
             return encryptedPost.pid
         } else {
             if (post.body) {
@@ -429,13 +425,10 @@ export default state => {
             })
 
             putPostToStore(post)
-            broadcast({type: 'put post', post})
+            broadcast({type: 'put post', post}, false, peers, pr)
             return post.pid
         }
     }
-
-    // --- GETTERS ---
-
 
     // --- THINGS THAT USE GETTERS ---
 
@@ -488,7 +481,7 @@ export default state => {
         contentStore,
         posts,
         postsAggregated,
-        messagesProcessed,
+        // messagesProcessed, // mantra/ internal
         conversations,
 
         putContent,
@@ -510,8 +503,6 @@ export default state => {
         crypto
     })
 
-
-
     addHandlers({
         pr,
         peers,
@@ -520,7 +511,6 @@ export default state => {
         getPostInitialized: () => postInitialized,
         setPostInitialized: (value) => { postInitialized = value },
         storePost,
-        messagesProcessed,
         contentStore,
     })
 }

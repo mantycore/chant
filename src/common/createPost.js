@@ -49,13 +49,13 @@ const createPost = async ({body, attachments, nid, opid, tags, proofs, conversat
       ------------------------*/
     const bsonPost = Buffer.from(microjson(post)) // is it good enough?
     const pid = bs58.encode(nacl.hash(Buffer.from(microjson(({post, nid})))))
-    const [proofKey, proofSignature] = crypto.proof.signOrigin(bsonPost).map(Buffer).map(bs58.encode)
-    const directKey = bs58.encode(Buffer(crypto.direct.signOrigin(bsonPost)))
+    const [proofKey, proofSignature] = crypto.proof.signOrigin(bsonPost).map(Buffer.from).map(bs58.encode)
+    const directKey = bs58.encode(Buffer.from(crypto.direct.signOrigin(bsonPost)))
 
     if (proofs) {
         Object.assign(post, {proofs: proofs.map(proof => {
             const result = ({
-                signature: bs58.encode(Buffer(crypto.proof.signDerived(
+                signature: bs58.encode(Buffer.from(crypto.proof.signDerived(
                     bsonPost, Buffer.from(microjson(inner(proof.post))) ))),
                 type: proof.type,
                 pid: proof.post.pid
