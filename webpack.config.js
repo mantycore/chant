@@ -11,6 +11,19 @@ const resolve = {
 const myModule = {
     rules: [
         {
+            test: /\.css$/i,
+            use: 'style-loader'
+        },
+        {
+            test: /\.css$/i,
+            loader: 'css-loader',
+            options: {
+                modules: {
+                    localIdentName: '[path][name]__[local]--[hash:base64:5]'
+                }
+            }
+        },
+        {
             test: /\.txt$/i,
             use: 'raw-loader',
         },

@@ -17,8 +17,10 @@
     "@babel/preset-flow": "^7.0.0",
     "fast-async": "^6.3.8",
     "flow-bin": "^0.102.0",
+    "css-loader": "^3.0.0",
     "raw-loader": "^3.0.0",
     "sloc": "^0.2.1",
+    "style-loader": "^0.23.1",
     "webpack": "^4.35.0",
     "webpack-cli": "^3.3.5"
   },
