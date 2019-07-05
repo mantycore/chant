@@ -17,8 +17,6 @@ const selectThreadsByTag = (state, tag) => tag &&
 const selectPostsByThreadPid = (state, pid) => thread &&
     state.postsAggregated.filter(post => post.result.opid === pid)
 
-
-
 export {
     selectTags,
     selectThreadsByTag,

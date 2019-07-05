@@ -22,6 +22,7 @@ if (!secretCode) {
 }
 
 store.dispatch({type: 'init', state})
-state.onStateChange(({type, payload}) => store.dispatch({type: 'update', state, mhType: type, mhPayload: payload}))
+state.onStateChange(({type, payload}) => 
+    store.dispatch({type: 'update', state, mhType: type, mhPayload: payload}))
 window.addEventListener('hashchange', (event) =>
     store.dispatch({type: 'hashchange', event}))

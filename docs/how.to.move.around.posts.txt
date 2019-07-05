@@ -1,0 +1,3 @@
+p = chant.posts.find(p=>p.pid === "34rVJu5Aq45BN39RYiG4kFndaxyL97iEVAJCbugtVNoKXnotb49W2CLPHnoWYko9rDgVedDhvNPbDkJEh1NYH6wi")
+
+chant.updatePost({opid: '4iVzjT8TH9QsKLm3hE5LvakW29Lb9VN1MMvZHpzx5uU6CHCtfoBXrNKdCJmSzQrgnvYXfDsYFxYhgeeNF5x8AKPP', tags: '$delete'}, p, 'patch')

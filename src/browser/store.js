@@ -68,7 +68,7 @@ function handleUrl(draft) {
 }
 
 function reducer(state = initialState, action) {
-    console.log("RDCR", action)
+    // console.log("RDCR", action)
     const newState = produce(state, draft => {
         switch (action.type) {
             case 'attachment load start':

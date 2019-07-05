@@ -4,6 +4,7 @@ const path = require('path')
 const resolve = {
     alias: {
         Common: path.resolve(__dirname, 'src/common/'),
+        Mantra: path.resolve(__dirname, 'src/common/mantra/'),
         Tools: path.resolve(__dirname, 'tools/') //TODO: think about better solution
     }
 }
