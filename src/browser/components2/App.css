@@ -1,0 +1,25 @@
+.chant {
+    display: flex;
+    height: 100vh;
+}
+
+.tags {
+    width: 9em;
+    min-width: 9em;
+}
+
+.threads {
+    width: 12em;
+    min-width: 12em;
+}
+
+.thread {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.posts {
+    flex-grow: 1;
+    overflow-y: scroll;
+}
