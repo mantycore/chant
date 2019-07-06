@@ -41,7 +41,7 @@ and attachments, indexed by (mostly) IPFS compatible CIDs.
     </tr>
     <tr>
         <td>version control</td>
-        <td colspan="2">(Surah)</td>
+        <td colspan="2">post with its version history (Surah)</td>
     </tr> 
     <tr>
         <td>content encoding</td>
