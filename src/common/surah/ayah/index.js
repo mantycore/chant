@@ -6,21 +6,21 @@ export { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import crypto from 'Common/crypto.js'
 
-const ayat = (post, plainPost, directSide, suwar) => {
+const ayat = (payload, psalm, directSide, suwar) => {
     let surah
 
     if (directSide !== 'unknown') {
-        const updateProof = plainPost.proofs && plainPost.proofs.find(proof =>
-            proof.type === 'put' ||
-            proof.type === 'patch' ||
-            proof.type === 'delete')
+        const updateAyah = psalm.proofs && psalm.proofs.find(ayah =>
+            ayah.type === 'put' ||
+            ayah.type === 'patch' ||
+            ayah.type === 'delete')
         // there should be no more than one
-        if (updateProof) {
+        if (updateAyah) {
             //case 1: post has put/delete proofs, so there must be an original in pa
-            surah = suwar.find(curSurah => curSurah.pid === updateProof.pid) // TODO: or else
-            surah.posts.push(plainPost)
-            surah.posts.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-            //surah.latest = surah.posts[surah.posts.length - 1]
+            surah = suwar.find(curSurah => curSurah.pid === updateAyah.pid) // TODO: or else
+            surah.psalms.push(psalm)
+            surah.psalms.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+            //surah.latest = surah.psalms[surah.psalms.length - 1]
 
             // curently this is the code for body updating only.
             // it doesn't support attachemnt addition or deletion,
@@ -28,89 +28,92 @@ const ayat = (post, plainPost, directSide, suwar) => {
             // generally, primitive values are updated correctly,
             // but arrays can be put but not patched.
             // TODO: massive rewrite?
-            let result = {
+            let resultPsalm = { // its type differs from the ordinary Psalm; maybe store it differently?
                 ...inner(surah.origin),
                 ...(surah.origin.proofs ? {proofs: [...surah.origin.proofs]} : {}),
                 ...(surah.origin.contentMap ? {contentMap: {...surah.origin.contentMap}} : {})
             }
 
             // leaks 'from' field to other nodes!!!
-            if (result.proofs) {
-                for (const proof of result.proofs) {
-                    Object.assign(proof, {from: surah.pid})
+            if (resultPsalm.proofs) {
+                resultPsalm.ayat = []
+                for (const ayah of resultPsalm.proofs) {
+                    resultPsalm.ayat.push({...ayah, from: surah.origin.pid})
                 }
             }
 
-            for (const postVersion of surah.posts) {
-                const versionProof = postVersion.proofs && postVersion.proofs.find(curProof => curProof.pid === surah.pid)
-                if (versionProof) { //there is no proof only if this is origin
-                    if (verify(postVersion, versionProof, surah.origin)) {
-                        switch (versionProof.type) {
+            for (const versionPsalm of surah.psalms) {
+                const versionAyah = versionPsalm.proofs && versionPsalm.proofs.find(curAyah => curAyah.pid === surah.pid)
+                if (versionAyah) { //there is no proof only if this is origin
+                    if (verify(versionPsalm, versionAyah, surah.origin)) {
+                        switch (versionAyah.type) {
                             case 'patch':
-                                Object.assign(result, inner(postVersion))
+                                Object.assign(resultPsalm, inner(versionPsalm))
 
-                                result.proofs = result.proofs || []
-                                for (const p of postVersion.proofs) {
-                                    if (!surah.origin.proofs || !surah.origin.proofs.find(pp => pp.pid === p.pid)) {
+                                resultPsalm.ayat = resultPsalm.ayat || []
+                                for (const curAyah of versionPsalm.proofs) {
+                                    if (!surah.origin.proofs || !surah.origin.proofs.find(originalAyah => originalAyah.pid === curAyah.pid)) {
                                         // todo: decide if it is necessary or safe to push updating proofs
-                                        result.proofs.push({...p, from: postVersion.pid})
+                                        resultPsalm.ayat.push({...curAyah, from: versionPsalm.pid})
                                     }
                                 }
                                 
-                                if (result.contentMap || postVersion.contentMap) {
-                                    result.contentMap = postVersion.contentMap && Object.keys(postVersion.contentMap).length > 0
-                                        ? postVersion.contentMap
-                                        : result.contentMap // replaced only if the patch has new content map
+                                if (resultPsalm.contentMap || versionPsalm.contentMap) {
+                                    resultPsalm.contentMap = versionPsalm.contentMap && Object.keys(versionPsalm.contentMap).length > 0
+                                        ? versionPsalm.contentMap
+                                        : resultPsalm.contentMap // replaced only if the patch has new content map
                                 }
-                                Object.keys(result).forEach(key => {
-                                    if (result[key] === '$delete') {
-                                        delete result[key] // somewhat hacky
+                                Object.keys(resultPsalm).forEach(key => {
+                                    if (resultPsalm[key] === '$delete') {
+                                        delete resultPsalm[key] // somewhat hacky
                                     }
                                 })
                                 break
                             case 'put':
-                                result = {...inner(postVersion)}
-                                result.proofs = postVersion.proofs //are always replaced whole!
-                                if (postVersion.contentMap) {
-                                    result.contentMap = postVersion.contentMap
+                                resultPsalm = {...inner(versionPsalm)}
+                                resultPsalm.proofs = versionPsalm.proofs //are always replaced whole!
+                                //todo: add from?
+                                if (versionPsalm.contentMap) {
+                                    resultPsalm.contentMap = versionPsalm.contentMap
                                 }
                                 break
                             case 'delete':
-                                Object.assign(result, {revoked: true})
+                                Object.assign(resultPsalm, {revoked: true})
                         }
                     } else {
-                        console.error('Counterfeit proof in the post history', postVersion, versionProof, surah.origin)
+                        console.error('Counterfeit proof in the post history', versionPsalm, versionAyah, surah.origin)
                     }
                 }
             }
-            surah.result = result
+            surah.result = resultPsalm
         } else {
             //case 2: post has no proofs, so it must be new
 
             /*console.log("LOAD CHECK")
-            console.log(plainPost.directKey)
-            console.log(microjson(inner(plainPost)))
-            console.log(bs58.encode( Buffer.from(microjson(inner(plainPost))) ))
-            console.log(bs58.encode(crypto.direct.signOrigin( Buffer.from(microjson(inner(plainPost))) )))
-            console.log(bs58.decode(plainPost.directKey).equals(Buffer.from(crypto.direct.signOrigin( Buffer.from(microjson(inner(plainPost))) ))))
+            console.log(psalm.directKey)
+            console.log(microjson(inner(psalm)))
+            console.log(bs58.encode( Buffer.from(microjson(inner(psalm))) ))
+            console.log(bs58.encode(crypto.direct.signOrigin( Buffer.from(microjson(inner(psalm))) )))
+            console.log(bs58.decode(psalm.directKey).equals(Buffer.from(crypto.direct.signOrigin( Buffer.from(microjson(inner(psalm))) ))))
             */
 
             surah = {
-                pid: plainPost.pid,
-                posts: [plainPost],
-                origin: plainPost,
-                //latest: plainPost,
-                result: plainPost,
+                pid: psalm.pid,
+                psalms: [psalm],
+                origin: psalm,
+                //latest: psalm,
+                result: {...psalm},
                 //TODO: move to a separate file?
-                my: bs58.decode(plainPost.directKey).equals(      // Buffer
+                my: bs58.decode(psalm.directKey).equals(      // Buffer
                     Buffer.from(                             // Buffer
                         crypto.direct.signOrigin(            // Uint8Array
-                            asBuffer(plainPost))))                // Buffer
+                            asBuffer(psalm))))                // Buffer
             }
             // leaks 'from' field to other nodes!!!
-            if (plainPost.proofs) {
-                for (const proof of plainPost.proofs) {
-                    Object.assign(proof, {from: surah.pid})
+            if (psalm.proofs) {
+                surah.result.ayat = []
+                for (const proof of psalm.proofs) {
+                    surah.result.ayat.push({...ayah, from: surah.pid})
                 }
             }
             if (directSide) {
