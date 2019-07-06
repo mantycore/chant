@@ -50,7 +50,7 @@ and attachments, indexed by (mostly) IPFS compatible CIDs.
     <tr>
         <td>encryption</td>
         <td>(unencrypted Psalm)</td>
-        <td>direct private message (Haiku)</td>
+        <td>direct private message, asymmetrically encrypted (Haiku)</td>
     </tr> 
     <tr>
         <td>content routing</td>
