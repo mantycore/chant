@@ -6,6 +6,10 @@ import { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import crypto from 'Common/crypto.js'
 import asBuffer from 'Psalm/asBuffer.js'
+import style from './Posts.css'
+
+//TODO: handle this in aggregate
+import verify from 'Surah/ayah/verify.js'
 
 const md = new MarkdownIt()
 
@@ -69,23 +73,14 @@ const Image = ({attachment, state, dispatch}) =>
         ])
 
 const Attachments = ({attachments, state, dispatch}) =>
-    e('div', {style: {display: 'flex', flexDirection: 'row', marginBottom: 16}}, attachments
+    (<div className={style.attachments}>{attachments
         .filter(attachment => attachment.type === 'image/png' || attachment.type === 'image/jpeg')
-        .map(attachment => e(Image, {attachment, state, dispatch})))
-
-//TODO: handle this in aggregate
-const verify = (post, proof, original) =>
-    crypto.proof.verify(
-    asBuffer(post),
-    bs58.decode(proof.signature),
-    asBuffer(original),
-    bs58.decode(original.proofSignature),
-    bs58.decode(original.proofKey))
+        .map(attachment => e(Image, {attachment, state, dispatch}))}</div>)
 
 const renderBody = (post, state) => {
     let html = md.render(post.result.body.text)
-    if (post.result.proofs) {
-        post.result.proofs.filter(proof => proof.type === 'hand').forEach(proof => {
+    if (post.result.ayat) {
+        post.result.ayat.filter(proof => proof.type === 'hand').forEach(proof => {
             const original = state.posts.find(p => p.pid === proof.pid)
             const from = state.posts.find(p => p.pid === proof.from)
             const genuine = verify(from, proof, original)

@@ -112,7 +112,7 @@ const ayat = (payload, psalm, directSide, suwar) => {
             // leaks 'from' field to other nodes!!!
             if (psalm.proofs) {
                 surah.result.ayat = []
-                for (const proof of psalm.proofs) {
+                for (const ayah of psalm.proofs) {
                     surah.result.ayat.push({...ayah, from: surah.pid})
                 }
             }
