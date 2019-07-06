@@ -4,9 +4,9 @@ import bs58 from 'bs58'
 
 const initialState = {
     peers: new Set(),
-    postsAggregated: [],
+    suwar: [],
     contentStore: new Map(),
-    conversations: [],
+    rengashu: [],
     getAndStoreContent: () => {},
     putPost: () => {},
     revoke: () => {},
@@ -27,8 +27,8 @@ const initialState = {
 
 function copy(draft, action) {
     draft.posts = [...action.state.posts]
-    draft.postsAggregated = [...action.state.postsAggregated]
-    draft.conversations = [...action.state.conversations]
+    draft.suwar = [...action.state.suwar]
+    draft.rengashu = [...action.state.rengashu]
     draft.contentStore = new Map(action.state.contentStore)
     draft.peers = new Set(action.state.peers)
 }
@@ -47,7 +47,7 @@ function handleUrl(draft) {
     } else if (path[1] === '~') {
         draft.postsMode = 'tilde'
     } else if (path[1] && bs58.decode(path[1]).length === 64) {
-        draft.opost = draft.postsAggregated.find(post => post.pid === path[1])
+        draft.opost = draft.suwar.find(surah => surah.pid === path[1])
         //TODO: or else!
         if (path[2] && path[2] === 'direct') {
             if (path[3] && bs58.decode(path[3]).length === 64) {

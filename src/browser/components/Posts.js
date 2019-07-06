@@ -99,13 +99,13 @@ const renderBody = (post, state) => {
     return html
 }
 
-const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
+const Post = ({post, state, dispatch, mini = false, renga = null}) => {
     const updateProof = post.result.proofs && post.result.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
     const revoked = post.result.revoked
-    const thread = conversation
-        ? conversation.posts.slice(1)
-        : state.postsAggregated.filter(threadPost =>
-            threadPost.result.opid === post.pid)
+    const thread = renga
+        ? renga.suwar.slice(1)
+        : state.suwar.filter(curSurah =>
+            curSurah.result.opid === post.pid)
     return e('div', {}, [
         e('div', {className: [
                 'post',
@@ -115,7 +115,7 @@ const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
             e('div', {className: 'meta'}, [
                 e('span', {style: {flexGrow: 1}}, 
                     e('a', {
-                        href: conversation ? `#${conversation.id}` : `#/${post.pid}`
+                        href: renga ? `#${renga.id}` : `#/${post.pid}`
                     }, [
                         post.pid.substring(0, 8),
                         ' ',
@@ -139,12 +139,12 @@ const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
             ])
         ]),
         ...(!mini && thread.length > 0 ? [e('div', {className: 'thread'}, thread.length > 3 ? [
-                e(Post, {post: thread[0], state, dispatch, mini: 'true', conversation}),
+                e(Post, {post: thread[0], state, dispatch, mini: 'true', renga}),
                 e('div', {className: 'more'}, e('a', {
-                    href: conversation ? `#${conversation.id}` : `#/${post.pid}`
+                    href: renga ? `#${renga.id}` : `#/${post.pid}`
                 }, `${thread.length - 2} more post(s)`)),
-                e(Post, {post: thread[thread.length-1], state, dispatch, mini: 'true', conversation}),
-            ] : [thread.map(threadPost => e(Post, {post: threadPost, state, dispatch, mini: 'true', conversation}))]
+                e(Post, {post: thread[thread.length-1], state, dispatch, mini: 'true', renga}),
+            ] : [thread.map(threadPost => e(Post, {post: threadPost, state, dispatch, mini: 'true', renga}))]
             )] : [])
     ])
 }
@@ -152,23 +152,23 @@ const Post = ({post, state, dispatch, mini = false, conversation = null}) => {
 
 
 const Posts = ({state, dispatch}) => {
-    const findReplies = post => state.postsAggregated.filter(pa =>
-        pa.to && pa.to.filter(to => to.pid === post.pid).length > 0)
+    const findReplies = post => state.suwar.filter(curSurah =>
+        curSurah.to && curSurah.to.filter(to => to.pid === post.pid).length > 0)
     /*const findRepliesRecursively = post => {
         const replies = findReplies(post)
         return replies.concat(...replies.map(findRepliesRecursively))
     }*/
-    const findConversation = conversationId => state.postsAggregated.filter(pa =>
-        pa.conversationId === conversationId)
+    const findRenga = id => state.suwar.filter(curSurah =>
+        curSurah.conversationId === id)
 
-    let posts = [...state.postsAggregated]
+    let posts = [...state.suwar]
     let oPost = null
     if (state.postsMode === 'directs list') {
         //roundabout due to conversations strucure, rewrite
-        return e('div', {id: 'posts'}, state.conversations.map(conversation => {
-            const first = conversation.posts.find(post => post.pid === conversation.firstPid)
+        return e('div', {id: 'posts'}, state.rengashu.map(renga => {
+            const first = renga.suwar.find(curSurah => curSurah.pid === renga.firstPid)
             return [
-                e(Post, {post: first, state, dispatch, mini: false, conversation}),
+                e(Post, {post: first, state, dispatch, mini: false, renga}),
             ]
         }))
     }
@@ -178,16 +178,16 @@ const Posts = ({state, dispatch}) => {
         posts = posts.filter(post => post.result.tags && post.result.tags.includes(state.tag))
     } else if (state.postsMode === 'thread') {
         oPost = state.opost;
-        posts = state.postsAggregated.filter(post =>
-            post.result.opid === state.opost.pid)
+        posts = state.suwar.filter(curSurah =>
+            curSurah.result.opid === state.opost.pid)
     } else if (state.postsMode === 'direct') {
         oPost = state.opost // sort
         posts = []
         //posts = findReplies(oPost)
     } else if (state.postsMode === 'direct conversation') {
-        const conversation = state.conversations.find(conversation => conversation.id === state.conversationId)
-        if (conversation) {
-            [oPost, ...posts] = conversation.posts
+        const renga = state.rengashu.find(curRenga => curRenga.id === state.conversationId)
+        if (renga) {
+            [oPost, ...posts] = renga.suwar
         } else {
             return e('div', {id: 'error'}, "Conversation is not found or is not accessible")
         }

@@ -38,8 +38,8 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
         encrypted = true
     }
     if (state.postsMode === 'direct conversation') {
-        const conversation = state.conversations.find(conv => conv.id === state.conversationId)
-        protoPost.to = conversation.posts[0].my ? conversation.secondPid : conversation.firstPid // can fail if the conversation is malformed
+        const renga = state.rengashu.find(curRenga => curRenga.id === state.conversationId)
+        protoPost.to = renga.suwar[0].my ? renga.secondPid : renga.firstPid // can fail if the conversation is malformed
         // think about it. What if both sides are mine?
         protoPost.conversationId = state.conversationId
         placeholder = `⚿ Encrypted direct message to ~${protoPost.to.substring(0, 8)} ⚿`

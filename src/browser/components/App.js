@@ -13,7 +13,7 @@ const App = ({state}) => {
     const [tag, updateTag] = useState(null)
     const [thread, updateThread] = useState(null)
 
-    const tags = Object.entries(state.postsAggregated.reduce((acc, cur) => {
+    const tags = Object.entries(state.suwar.reduce((acc, cur) => {
         if ('tags' in cur.result) {
             cur.result.tags.forEach(tag => {
                 if (tag in acc) {
@@ -28,12 +28,12 @@ const App = ({state}) => {
 
     let threads = null
     if (tag) {
-        threads = state.postsAggregated.filter(post => post.result.tags && post.result.tags.includes(tag)) // TODO: sort on the latest comment in the thread = bump (if not sage)
+        threads = state.suwar.filter(post => post.result.tags && post.result.tags.includes(tag)) // TODO: sort on the latest comment in the thread = bump (if not sage)
     }
 
     let posts = null
     if (thread) {
-        posts = state.postsAggregated.filter(post => post.result.opid === thread)
+        posts = state.suwar.filter(post => post.result.opid === thread)
     }
 
     return e('div', {className: 'chant', style: {display: 'flex', height: '100vh'}}, [ // main

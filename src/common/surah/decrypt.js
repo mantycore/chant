@@ -6,7 +6,7 @@ import asBuffer from 'Psalm/asBuffer.js'
 
 const decrypt = (
     post,
-    postsAggregated,
+    suwar,
     contentStore,
     getStateChangeHandler,
     getAndStoreContent
@@ -27,7 +27,7 @@ const decrypt = (
             let origin;
             let encryptedKey;
             post.to.forEach(recipient => {
-                const originCandidate = postsAggregated.find(pa => pa.pid === recipient.pid)
+                const originCandidate = suwar.find(curSurah => curSurah.pid === recipient.pid)
                 if (originCandidate && originCandidate.my) {
                     origin = originCandidate
                     encryptedKey = base64.toByteArray(recipient.key)
@@ -65,7 +65,8 @@ const decrypt = (
         plainPost = post
     }
 
-    return {plainPost, directSide}
+    const psalm = plainPost
+    return {psalm, directSide}
 }
 
 export default decrypt

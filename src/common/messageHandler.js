@@ -44,15 +44,15 @@ export default state => {
     }
     // TODO: move to a separate module -------------------------------------------------------------
     const posts = state.posts || []
-    const postsAggregated = []
-    const conversations = []
+    const suwar = []
+    const rengashu = []
 
     posts.forEach(post => aggregate(
         post,
-        postsAggregated, // modified as a result
+        suwar, // modified as a result
         contentStore, // modified as a result
         () => stateChangeHandler, // called as a result
-        conversations, // modified as a result
+        rengashu, // modified as a result
         getAndStoreContent
     ))
     // TODO: move to a separate module -------------------------------------------------------------
@@ -71,15 +71,15 @@ export default state => {
             delete post.opid // hacky, improve
         }
         posts.push(post)
-        const postAggregated = aggregate(
+        const surah = aggregate(
             post,
-            postsAggregated, // modified as a result
+            suwar, // modified as a result
             contentStore, // modified as a result
             () => stateChangeHandler, // called as a result
-            conversations, // modified as a result
+            rengashu, // modified as a result
             getAndStoreContent
         )
-        stateChangeHandler('put post', {post, postAggregated})
+        stateChangeHandler('put post', {post, surah})
     }
 
     const revoke = async origin => {
@@ -160,7 +160,7 @@ export default state => {
 
         if (to) {
             const nonce = bs58.decode(post.pid).slice(0, 24)
-            const toPost = postsAggregated.find(curPost => curPost.pid === to)
+            const toPost = suwar.find(curSurah => curSurah.pid === to)
             const recipientDirectKey = bs58.decode(toPost.origin.directKey)
             const secretKey = crypto.direct.secretKey(recipientDirectKey, nonce)
 
@@ -270,9 +270,9 @@ export default state => {
         peers,
         contentStore,
         posts,
-        postsAggregated,
+        suwar,
         // messagesProcessed, // mantra/ internal
-        conversations,
+        rengashu,
 
         putContent,
         getContent, // mantra/request

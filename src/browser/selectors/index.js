@@ -1,4 +1,4 @@
-const selectTags = state => Object.entries(state.postsAggregated.reduce((acc, cur) => {
+const selectTags = state => Object.entries(state.suwar.reduce((acc, cur) => {
     if ('tags' in cur.result) {
         cur.result.tags.forEach(tag => {
             if (tag in acc) {
@@ -12,10 +12,10 @@ const selectTags = state => Object.entries(state.postsAggregated.reduce((acc, cu
 }, {}))
 
 const selectThreadsByTag = (state, tag) => tag &&
-    state.postsAggregated.filter(post => post.result.tags && post.result.tags.includes(tag)) // TODO: sort on the latest comment in the thread = bump (if not sage)
+    state.suwar.filter(surah => surah.result.tags && surah.result.tags.includes(tag)) // TODO: sort on the latest comment in the thread = bump (if not sage)
 
 const selectPostsByThreadPid = (state, pid) => thread &&
-    state.postsAggregated.filter(post => post.result.opid === pid)
+    state.suwar.filter(surah => surah.result.opid === pid)
 
 export {
     selectTags,

@@ -6,8 +6,8 @@ export { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import crypto from 'Common/crypto.js'
 
-const ayat = (post, plainPost, directSide, postsAggregated) => {
-    let postAggregated
+const ayat = (post, plainPost, directSide, suwar) => {
+    let surah
 
     if (directSide !== 'unknown') {
         const updateProof = plainPost.proofs && plainPost.proofs.find(proof =>
@@ -17,10 +17,10 @@ const ayat = (post, plainPost, directSide, postsAggregated) => {
         // there should be no more than one
         if (updateProof) {
             //case 1: post has put/delete proofs, so there must be an original in pa
-            postAggregated = postsAggregated.find(pa => pa.pid === updateProof.pid) // TODO: or else
-            postAggregated.posts.push(plainPost)
-            postAggregated.posts.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-            //postAggregated.latest = postAggregated.posts[postAggregated.posts.length - 1]
+            surah = suwar.find(curSurah => curSurah.pid === updateProof.pid) // TODO: or else
+            surah.posts.push(plainPost)
+            surah.posts.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+            //surah.latest = surah.posts[surah.posts.length - 1]
 
             // curently this is the code for body updating only.
             // it doesn't support attachemnt addition or deletion,
@@ -29,29 +29,29 @@ const ayat = (post, plainPost, directSide, postsAggregated) => {
             // but arrays can be put but not patched.
             // TODO: massive rewrite?
             let result = {
-                ...inner(postAggregated.origin),
-                ...(postAggregated.origin.proofs ? {proofs: [...postAggregated.origin.proofs]} : {}),
-                ...(postAggregated.origin.contentMap ? {contentMap: {...postAggregated.origin.contentMap}} : {})
+                ...inner(surah.origin),
+                ...(surah.origin.proofs ? {proofs: [...surah.origin.proofs]} : {}),
+                ...(surah.origin.contentMap ? {contentMap: {...surah.origin.contentMap}} : {})
             }
 
             // leaks 'from' field to other nodes!!!
             if (result.proofs) {
                 for (const proof of result.proofs) {
-                    Object.assign(proof, {from: postAggregated.pid})
+                    Object.assign(proof, {from: surah.pid})
                 }
             }
 
-            for (const postVersion of postAggregated.posts) {
-                const versionProof = postVersion.proofs && postVersion.proofs.find(curProof => curProof.pid === postAggregated.pid)
+            for (const postVersion of surah.posts) {
+                const versionProof = postVersion.proofs && postVersion.proofs.find(curProof => curProof.pid === surah.pid)
                 if (versionProof) { //there is no proof only if this is origin
-                    if (verify(postVersion, versionProof, postAggregated.origin)) {
+                    if (verify(postVersion, versionProof, surah.origin)) {
                         switch (versionProof.type) {
                             case 'patch':
                                 Object.assign(result, inner(postVersion))
 
                                 result.proofs = result.proofs || []
                                 for (const p of postVersion.proofs) {
-                                    if (!postAggregated.origin.proofs || !postAggregated.origin.proofs.find(pp => pp.pid === p.pid)) {
+                                    if (!surah.origin.proofs || !surah.origin.proofs.find(pp => pp.pid === p.pid)) {
                                         // todo: decide if it is necessary or safe to push updating proofs
                                         result.proofs.push({...p, from: postVersion.pid})
                                     }
@@ -79,11 +79,11 @@ const ayat = (post, plainPost, directSide, postsAggregated) => {
                                 Object.assign(result, {revoked: true})
                         }
                     } else {
-                        console.error('Counterfeit proof in the post history', postVersion, versionProof, postAggregated.origin)
+                        console.error('Counterfeit proof in the post history', postVersion, versionProof, surah.origin)
                     }
                 }
             }
-            postAggregated.result = result
+            surah.result = result
         } else {
             //case 2: post has no proofs, so it must be new
 
@@ -95,7 +95,7 @@ const ayat = (post, plainPost, directSide, postsAggregated) => {
             console.log(bs58.decode(plainPost.directKey).equals(Buffer.from(crypto.direct.signOrigin( Buffer.from(microjson(inner(plainPost))) ))))
             */
 
-            postAggregated = {
+            surah = {
                 pid: plainPost.pid,
                 posts: [plainPost],
                 origin: plainPost,
@@ -110,13 +110,13 @@ const ayat = (post, plainPost, directSide, postsAggregated) => {
             // leaks 'from' field to other nodes!!!
             if (plainPost.proofs) {
                 for (const proof of plainPost.proofs) {
-                    Object.assign(proof, {from: postAggregated.pid})
+                    Object.assign(proof, {from: surah.pid})
                 }
             }
             if (directSide) {
-                Object.assign(postAggregated, {to: post.to, encrypted: directSide})
+                Object.assign(surah, {to: post.to, encrypted: directSide})
             }
-            postsAggregated.push(postAggregated)
+            suwar.push(surah)
         }
     } else {
         const minimalPost = {
@@ -124,7 +124,7 @@ const ayat = (post, plainPost, directSide, postsAggregated) => {
             timestamp: post.timestamp,
             version: post.version
         }
-        postAggregated = {
+        surah = {
             pid: post.pid,
             posts: [minimalPost],
             origin: minimalPost,
@@ -134,10 +134,11 @@ const ayat = (post, plainPost, directSide, postsAggregated) => {
             to: post.to,
             encrypted: 'unknown'
         }
+        //push to suwar?
     }
-    postsAggregated.sort(((a, b) => new Date(a.origin.timestamp) - new Date(b.origin.timestamp))) //ascending
+    suwar.sort(((a, b) => new Date(a.origin.timestamp) - new Date(b.origin.timestamp))) //ascending
 
-    return postAggregated
+    return surah
 }
 
 export default ayat

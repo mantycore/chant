@@ -1,40 +1,44 @@
 import decrypt from './decrypt.js'
 import ayat from './ayah/'
-import addPostToConversation from './conversation.js'
+import addSurahToRenga from './renga.js'
 
 const aggregate = (
-    post,
-    postsAggregated,
+    payload, // Psalm | Haiku
+    suwar,
     contentStore,
     getStateChangeHandler,
-    conversations,
+    rengashu,
     getAndStoreContent
 ) => {
-    let {plainPost, directSide} = decrypt(
-        post,
-        postsAggregated,
-        contentStore, // modified as a effect
-        getStateChangeHandler, // called as a effect
-        getAndStoreContent
-    )
+    let psalm, directSide
+    if (payload.to) {
+        ({psalm, directSide} = decrypt(
+            payload,
+            suwar,
+            contentStore, // modified as a effect
+            getStateChangeHandler, // called as a effect
+            getAndStoreContent
+        ))
+    } else {
+        psalm = payload
+    }
 
-    const postAggregated = ayat(
-        post, // TODO: not needed, remove?
-        plainPost,
+    const surah = ayat(
+        payload, // TODO: not needed, remove?
+        psalm,
         directSide,
-        postsAggregated // modified as a effect
+        suwar // modified as a effect
     )
 
-    addPostToConversation(
-        post,
-        plainPost,
-        postAggregated,
-        postsAggregated,
-        conversations // modifies as a effect
+    addSurahToRenga(
+        payload,
+        psalm,
+        surah,
+        suwar,
+        rengashu // modifies as a effect
     )
 
-    return postAggregated
+    return surah
 }
 
 export default aggregate
-
