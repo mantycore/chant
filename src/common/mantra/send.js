@@ -1,5 +1,5 @@
 // @flow
-import type { Message, MessageWithId } from 'Mantra/.flow/message.js'
+import type { Message, MessageWithId } from 'Mantra/.flow/'
 import log from 'Common/log.js'
 
 const send = (
@@ -8,7 +8,7 @@ const send = (
     binary: boolean = false,
     pr: any
 ) => {
-    const newMessage: Message | MessageWithId = Object.assign({}, message)
+    const newMessage = Object.assign({}, message)
     let mid: string
 
     if (typeof message.mid === 'string') {

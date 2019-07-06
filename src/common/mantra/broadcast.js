@@ -1,4 +1,3 @@
-// @flow
 import send from './send.js'
 
 const broadcast = (message, binary = false, /* add */ peers, pr) => {
