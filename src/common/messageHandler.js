@@ -23,7 +23,6 @@ import aggregate from './surah/'
 
 
 export default state => {
-
     const {isServerNode, pr} = state
     const peers = new Set()
     const contentStore = state.contentStore || new Map()
@@ -31,7 +30,6 @@ export default state => {
     let stateChangeHandler = () => {} // TODO: replace with messages
     const onStateChange = handler => stateChangeHandler = handler
     // --- THINGS THAT USE GETTERS ---
-
     const getAndStoreContent = async cid => {
         try {
             const attachment = await getContent(cid, peers, pr) // mantra/request
@@ -44,7 +42,6 @@ export default state => {
             throw e
         }
     }
-
     // TODO: move to a separate module -------------------------------------------------------------
     const posts = state.posts || []
     const postsAggregated = []
@@ -62,7 +59,6 @@ export default state => {
     //const generatePId = () => `${pr.id.toString('hex')}:${new Date().toISOString()}`
     //obsolete
     // --- PUTTERS ---
-
     const putContent = async payload => {
         const cid = await toCID(payload)
         contentStore.set(cid, payload)
@@ -240,9 +236,7 @@ export default state => {
             return post.pid
         }
     }
-
     // --- THINGS THAT USE GETTERS II ---
-
     setInterval(async () => {
         for (const peer of peers.values()) {
             try {
@@ -253,8 +247,6 @@ export default state => {
             }
         }
     }, 10000)
-
-    let postInitialized = false
 
     const storePost = post => {
         putPostToStore(post) //TODO: simplify calls and naming scheme
