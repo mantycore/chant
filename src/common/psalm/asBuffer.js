@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer'
-import { inner } from 'Common/createPost.js' // psalm
+import inner from './inner.js'
 
 const microjson = (entity: any): string => {
     if (typeof entity === 'string' || typeof entity === 'number') {

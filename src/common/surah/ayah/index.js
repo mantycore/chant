@@ -1,6 +1,6 @@
 import asBuffer from 'Psalm/asBuffer.js'
 import verify from './verify.js'
-import { inner } from 'Common/createPost.js' // psalm
+import inner from 'Psalm/inner.js'
 
 export { Buffer } from 'buffer'
 import bs58 from 'bs58'

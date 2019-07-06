@@ -1,24 +1,12 @@
 import { Buffer } from 'buffer'
 import BSON from 'bson'
-import crypto from './crypto.js'
+import crypto from 'Common/crypto.js'
 import bs58 from 'bs58'
 import nacl from 'tweetnacl'
-import toCID from './cid.js'
-import asBuffer, { asBufferPlain } from 'Psalm/asBuffer.js'
-import microjson from './microjson.js'
+import toCID from 'Common/cid.js'
+import asBuffer, { asBufferPlain } from './asBuffer.js'
 
 const PROTOCOL_VERSION = 0
-
-const inner = post => {
-    const innerPost = {...post}
-    delete innerPost.pid
-    delete innerPost.proofs
-    delete innerPost.proofKey
-    delete innerPost.proofSignature
-    delete innerPost.directKey
-    delete innerPost.contentMap
-    return innerPost
-}
 
 const createPost = async ({body, attachments, nid, opid, tags, proofs, conversationId}) => {
     const timestamp = new Date().getTime() // millisecond from epoch
@@ -85,31 +73,4 @@ const createPost = async ({body, attachments, nid, opid, tags, proofs, conversat
     return post
 }
 
-const processFiles = async(filesToLoad) => {
-    const pFileReader = method => file => new Promise((resolve, reject) => {
-        const fileReader = new FileReader()
-        fileReader.onload = resolve
-        fileReader[method](file)
-    })
-
-    let attachments = []
-    let filesFull = []
-    if (filesToLoad) {
-        const arrayBufferReaders = await Promise.all(Array.from(filesToLoad).map(pFileReader('readAsArrayBuffer')))
-        const arrayBuffers = arrayBufferReaders.map(event => event.target.result)  // change to Buffers, check if the result is the same
-        const cids = await Promise.all(arrayBuffers.map(toCID))
-
-        //const dataURLReaders = await Promise.all(Array.from(filesToLoad).map(pFileReader('readAsDataURL')))
-        //const dataURLs = dataURLReaders.map(event => event.target.result)
-
-        //filesFull = Array.from(filesToLoad).map((file, i) => ({dataURL: dataURLs[i], cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
-       
-        const buffers = arrayBuffers.map(arrayBuffer => Buffer.from(arrayBuffer))
-            filesFull = Array.from(filesToLoad).map((file, i) => ({buffer: buffers[i], cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
-       
-        attachments = Array.from(filesToLoad).map((file, i) => ({cid: cids[i], type: file.type, name: file.name, size: file.size})) // size, lastModified
-    }
-    return [filesFull, attachments]
-}
-
-export {processFiles, createPost, inner}
+export default createPost
