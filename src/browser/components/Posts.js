@@ -74,7 +74,8 @@ const Attachments = ({attachments, state, dispatch}) =>
         .map(attachment => e(Image, {attachment, state, dispatch})))
 
 //TODO: handle this in aggregate
-const verify = (post, proof, original) => crypto.proof.verify(
+const verify = (post, proof, original) =>
+    crypto.proof.verify(
     asBuffer(post),
     bs58.decode(proof.signature),
     asBuffer(original),

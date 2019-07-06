@@ -34,6 +34,7 @@ const ayat = (post, plainPost, directSide, postsAggregated) => {
                 ...(postAggregated.origin.contentMap ? {contentMap: {...postAggregated.origin.contentMap}} : {})
             }
 
+            // leaks 'from' field to other nodes!!!
             if (result.proofs) {
                 for (const proof of result.proofs) {
                     Object.assign(proof, {from: postAggregated.pid})
@@ -105,6 +106,12 @@ const ayat = (post, plainPost, directSide, postsAggregated) => {
                     Buffer.from(                             // Buffer
                         crypto.direct.signOrigin(            // Uint8Array
                             asBuffer(plainPost))))                // Buffer
+            }
+            // leaks 'from' field to other nodes!!!
+            if (plainPost.proofs) {
+                for (const proof of plainPost.proofs) {
+                    Object.assign(proof, {from: postAggregated.pid})
+                }
             }
             if (directSide) {
                 Object.assign(postAggregated, {to: post.to, encrypted: directSide})
