@@ -36,26 +36,26 @@ and attachments, indexed by (mostly) IPFS compatible CIDs.
 <table>
     <tr>
         <td>interaction</td>
-        <td>Public threads (Sutra)</td>
-        <td>Private conversations (Renga)</td>
+        <td>public thread (Sutra)</td>
+        <td>private conversation (Renga)</td>
     </tr>
     <tr>
         <td>version control</td>
-        <td colspan="2">Surah</td>
+        <td colspan="2">(Surah)</td>
     </tr> 
     <tr>
         <td>content encoding</td>
-        <td colspan="2">chant post format (<a href="/schema.md">psalm</a>)</td>
+        <td colspan="2">chant post format (<a href="/schema.md">Psalm</a>)</td>
     </tr> 
-    <tr>
-        <td>content routing</td>
-        <td colspan="2">chant message protocol</td>
-    </tr>
     <tr>
         <td>encryption</td>
         <td>(unencrypted Psalm)</td>
-        <td>Direct private message (Haiku)</td>
+        <td>direct private message (Haiku)</td>
     </tr> 
+    <tr>
+        <td>content routing</td>
+        <td colspan="2">chant message protocol (Mantra)</td>
+    </tr>
     <tr>
         <td>basic routing</td>
         <td colspan="2"><a href="https://github.com/xuset/peer-relay">peer-relay</a> (forked and modified)</td>
@@ -70,4 +70,4 @@ and attachments, indexed by (mostly) IPFS compatible CIDs.
     </tr>
 </table>
 
-The correspondence between columns breaks at basic routing level, i.e. there is no correspondence between encrypted/unencrypted distinction and WebSocket/WebRTC.
+The correspondence between columns breaks at basic routing level, that is to say, there is no correspondence between encrypted/unencrypted distinction and WebSocket/WebRTC.
