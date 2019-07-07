@@ -1,4 +1,5 @@
 node_modules/
 dist/
+content/
 chant.db
 !dist/index.html

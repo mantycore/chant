@@ -46,6 +46,9 @@ module.exports = [
         module: myModule,
         target: 'node',
         entry: './src/server/index.js',
+        plugins: [
+            new webpack.IgnorePlugin(/^pg-native$/)
+        ],
         output: {
             filename: 'server.js'
         },

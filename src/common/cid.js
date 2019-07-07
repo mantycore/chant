@@ -12,6 +12,9 @@ async function toCID(rawData) {
     const cid = await dagPB.util.cid(serialized, {cidVersion: 0})
     return cid.toBaseEncodedString()
 
+    //hash = await multihashing(..., 'sha2-256')
+    //new CID(0, 'dag-pb', hash).toBaseEncodedString())
+
     //const serialized = dagCBOR.util.serialize(dagNode);
     //const cid = await dagCBOR.util.cid(serialized)
 }

@@ -9,7 +9,7 @@ import { getPosts } from './request/get/'
 const has = (set, nid) =>
     Array.from(set.values()).reduce((acc, cur) => acc || cur.equals(nid), false)
 
-const messagesProcessed = new Set()
+const mantrasaProcessed = new Set()
 
 /*
     messages scheme:
@@ -74,10 +74,10 @@ const addHandlers = ({
         ) : from})
         {
             const umid = `${forwardedMessage.origin.toString('hex')}:${message.mid}`
-            if (messagesProcessed.has(umid)) {
+            if (mantrasaProcessed.has(umid)) {
                 return
             } else {
-                messagesProcessed.add(umid)
+                mantrasaProcessed.add(umid)
             }
         }
         switch (message.type) {

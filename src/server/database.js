@@ -1,30 +1,44 @@
-import { Database } from 'Tools/async.await.sqlite3.js'
+//import pg from 'pg'
+//const Client = pg.Client
+const { Client } = require('pg')
+const { writeAttachment, readAttachment } = require('Tools/files.js')
 
-let db;
+let postgres;
 
 async function setup(state) {
-    db = await Database('./chant.db')
-    state.posts = (await db.all('SELECT * FROM posts ORDER BY timestamp'))
-        .map(({pid, opid, timestamp, rest}) =>
-            ({pid, opid, timestamp,...JSON.parse(rest)}))
-    try {
-        state.contentStore = new Map((await db.all('SELECT * FROM attachments'))
-            .map(({cid, buffer, rest}) => {
-                return [cid, {cid, buffer, ...JSON.parse(rest)}]
-            }))
-    } catch (err) {
-        console.log(err)
+    postgres = new Client()
+    await postgres.connect();
+
+    state.posts = []
+    for (const {pid, opid, timestamp, rest} of
+        (await postgres.query('SELECT * FROM posts ORDER BY timestamp')).rows) {
+        state.posts.push({pid, opid, timestamp: parseInt(timestamp),...JSON.parse(rest)})
     }
+
+    let content = [];
+    for (const {cid, timestamp, rest} of
+        (await postgres.query('SELECT * FROM attachments')).rows) {
+        const json = JSON.parse(rest)
+        const buffer = await readAttachment({cid, ...json}) //TODO: read only on request
+        content.push([cid, {cid, buffer, ...json}])
+    }
+    state.contentStore = new Map(content)
 }
+
+process.on('SIGTERM', async () => {
+  console.info('SIGTERM signal received.')
+  await postgres.end()
+  process.exit(0)
+});
 
 async function stateChangeHandler(type, payload) {
     switch (type) {
         case 'put post': {
             const {pid, opid, timestamp, ...rest} = payload.post
-            await db.run(`
+            await postgres.query(`
                 INSERT
                     INTO posts(pid, opid, timestamp, rest)
-                    VALUES (?, ?, ?, ?)`,
+                    VALUES ($1, $2, $3, $4)`,
                     [pid, opid, timestamp, JSON.stringify(rest)])
         }
         break
@@ -36,11 +50,12 @@ async function stateChangeHandler(type, payload) {
                 return
             }
             const {buffer, ...rest} = payload.attachment
-            await db.run(`
+            await writeAttachment(payload.attachment)
+            await postgres.query(`
                 INSERT
-                    INTO attachments(cid, timestamp, rest, buffer)
-                    VALUES (?, ?, ?, ?)`,
-                    [payload.cid, new Date().getTime(), JSON.stringify(rest), buffer])
+                    INTO attachments(cid, timestamp, rest)
+                    VALUES ($1, $2, $3)`,
+                    [payload.cid, new Date().getTime(), JSON.stringify(rest)])
         }
         break
         case 'put peer':

@@ -34,7 +34,10 @@ export default state => {
         try {
             const attachment = await getContent(cid, peers, pr) // mantra/request
             const storageAttachment = {...attachment, buffer: attachment.buffer} //BSON: buffer(Binary).buffer; msgpack: just buffer
-            contentStore.set(cid, storageAttachment)
+            contentStore.set(cid, storageAttachment) //TODO: on server, store only metadata in the contentStore, and load buffer only on request
+            if (isServerNode) {
+                await writeAttachment(storageAttachment)
+            }
             stateChangeHandler('put attachment', {cid, attachment: storageAttachment})
             return {cid, attachment: storageAttachment}
         } catch (e) {
