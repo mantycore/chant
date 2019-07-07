@@ -20,7 +20,7 @@ async function setup(state) {
         (await postgres.query('SELECT * FROM attachments')).rows) {
         const json = JSON.parse(rest)
         const buffer = await readAttachment({cid, ...json}) //TODO: read only on request
-        content.push([cid, {cid, buffer, ...json}])
+        content.push([cid, {cid, timestamp: parseInt(timestamp), buffer, ...json}])
     }
     state.contentStore = new Map(content)
 }

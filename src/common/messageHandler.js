@@ -21,11 +21,15 @@ import asBuffer, {asBufferPlain} from './psalm/asBuffer.js'
 
 import aggregate from './surah/'
 
-
 export default state => {
     const {isServerNode, pr} = state
     const peers = new Set()
     const contentStore = state.contentStore || new Map()
+
+    let writeAttachment = () => {}
+    if (isServerNode) {
+        writeAttachment = state.writeAttachment //TODO: improve
+    }
 
     let stateChangeHandler = () => {} // TODO: replace with messages
     const onStateChange = handler => stateChangeHandler = handler

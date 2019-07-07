@@ -3,6 +3,7 @@ import Client from 'peer-relay'
 //var toCID = require('./src/cid.js')
 import messageHandler from 'Common/messageHandler.js'
 import {setup, stateChangeHandler} from './database.js'
+import { writeAttachment } from 'Tools/files.js'
 
 var needsHelp = process.argv.indexOf('--help') !== -1 ||
                 process.argv.indexOf('-h') !== -1 ||
@@ -17,6 +18,7 @@ async function main() {
   const state = {
     pr: new Client(opts),
     isServerNode: true,
+    writeAttachment
   }
   await setup(state)
 
