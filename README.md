@@ -33,37 +33,46 @@ and attachments, indexed by (mostly) IPFS compatible CIDs.
 
 # Architecture
 
+In the fine tradition of Tlön, we gave the parts of the arhitecture short, lucid, and pronouncedly idiomatic names.
+
 <table>
     <tr>
         <td>interaction</td>
         <td>public thread (Sutra)</td>
         <td>private conversation (Renga)</td>
+        <td>Sutra is a public conversation: a collection of suwar, all bearing the id of the starting one. Renga is its private counterpart: a collection of decrypted suwar, all bearing the ids of the starting ones (one for each participant) which provide encryption keys.</td>
     </tr>
     <tr>
         <td>version control</td>
         <td colspan="2">post with its version history (Surah)</td>
+        <td>Surah (pl. suwar) is a version-controlled post, containing the original vesrion, all revisions to it, and the resulting current version. It also contains info on whether it was decrypted.</td>
     </tr> 
     <tr>
         <td>content encoding</td>
         <td colspan="2">chant post format (<a href="/schema.md">Psalm</a>)</td>
+        <td>Psalm is the basic unit of Chant system, composed of content ids, links to other psalms, and cryptographically signed based on its author's secret code.</td>
     </tr> 
     <tr>
         <td>encryption</td>
         <td>(unencrypted Psalm)</td>
         <td>direct private message,<br />asymmetrically encrypted (Haiku)</td>
+        <td>Haiku contains a psalm encrypted with the public keys of one or more other psalms, forming the basis for direct private conversations (renga).</td>
     </tr> 
     <tr>
         <td>content routing</td>
         <td colspan="2">chant message protocol (Mantra)</td>
+        <td>Mantra is a message from one Chant node to another, bearing one of more psalms, haikus, content files, or request(s) for these.</td>
     </tr>
     <tr>
         <td>basic routing</td>
         <td colspan="2"><a href="https://github.com/xuset/peer-relay">peer-relay</a> (forked and modified)</td>
+        <td />
     </tr>   
     <tr>
         <td rowspan="2">transport</td>
         <td rowspan="2">WebSocket</td>
         <td><a href="https://github.com/feross/simple-peer">simple-peer</a></td>
+        <td />
     </tr>
     <tr>
         <td>WebRTC</td>
