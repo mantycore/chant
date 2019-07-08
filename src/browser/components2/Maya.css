@@ -3,28 +3,45 @@
     height: 100vh;
 }
 
-.tags {
+/* ---- I column ---- */
+
+.maya-tags-list { /* also column*/
     width: 9em;
     min-width: 9em;
 }
 
-.sutrani {
+/* ---- II column ---- */
+
+.tag-column {
     width: 12em;
     min-width: 12em;
 }
 
-.sutra {
+.tag-meta {
+    height: 4em;
+}
+
+.sutra-item {
+    margin-bottom: 3em;
+}
+
+/* ---- III column ---- */
+
+.sutra-column {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
 }
 
-.suwar {
+.sutra-meta {
+    height: 4em;
+}
+
+.sutra-suwar-list {
     flex-grow: 1;
     overflow-y: scroll;
 }
 
-
-.surah {
+.surah-item {
     margin-bottom: 3em;
 }

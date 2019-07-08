@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import {
     selectTags,
     selectSutraniByTag,
-    selectSuwarBySutra
+    selectSuwarBySutraPid
 } from 'Browser/selectors/'
 import style from './Maya.css'
 
@@ -18,41 +18,44 @@ const connector = connect(
     }})
 )
 
-const Surah = connector(({post, state, newState, dispatch}) =>
-    <div className="surah">{post.pid.substring(0, 8)} {post.result.body && post.result.body.text}</div>)
+const Surah = connector(({surah, state, newState, dispatch}) =>
+    <div className={style['surah-item']}>{surah.pid.substring(0, 8)} {surah.result.body && surah.result.body.text}</div>)
 
-const Sutra = connector(({thread, state, newState, dispatch}) =>
-    <div className="sutra" onClick={() => dispatch.updateThread(thread.pid)}>
-        {thread.pid.substring(0, 8)}
+const Sutra = connector(({sutra, state, newState, dispatch}) =>
+    <div className={style['sutra-item']} onClick={() => dispatch.updateSutra(sutra.pid)}>
+        {sutra.pid.substring(0, 8)}
         <br />
-        {thread.result.body && thread.result.body.text.substring(0, 24)}
+        {sutra.result.body && sutra.result.body.text.substring(0, 24)}
     </div>)
 
 const Tag = connector(({tag, state, newState, dispatch}) =>
-    <div onClick={() => dispatch.updateTag(tag[0])}>{tag[0]}</div>)
+    <div className={style['tag-item']} onClick={() => dispatch.updateTag(tag[0])}>{tag[0]}</div>)
 
 const Maya = ({state, newState, dispatch}) => {
-    const {tag, threadPid} = newState.app
+    const {tag, sutraPid} = newState.maya
 
     const tags = selectTags(state)
     const sutrani = selectSutraniByTag(state, tag)
     const suwar = selectSuwarBySutraPid(state, sutraPid)
 
-    return <div className={style.maya}>
-        <div className={style.tags}>{tags.map(tag => <Tag {tag} />)}</div>
-        <div className={style.sutrani}>{sutrani
-            ? sutrani.map(sutra => <Sutra {sutra} />)
-            : "Threads placeholder"
-        }</div>
-        <div className={style.sutra}>
-            <div>OP</div> // thread meta/op
-            <div className={style.suwar}>{suwar
-                ? suwar.map(surah => <Surah {surah} />)
-                : "Posts placeholder"
+    return <div className={style['maya']}>
+        <div className={style['maya-tags-list']}>{tags.map(tag => <Tag {...{tag}} />)}</div>
+        <div className={style['tag-column']}>
+            <div className={style['tag-meta']} />
+            <div className={style['tag-sutrani-list']}>{sutrani
+            ? sutrani.map(sutra => <Sutra {...{sutra}} />)
+            : "Sutrani placeholder"
             }</div>
-            <div>Post form</div>
-        ])
-    ])
+        </div>
+        <div className={style['sutra-column']}>
+            <div className={style['sutra-meta']}>OP</div>
+            <div className={style['sutra-suwar-list']}>{suwar
+                ? suwar.map(surah => <Surah {...{surah}} />)
+                : "Suwar placeholder"
+            }</div>
+            <div>surah form</div>
+        </div>
+    </div>
 }
 
-export default connector(App)
+export default connector(Maya)

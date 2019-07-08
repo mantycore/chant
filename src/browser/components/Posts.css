@@ -1,5 +1,151 @@
+/* ---- Image ---- */
+
+.image {
+	max-height: 400px;
+	padding-right: 10px; /* todo: find a cleaner way to align them */
+}
+
+.image-placeholder {
+    height: 400px;
+    width: 300px;
+    margin-right: 10px;
+    background-color: #aaa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ---- Attachments ---- */
+
 .attachments {
     display: flex;
     flex-direction: row;
     margin-bottom: 16;
+}
+
+/* ---- Marks ---- */
+
+.mark {
+    font-family: monospace;
+    text-decoration: none;
+    word-break: break-all;
+    word-wrap: break-word;
+}
+
+.mark:hover {
+    text-decoration: underline;
+}
+
+.mark.genuine {
+    color: #494;
+}
+
+.mark.counterfeit {
+    color: #a44;
+}
+
+/* ---- Post ---- */
+
+.post {
+    /* padding-bottom: 6px; */
+    border-bottom: 1px dotted #bbb;
+    padding: 0 10px;
+}
+
+.post.my {
+    border-bottom: 1px dotted #6a6;
+    border-left: 1px dotted #6a6;
+}
+
+.post.revoked {
+    padding: 3px 0;
+    background-color: #bbb;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    border-bottom: 1px dotted #a44;
+}
+
+.post .meta {
+    /* margin-top: 3px; */
+    opacity: 0;
+    font-family: monospace;
+    display: flex;
+    color: #bbb;
+    transition: opacity 100ms ease-out;
+}
+
+.post:hover .meta {
+    opacity: 100;
+    visibility: visible;
+    transition: opacity 200ms ease-in;
+}
+
+.post.revoked:hover .meta, .post.revoked:hover .meta a {
+    color: #a44
+}
+
+.post .meta a {
+    text-decoration: none;
+    color: #bbb;
+    font-family: monospace;
+}
+
+.post .meta .action {
+    cursor: pointer;
+}
+
+.meta-link {
+	flex-grow: 1; 
+}
+
+.post .body :first-child {
+    margin-top: 0;
+    /* margin-top: 3px; */
+}
+
+/* ---- Post.Sutra ---- */
+
+.thread {
+/* #posts > div > div - post with thread; but this style only should apply in tag view */
+    margin-bottom: 40px;
+}
+.thread .post, .thread .more {
+    width: auto;
+    box-sizing: border;
+    margin-left: 50px;
+
+}
+.thread .more {
+    font-style: italic;
+    padding-left: 10px;
+}
+.thread .more a {
+    text-decoration: none;
+    color: #bbb;
+}
+
+/* ---- Posts ---- */
+
+.posts {
+    flex-grow: 1;
+    overflow-y: scroll;
+    /*overflow-x: hidden;*/
+}
+
+.opost .post {
+    background-color: #eee;
+}
+
+/* ---- Common ---- */
+
+.error {
+    flex-grow: 1;
+    color: #a44;
+}
+.error, .post, .thread { /* #post_form_outer -- DRY */
+    width: 60vw;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
 }

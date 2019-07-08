@@ -1,11 +1,11 @@
 import React from 'react'
-import e from './createElement.js'
 import { connect } from 'react-redux'
+import style from './Tags.css'
 
 const Tags = ({tags}) => 
-    e('div', {id: 'tags'}, tags.map(([name, count]) =>
-        e('span', {},
-           e('a', {href: `#/${name}/`, title: count}, `/${name}/`))))
+    <div className={style.tags}>{tags.map(([name, count]) =>
+        <span><a href={`#/${name}/`} title={count}>/{name}/</a></span>
+    )}</div>
 
 export default connect(state => ({
     tags: [['~', state.suwar.length], ...Object.entries(state.suwar.reduce((acc, cur) => {

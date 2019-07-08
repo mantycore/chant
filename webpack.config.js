@@ -7,6 +7,7 @@ const resolve = {
         Mantra: path.resolve(__dirname, 'src/common/mantra/'),
         Psalm: path.resolve(__dirname, 'src/common/psalm/'),
         Surah: path.resolve(__dirname, 'src/common/surah/'),
+        Browser: path.resolve(__dirname, 'src/browser/'),
         Tools: path.resolve(__dirname, 'tools/') //TODO: think about better solution
     }
 }

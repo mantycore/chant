@@ -1,5 +1,4 @@
 import React, {useRef, useEffect} from 'react'
-import e from './createElement.js'
 import { connect } from 'react-redux'
 import MarkdownIt from 'markdown-it'
 import { Buffer } from 'buffer'
@@ -45,49 +44,46 @@ const binaryToUrl = (binary, type) => `data:${type};base64,${btoa(Uint8ToB64Stri
 
 const Image = ({attachment, state, dispatch}) => 
     state.contentStore.has(attachment.cid)
-        ? e('img', {
-            src: binaryToUrl(state.contentStore.get(attachment.cid).buffer, attachment.type),
-            style: {maxHeight: 400, paddingRight: 10} // todo: find a cleaner way to align them
-        })
-        : e('div', {
-            onClick: dispatch.downloadAttachment(attachment.cid, state),
-            style: {
-                height: 400,
-                width: 300,
-                marginRight: 10,
-                backgroundColor: '#aaa',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center'
-            }
-        },
-        [
-            e('p', null, attachment.type),
-            e('p', null, format(attachment.size)),
-            e('p', null, state.attachmentIsLoading[attachment.cid] === 'loading'
+        ? <img
+            src={binaryToUrl(state.contentStore.get(attachment.cid).buffer, attachment.type)}
+            className={style.image}
+        />
+        : <div
+            onClick={dispatch.downloadAttachment(attachment.cid, state)}
+            className={style['image-placeholder']}
+        >
+            <p>{attachment.type}</p>
+            <p>{format(attachment.size)}</p>
+            <p>{state.attachmentIsLoading[attachment.cid] === 'loading'
                 ? 'Loading'
                 : state.attachmentIsLoading[attachment.cid] === 'fail'
                 ? 'Failed to load'
-                : 'Click to load')
-        ])
+                : 'Click to load'
+            }</p>
+        </div>
 
 const Attachments = ({attachments, state, dispatch}) =>
-    (<div className={style.attachments}>{attachments
+    <div className={style.attachments}>{attachments
         .filter(attachment => attachment.type === 'image/png' || attachment.type === 'image/jpeg')
-        .map(attachment => e(Image, {attachment, state, dispatch}))}</div>)
+        .map(attachment => <Image {...{attachment, state, dispatch}} />)
+    }</div>
 
-const renderBody = (post, state) => {
-    let html = md.render(post.result.body.text)
-    if (post.result.ayat) {
-        post.result.ayat.filter(proof => proof.type === 'hand').forEach(proof => {
-            const original = state.posts.find(p => p.pid === proof.pid)
-            const from = state.posts.find(p => p.pid === proof.from)
-            const genuine = verify(from, proof, original)
-            if (genuine) {
-                html = html.replace(new RegExp(`~${proof.pid}`, 'g'), `<a href="#/${proof.pid}" class="mark genuine">$&</a>`)
+
+const mark = style['mark']
+const genuine = style['genuine']
+const counterfeit = style['counterfeit']
+
+const renderBody = (surah, state) => {
+    let html = md.render(surah.result.body.text)
+    if (surah.result.ayat) {
+        surah.result.ayat.filter(ayah => ayah.type === 'hand').forEach(ayah => {
+            const original = state.posts.find(psalm => psalm.pid === ayah.pid)
+            const from = surah.psalms.find(psalm => psalm.pid === ayah.from)
+            const isGenuine = verify(from, ayah, original)
+            if (isGenuine) {
+                html = html.replace(new RegExp(`~${ayah.pid}`, 'g'), `<a href="#/${ayah.pid}" class="${mark} ${genuine}">$&</a>`)
             } else {
-                html = html.replace(new RegExp(`~${proof.pid}`, 'g'), `<a href="#/${proof.pid}" class="mark counterfeit">$&</a>`)
+                html = html.replace(new RegExp(`~${ayah.pid}`, 'g'), `<a href="#/${ayah.pid}" class="${mark} ${counterfeit}">$&</a>`)
             }
         })
     }
@@ -101,50 +97,47 @@ const Post = ({post, state, dispatch, mini = false, renga = null}) => {
         ? renga.suwar.slice(1)
         : state.suwar.filter(curSurah =>
             curSurah.result.opid === post.pid)
-    return e('div', {}, [
-        e('div', {className: [
+    return <div>
+        <div className={[
                 'post',
                 ...(revoked ? ['revoked'] : []),
                 ...(post.my ? ['my'] : [])
-            ].join(' ')}, [
-            e('div', {className: 'meta'}, [
-                e('span', {style: {flexGrow: 1}}, 
-                    e('a', {
-                        href: renga ? `#${renga.id}` : `#/${post.pid}`
-                    }, [
-                        post.pid.substring(0, 8),
-                        ' ',
-                        new Date(post.result.timestamp).toISOString() //TODO: latest AND initial timestamp for modified posts
-                    ])),
-                ...(revoked ? ['POST REVOKED'] : [ //TODO: see history?
+            ].map(name => style[name]).join(' ')}
+        >
+            <div className={style['meta']}>
+                <span className={style['meta-link']}>
+                    <a href={renga ? `#${renga.id}` : `#/${post.pid}`} >
+                        {post.pid.substring(0, 8)} {new Date(post.result.timestamp).toISOString() /*TODO: latest AND initial timestamp for modified posts*/}
+                    </a>
+                </span>
+
+                {revoked ? ['POST REVOKED'] : [ //TODO: see history?
                     ...(post.my ? [
-                        e('span', {className: 'action', onClick: dispatch.update(post, state)}, 'Update'),
+                        <span className={style['action']} onClick={dispatch.update(post, state)}>Update</span>,
                         '\u00A0',
-                        e('span', {className: 'action', onClick: dispatch.revoke(post.origin, state)}, 'Revoke'),
+                        <span className={style['action']} onClick={dispatch.revoke(post.origin, state)}>Revoke</span>
                     ] : []),
                     '\u00A0',
-                    e('span', {}, e('a', {href: `#/${post.pid}/direct`}, 'Direct')),
+                    <span><a href={`#/${post.pid}/direct`}>Direct</a></span>,
                     '\u00A0',
-                    e('span', {className: 'action', onClick: () => { console.log(post) }}, 'Dump')
-                ])
-            ]),
-            ...(revoked ? [] : [
-                ...(post.result.body ? [e('div', {className: 'body', dangerouslySetInnerHTML: {__html: renderBody(post, state)}})] : []),
-                ...(post.result.attachments ? [e(Attachments, {attachments: post.result.attachments, state, dispatch})] : []),
-            ])
-        ]),
-        ...(!mini && thread.length > 0 ? [e('div', {className: 'thread'}, thread.length > 3 ? [
-                e(Post, {post: thread[0], state, dispatch, mini: 'true', renga}),
-                e('div', {className: 'more'}, e('a', {
-                    href: renga ? `#${renga.id}` : `#/${post.pid}`
-                }, `${thread.length - 2} more post(s)`)),
-                e(Post, {post: thread[thread.length-1], state, dispatch, mini: 'true', renga}),
-            ] : [thread.map(threadPost => e(Post, {post: threadPost, state, dispatch, mini: 'true', renga}))]
-            )] : [])
-    ])
+                    <span className={style['action']} onClick={() => { console.log(post) }}>Dump</span>
+                ]}
+            </div>
+
+            {revoked ? [] : [
+                ...(post.result.body ? [ <div className={style['body']} dangerouslySetInnerHTML={{__html: renderBody(post, state)}} /> ] : []),
+                ...(post.result.attachments ? [<Attachments {...{attachments: post.result.attachments, state, dispatch}} />] : []),
+            ]}
+        </div>
+
+        {!mini && thread.length > 0 ? [<div className={style['thread']}>{thread.length > 3 ? [
+                <Post {...{post: thread[0], state, dispatch, mini: 'true', renga}} />,
+                <div className={style['more']}><a href={renga ? `#${renga.id}` : `#/${post.pid}`}>{thread.length - 2} more post(s)</a></div>,
+                <Post {...{post: thread[thread.length-1], state, dispatch, mini: 'true', renga}} />
+            ] : [thread.map(threadPost => <Post {...{post: threadPost, state, dispatch, mini: 'true', renga}} />)]
+            }</div>] : []}
+    </div>
 }
-
-
 
 const Posts = ({state, dispatch}) => {
     const findReplies = post => state.suwar.filter(curSurah =>
@@ -160,12 +153,10 @@ const Posts = ({state, dispatch}) => {
     let oPost = null
     if (state.postsMode === 'directs list') {
         //roundabout due to conversations strucure, rewrite
-        return e('div', {id: 'posts'}, state.rengashu.map(renga => {
+        return <div id="posts">{state.rengashu.map(renga => {
             const first = renga.suwar.find(curSurah => curSurah.pid === renga.firstPid)
-            return [
-                e(Post, {post: first, state, dispatch, mini: false, renga}),
-            ]
-        }))
+            return [<Post {...{post: first, state, dispatch, mini: false, renga}} />]
+        })}</div>
     }
     if (state.postsMode === 'tilde') {
         posts = posts.filter(post => !post.result.opid && !post.encrypted)
@@ -184,15 +175,15 @@ const Posts = ({state, dispatch}) => {
         if (renga) {
             [oPost, ...posts] = renga.suwar
         } else {
-            return e('div', {id: 'error'}, "Conversation is not found or is not accessible")
+            return <div className={style['error']}>Conversation is not found or is not accessible</div>
         }
     }
     //const ref = useRef(null)
     //useEffect((e) => { console.log(ref); ref.current.scrollTop = ref.current.scrollHeight - ref.current.clientHeight; }, [posts])
-    return e('div', {id: 'posts'}, [
-        ...(oPost ? [e('div', {id: 'opost'}, e(Post, {post: oPost, state, dispatch, mini: true}))] : []),
-        e('div', {}, posts.map(post => e(Post, {post, state, dispatch})))
-    ])
+    return <div className={style['posts']}>
+        {oPost ? <div className={style['opost']}><Post {...{post: oPost, state, dispatch, mini: true}} /></div> : []}
+        <div>{posts.map(post => <Post {...{post, state, dispatch}} />)}</div>
+    </div>
 }
 
 export default connect(

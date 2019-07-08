@@ -1,6 +1,6 @@
 import React, {useState, useRef} from 'react'
-import e from './createElement.js'
 import { connect } from 'react-redux'
+import style from './PostForm.css'
 
 const PostForm = ({state, dispatch}) => {
     const [filesToLoad, setFilesToLoad] = useState([])
@@ -10,13 +10,13 @@ const PostForm = ({state, dispatch}) => {
      
     let protoPost = {}
     if (state.initiation) {
-        return e('div', {id: 'post_form_outer'}, [
-            e('div', {id: 'post_form'}, [
-                e('button', {onClick: dispatch.unlockPassword}, 'Enter your own'),
-                e('input', {type: 'text', className: 'encrypted', value: state.secretCode, disabled: !state.passwordEditable, onChange: dispatch.changePassword}),
-                e('button', {onClick: dispatch.acceptPassword}, 'Accept'),
-            ]),
-            e('div', {className: 'initiation-message'},
+        return <div className={style["post-form-outer"]}>
+            <div className={style["post-form"]}>
+                <button onClick={dispatch.unlockPassword}>Enter your own</button>
+                <input {...{type: 'text', className: style['encrypted'], value: state.secretCode, disabled: !state.passwordEditable, onChange: dispatch.changePassword}} />
+                <button onClick={dispatch.acceptPassword}>Accept</button>
+            </div>
+            <div className={style["initiation-message"]}>{
 `This is your secret code. Please copy it, either electronically or by hand
 (preferably both), and store it in secure locations. The code is the key to
 all aspects of your identity on the Anoma Chant. If you lose it, you will not
@@ -24,8 +24,9 @@ have access to direct messages at the posts you created with it, and you
 will be not able to prove that you are their author. The secret code is stored
 only in the localStorage of your browser (you can revisit it by opening your
 browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0Cmd\u00A0+\u00A0Option\u00A0+\u00A0J, and entering
-"localStorage.getItem('Secret code')") and cannot be restored by any outside party.`),
-        ])
+"localStorage.getItem('Secret code')") and cannot be restored by any outside party.`
+            }</div>
+        </div>
     }
     if (state.postsMode === 'directs list') {
         placeholder = `⚿ List of your direct conversations ⚿`
@@ -110,37 +111,39 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
         }
     } 
 
-    return e('div', {id: 'post_form_outer'}, [
-        ...(Array.from(filesToLoad).length > 0 ? [
-                e('div', {id: 'files'}, Array.from(filesToLoad).map(file =>
-                    e('p', {}, [file.name, file.type, file.size].map(field =>
-                        e('span', {}, field)))))
-        ] : []),
+    return <div className={style["post-form-outer"]}>
+        {Array.from(filesToLoad).length > 0 ? 
+            <div className={style["files"]}>{Array.from(filesToLoad).map(file =>
+                <p>{[file.name, file.type, file.size].map(field =>
+                    <span>{field}</span>
+                )}</p>
+            )}</div>
+        : []}
 
-        e('div', {id: 'post_form'}, [
-            state.postBeingEdited.mode === 'patch'
-            ? e('button', {onClick: dispatch.cancelUpdate}, 'Cancel')
-            : e('div',
-                {id: 'drop_zone', onDragOver, onDrop, onClick: proxy},
-                'Drop files or click to upload'),
-            e('textarea', {
-                ...(encrypted ? {className: 'encrypted'} : {}),
+        <div className={style["post-form"]}>
+            {state.postBeingEdited.mode === 'patch'
+                ? <button onClick={dispatch.cancelUpdate}>Cancel</button>
+                : <div {...{className: style['drop-zone'], onDragOver, onDrop, onClick: proxy}}
+                >Drop files or click to upload</div>
+            }
+            <textarea {...{
+                ...(encrypted ? {className: style['encrypted']} : {}),
                 placeholder,
                 disabled,
                 //ref: bodyRef,
                 onKeyPress,
                 onChange: dispatch.bodyChange,
                 value: state.postBeingEdited.body
-            }),
-            e('button', {onClick: submit}, 'Post'),
-            e('input', {
+            }} />
+            <button onClick={submit}>Post</button>
+            <input {...{
                 type: "file",
                 ref: helperRef,
                 onChange: helperChange,
                 multiple: true,
-                style: {display: 'none'}})
-        ])
-    ])
+                style: {display: 'none'}}} />
+        </div>
+    </div>
 }
 
 export default connect(

@@ -22,7 +22,14 @@ const initialState = {
         post: null
     },
 
-    displaySplash: true
+    displaySplash: true,
+
+    newState: {
+        maya: {
+            tag: 'd',
+            sutraPid: null
+        }
+    }
 }
 
 function copy(draft, action) {
@@ -136,6 +143,19 @@ function reducer(state = initialState, action) {
                 draft.postBeingEdited.body = ''
                 draft.postBeingEdited.mode = 'put'
                 draft.postBeingEdited.post = null
+                break
+
+            /* ----- */
+
+            case 'react maya sutra update':
+                draft.newState.maya.sutraPid = action.pid
+                break
+
+            case 'react maya tag update':
+                if (draft.newState.maya.tag !== action.tag) {
+                    draft.newState.maya.sutraPid = null
+                    draft.newState.maya.tag = action.tag
+                }
                 break
 
         }

@@ -1,0 +1,8 @@
+.splash {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    font-size: 48px;
+}

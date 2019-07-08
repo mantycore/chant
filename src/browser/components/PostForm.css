@@ -1,0 +1,55 @@
+.post-form-outer {
+    width: 60vw;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    /* dry w/module */
+
+    margin-bottom: 10px;
+}
+
+
+.post-form {
+    display: flex;
+}
+.post-form textarea, .post-form input {
+    flex-grow: 1
+}
+.post-form button {
+    width: 70px;
+}
+.post-form textarea::placeholder {
+    color: #baa;
+}
+.post-form textarea.encrypted::placeholder, {
+    color: #aba;
+}
+.post-form input {
+    color: #464;
+    font-size: 24px;
+    text-align: center;
+}
+
+.files {
+	font-size: 10px;
+}
+.files span {
+	margin-right: 10px;
+}
+.drop-zone {
+	border: 2px dashed #bbb;
+	padding: 2px;
+	color: #bbb;
+	width: 50px;
+	height: 50px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+    font-size: 12px;
+}
+
+.initiation-message {
+    font-size: 16px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
