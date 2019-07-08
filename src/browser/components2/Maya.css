@@ -1,4 +1,4 @@
-.chant {
+.maya {
     display: flex;
     height: 100vh;
 }
@@ -8,18 +8,23 @@
     min-width: 9em;
 }
 
-.threads {
+.sutrani {
     width: 12em;
     min-width: 12em;
 }
 
-.thread {
+.sutra {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
 }
 
-.posts {
+.suwar {
     flex-grow: 1;
     overflow-y: scroll;
+}
+
+
+.surah {
+    margin-bottom: 3em;
 }
