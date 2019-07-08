@@ -77,8 +77,8 @@ const renderBody = (surah, state) => {
     let html = md.render(surah.result.body.text)
     if (surah.result.ayat) {
         surah.result.ayat.filter(ayah => ayah.type === 'hand').forEach(ayah => {
-            const original = state.posts.find(psalm => psalm.pid === ayah.pid)
-            const from = surah.psalms.find(psalm => psalm.pid === ayah.from)
+            const original = state.poemata.find(psalm => psalm.pid === ayah.pid) // what if it is haiku?
+            const from = surah.psalmoi.find(psalm => psalm.pid === ayah.from)
             const isGenuine = verify(from, ayah, original)
             if (isGenuine) {
                 html = html.replace(new RegExp(`~${ayah.pid}`, 'g'), `<a href="#/${ayah.pid}" class="${mark} ${genuine}">$&</a>`)
@@ -90,58 +90,58 @@ const renderBody = (surah, state) => {
     return html
 }
 
-const Post = ({post, state, dispatch, mini = false, renga = null}) => {
-    const updateProof = post.result.proofs && post.result.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
-    const revoked = post.result.revoked
+const Post = ({surah, state, dispatch, mini = false, renga = null}) => {
+    const updateProof = post.result.proofs && surah.result.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
+    const revoked = surah.result.revoked
     const thread = renga
         ? renga.suwar.slice(1)
         : state.suwar.filter(curSurah =>
-            curSurah.result.opid === post.pid)
+            curSurah.result.opid === surah.pid)
     return <div>
         <div className={[
                 'post',
                 ...(revoked ? ['revoked'] : []),
-                ...(post.my ? ['my'] : [])
+                ...(surah.my ? ['my'] : [])
             ].map(name => style[name]).join(' ')}
         >
             <div className={style['meta']}>
                 <span className={style['meta-link']}>
-                    <a href={renga ? `#${renga.id}` : `#/${post.pid}`} >
-                        {post.pid.substring(0, 8)} {new Date(post.result.timestamp).toISOString() /*TODO: latest AND initial timestamp for modified posts*/}
+                    <a href={renga ? `#${renga.id}` : `#/${surah.pid}`} >
+                        {surah.pid.substring(0, 8)} {new Date(surah.result.timestamp).toISOString() /*TODO: latest AND initial timestamp for modified posts*/}
                     </a>
                 </span>
 
                 {revoked ? ['POST REVOKED'] : [ //TODO: see history?
-                    ...(post.my ? [
-                        <span className={style['action']} onClick={dispatch.update(post, state)}>Update</span>,
+                    ...(surah.my ? [
+                        <span className={style['action']} onClick={dispatch.update(surah, state)}>Update</span>,
                         '\u00A0',
-                        <span className={style['action']} onClick={dispatch.revoke(post.origin, state)}>Revoke</span>
+                        <span className={style['action']} onClick={dispatch.revoke(surah.origin, state)}>Revoke</span>
                     ] : []),
                     '\u00A0',
-                    <span><a href={`#/${post.pid}/direct`}>Direct</a></span>,
+                    <span><a href={`#/${surah.pid}/direct`}>Direct</a></span>,
                     '\u00A0',
-                    <span className={style['action']} onClick={() => { console.log(post) }}>Dump</span>
+                    <span className={style['action']} onClick={() => { console.log(surah) }}>Dump</span>
                 ]}
             </div>
 
             {revoked ? [] : [
-                ...(post.result.body ? [ <div className={style['body']} dangerouslySetInnerHTML={{__html: renderBody(post, state)}} /> ] : []),
-                ...(post.result.attachments ? [<Attachments {...{attachments: post.result.attachments, state, dispatch}} />] : []),
+                ...(surah.result.body ? [ <div className={style['body']} dangerouslySetInnerHTML={{__html: renderBody(surah, state)}} /> ] : []),
+                ...(surah.result.attachments ? [<Attachments {...{attachments: surah.result.attachments, state, dispatch}} />] : []),
             ]}
         </div>
 
         {!mini && thread.length > 0 ? [<div className={style['thread']}>{thread.length > 3 ? [
-                <Post {...{post: thread[0], state, dispatch, mini: 'true', renga}} />,
-                <div className={style['more']}><a href={renga ? `#${renga.id}` : `#/${post.pid}`}>{thread.length - 2} more post(s)</a></div>,
-                <Post {...{post: thread[thread.length-1], state, dispatch, mini: 'true', renga}} />
-            ] : [thread.map(threadPost => <Post {...{post: threadPost, state, dispatch, mini: 'true', renga}} />)]
+                <Post {...{surah: thread[0], state, dispatch, mini: 'true', renga}} />,
+                <div className={style['more']}><a href={renga ? `#${renga.id}` : `#/${surah.pid}`}>{thread.length - 2} more post(s)</a></div>,
+                <Post {...{surah: thread[thread.length-1], state, dispatch, mini: 'true', renga}} />
+            ] : [thread.map(threadPost => <Post {...{surah: threadPost, state, dispatch, mini: 'true', renga}} />)]
             }</div>] : []}
     </div>
 }
 
 const Posts = ({state, dispatch}) => {
-    const findReplies = post => state.suwar.filter(curSurah =>
-        curSurah.to && curSurah.to.filter(to => to.pid === post.pid).length > 0)
+    const findReplies = surah => state.suwar.filter(curSurah =>
+        curSurah.to && curSurah.to.filter(to => to.pid === surah.pid).length > 0)
     /*const findRepliesRecursively = post => {
         const replies = findReplies(post)
         return replies.concat(...replies.map(findRepliesRecursively))
@@ -149,8 +149,8 @@ const Posts = ({state, dispatch}) => {
     const findRenga = id => state.suwar.filter(curSurah =>
         curSurah.conversationId === id)
 
-    let posts = [...state.suwar]
-    let oPost = null
+    let suwar = [...state.suwar]
+    let oSurah = null
     if (state.postsMode === 'directs list') {
         //roundabout due to conversations strucure, rewrite
         return <div id="posts">{state.rengashu.map(renga => {
@@ -159,21 +159,21 @@ const Posts = ({state, dispatch}) => {
         })}</div>
     }
     if (state.postsMode === 'tilde') {
-        posts = posts.filter(post => !post.result.opid && !post.encrypted)
+        suwar = suwar.filter(surah => !surah.result.opid && !surah.encrypted)
     } else if (state.postsMode === 'tag') {
-        posts = posts.filter(post => post.result.tags && post.result.tags.includes(state.tag))
+        suwar = suwar.filter(surah => surah.result.tags && surah.result.tags.includes(state.tag))
     } else if (state.postsMode === 'thread') {
-        oPost = state.opost;
-        posts = state.suwar.filter(curSurah =>
+        oSurah = state.opost;
+        suwar = state.suwar.filter(curSurah =>
             curSurah.result.opid === state.opost.pid)
     } else if (state.postsMode === 'direct') {
-        oPost = state.opost // sort
-        posts = []
-        //posts = findReplies(oPost)
+        oSurah = state.opost // sort
+        suwar = []
+        //posts = findReplies(oSurah)
     } else if (state.postsMode === 'direct conversation') {
         const renga = state.rengashu.find(curRenga => curRenga.id === state.conversationId)
         if (renga) {
-            [oPost, ...posts] = renga.suwar
+            [oSurah, ...suwar] = renga.suwar
         } else {
             return <div className={style['error']}>Conversation is not found or is not accessible</div>
         }
@@ -181,8 +181,8 @@ const Posts = ({state, dispatch}) => {
     //const ref = useRef(null)
     //useEffect((e) => { console.log(ref); ref.current.scrollTop = ref.current.scrollHeight - ref.current.clientHeight; }, [posts])
     return <div className={style['posts']}>
-        {oPost ? <div className={style['opost']}><Post {...{post: oPost, state, dispatch, mini: true}} /></div> : []}
-        <div>{posts.map(post => <Post {...{post, state, dispatch}} />)}</div>
+        {oSurah ? <div className={style['opost']}><Post {...{surah: oSurah, state, dispatch, mini: true}} /></div> : []}
+        <div>{suwar.map(surah => <Post {...{surah, state, dispatch}} />)}</div>
     </div>
 }
 

@@ -18,9 +18,9 @@ const ayat = (payload, psalm, directSide, suwar) => {
         if (updateAyah) {
             //case 1: post has put/delete proofs, so there must be an original in pa
             surah = suwar.find(curSurah => curSurah.pid === updateAyah.pid) // TODO: or else
-            surah.psalms.push(psalm)
-            surah.psalms.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-            //surah.latest = surah.psalms[surah.psalms.length - 1]
+            surah.psalmoi.push(psalm)
+            surah.psalmoi.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+            //surah.latest = surah.psalmoi[surah.psalmoi.length - 1]
 
             // curently this is the code for body updating only.
             // it doesn't support attachemnt addition or deletion,
@@ -42,7 +42,7 @@ const ayat = (payload, psalm, directSide, suwar) => {
                 }
             }
 
-            for (const versionPsalm of surah.psalms) {
+            for (const versionPsalm of surah.psalmoi) {
                 const versionAyah = versionPsalm.proofs && versionPsalm.proofs.find(curAyah => curAyah.pid === surah.pid)
                 if (versionAyah) { //there is no proof only if this is origin
                     if (verify(versionPsalm, versionAyah, surah.origin)) {
@@ -99,7 +99,7 @@ const ayat = (payload, psalm, directSide, suwar) => {
 
             surah = {
                 pid: psalm.pid,
-                psalms: [psalm],
+                psalmoi: [psalm],
                 origin: psalm,
                 //latest: psalm,
                 result: {...psalm},
@@ -129,7 +129,7 @@ const ayat = (payload, psalm, directSide, suwar) => {
         }
         surah = {
             pid: payload.pid,
-            psalms: [minimalPsalm],
+            psalmoi: [minimalPsalm],
             origin: minimalPsalm,
             //latest: minimalPsalm,
             result: minimalPsalm,

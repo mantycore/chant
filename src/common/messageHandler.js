@@ -50,12 +50,12 @@ export default state => {
         }
     }
     // TODO: move to a separate module -------------------------------------------------------------
-    const posts = state.posts || []
+    const poemata = state.poemata || [] //could also contain haikus 
     const suwar = []
     const rengashu = []
 
-    posts.forEach(post => aggregate(
-        post,
+    poemata.forEach(poema => aggregate(
+        poema,
         suwar, // modified as a result
         contentStore, // modified as a result
         () => stateChangeHandler, // called as a result
@@ -73,24 +73,24 @@ export default state => {
         return cid
     }
 
-    const putPostToStore = post => {
-        if (post.opid === null) {
-            delete post.opid // hacky, improve
+    const putPostToStore = poema => {
+        if (poema.opid === null) {
+            delete poema.opid // hacky, improve
         }
-        posts.push(post)
+        poemata.push(poema)
         const surah = aggregate(
-            post,
+            poema,
             suwar, // modified as a result
             contentStore, // modified as a result
             () => stateChangeHandler, // called as a result
             rengashu, // modified as a result
             getAndStoreContent
         )
-        stateChangeHandler('put post', {post, surah})
+        stateChangeHandler('put post', {poema, surah})
     }
 
     const revoke = async origin => {
-        const post = await createPost({
+        const psalm = await createPost({
             nid: pr.id,
             proofs: [{type: 'delete', post: origin}]
         })
@@ -103,12 +103,12 @@ export default state => {
             bs58.decode(origin.proofSignature),
             bs58.decode(origin.proofKey)
         ))*/
-        putPostToStore(post)
-        broadcast({type: 'put post', post}, false, peers, pr)
+        putPostToStore(psalm)
+        broadcast({type: 'put post', post: psalm}, false, peers, pr)
     }
 
     const updatePost = async (update, origin, mode) => {
-        let post;
+        let psalm;
 
         let proofs = []
         if (update.body) {
@@ -116,13 +116,13 @@ export default state => {
             if (signaturesMarkup) {
                 proofs = signaturesMarkup
                     .map(s => s.substring(1))
-                    .map(pid => posts.find(post => post.pid === pid))
-                    .map(post => ({type: 'hand', post}))
+                    .map(pid => poemata.find(poema => poema.pid === pid))
+                    .map(poema => ({type: 'hand', post: poema}))
             }
         }
 
         if (mode === 'patch') {
-            post = await createPost({
+            psalm = await createPost({
                 nid: pr.id,
                 ...update,
                 proofs: [{type: 'patch', post: origin}].concat(proofs)
@@ -134,10 +134,10 @@ export default state => {
             }
             params.proofs = (params.proofs || []).concat(proofs)
             params.proofs.push({type: 'put', post: origin})
-            post = await createPost()
+            psalm = await createPost(/*...*/)
         }
-        putPostToStore(post)
-        broadcast({type: 'put post', post}, false, peers, pr)
+        putPostToStore(psalm)
+        broadcast({type: 'put post', post: psalm}, false, peers, pr)
     }
 
     const putPost = async({body, filesToLoad, opid, tags, to, conversationId}) => {
@@ -151,11 +151,11 @@ export default state => {
         if (signaturesMarkup) {
             proofs = signaturesMarkup
                 .map(s => s.substring(1))
-                .map(pid => posts.find(post => post.pid === pid))
-                .map(post => ({type: 'hand', post}))
+                .map(pid => poemata.find(poema => poema.pid === pid))
+                .map(poema => ({type: 'hand', post: poema}))
         }
 
-        const post = await createPost({
+        const psalm = await createPost({
             body,
             attachments,
             nid: pr.id,
@@ -166,19 +166,19 @@ export default state => {
         })
 
         if (to) {
-            const nonce = bs58.decode(post.pid).slice(0, 24)
+            const nonce = bs58.decode(psalm.pid).slice(0, 24)
             const toPost = suwar.find(curSurah => curSurah.pid === to)
             const recipientDirectKey = bs58.decode(toPost.origin.directKey)
             const secretKey = crypto.direct.secretKey(recipientDirectKey, nonce)
 
             const contentMap = {}
 
-            if (post.body) {
+            if (psalm.body) {
                 const encryptedBody = nacl.secretbox(Buffer.from(body), nonce, secretKey.itself)
                 const cid = await toCID(encryptedBody)
                 contentStore.set(cid, {type: 'application/octet-stream', buffer: encryptedBody, cid})
-                contentStore.set(post.body.cid, {type: 'text/plain', text: body, cid: post.body.cid, private: true}) // todo: regularize with files?
-                contentMap[post.body.cid] = cid
+                contentStore.set(psalm.body.cid, {type: 'text/plain', text: body, cid: psalm.body.cid, private: true}) // todo: regularize with files?
+                contentMap[psalm.body.cid] = cid
             }
 
             for (const file of filesFull) {
@@ -190,20 +190,20 @@ export default state => {
                 contentMap[file.cid] = cid
             }
 
-            Object.assign(post, {contentMap}) // counts as a part of outer post
+            Object.assign(psalm, {contentMap}) // counts as a part of outer post
 
-            const ciphertext = nacl.secretbox(asBufferPlain(post), nonce, secretKey.itself) //BSON instead of Buffer.from(microjson(post)?
+            const ciphertext = nacl.secretbox(asBufferPlain(psalm), nonce, secretKey.itself) //BSON instead of Buffer.from(microjson(post)?
 
-            const encryptedPost = {
+            const haiku = {
                 ciphertext: base64.fromByteArray(ciphertext),
                 to: [{
                     pid: to,
                     key: base64.fromByteArray(secretKey.encryptedForRecipient)
                 }],
                 senderKey: base64.fromByteArray(secretKey.encryptedForSender),
-                timestamp: post.timestamp,
-                pid: post.pid,
-                version: post.version
+                timestamp: psalm.timestamp,
+                pid: psalm.pid,
+                version: psalm.version
             }
 
             //console.log(encryptedPost)
@@ -226,21 +226,21 @@ export default state => {
             //const [filesFull, attachments] = await processFiles(filesToLoad, encrypt)
 
             //const decrypted = crypto.direct.decrypt(encrypted, Buffer.from(microjson(inner(toPost))))
-            putPostToStore(encryptedPost)
-            broadcast({type: 'put post', post: encryptedPost}, false, peers, pr)
-            return encryptedPost.pid
+            putPostToStore(haiku)
+            broadcast({type: 'put post', post: haiku}, false, peers, pr)
+            return haiku.pid
         } else {
-            if (post.body) {
-                contentStore.set(post.body.cid, {type: 'text/plain', text: body, cid: post.body.cid}) // todo: regularize with files?
+            if (psalm.body) {
+                contentStore.set(psalm.body.cid, {type: 'text/plain', text: body, cid: psalm.body.cid}) // todo: regularize with files?
             }
 
             filesFull.forEach(file => {
                 contentStore.set(file.cid, file)
             })
 
-            putPostToStore(post)
-            broadcast({type: 'put post', post}, false, peers, pr)
-            return post.pid
+            putPostToStore(psalm)
+            broadcast({type: 'put post', post: psalm}, false, peers, pr)
+            return psalm.pid
         }
     }
     // --- THINGS THAT USE GETTERS II ---
@@ -255,12 +255,12 @@ export default state => {
         }
     }, 10000)
 
-    const storePost = post => {
-        putPostToStore(post) //TODO: simplify calls and naming scheme
+    const storePost = poema => {
+        putPostToStore(poema) //TODO: simplify calls and naming scheme
 
         if (isServerNode) {
-            if (post.attachments) {
-                post.attachments.map(async attachment => {
+            if (poema.attachments) {
+                poema.attachments.map(async attachment => {
                     if (!contentStore.get(attachment.cid)) {
                         try {
                             await getAndStoreContent(attachment.cid) //stateChangeHandler is fired inside; think if it is good solution
@@ -276,7 +276,7 @@ export default state => {
     Object.assign(state, {
         peers,
         contentStore,
-        posts,
+        poemata,
         suwar,
         // messagesProcessed, // mantra/ internal
         rengashu,
@@ -303,7 +303,7 @@ export default state => {
     addHandlers({
         pr,
         peers,
-        posts,
+        poemata,
         getStateChangeHandler: () => stateChangeHandler,
         storePost,
         contentStore,

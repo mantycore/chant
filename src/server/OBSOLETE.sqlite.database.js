@@ -4,7 +4,7 @@ let db;
 
 async function setup(state) {
     db = await Database('./chant.db')
-    state.posts = (await db.all('SELECT * FROM posts ORDER BY timestamp'))
+    state.poemata = (await db.all('SELECT * FROM posts ORDER BY timestamp'))
         .map(({pid, opid, timestamp, rest}) =>
             ({pid, opid, timestamp,...JSON.parse(rest)}))
     try {

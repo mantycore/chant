@@ -17,9 +17,9 @@ const microjson = (entity: any): string => {
     }}`
 }
 
-const asBufferPlain = post => Buffer.from(microjson(post))
+const asBufferPlain = psalm => Buffer.from(microjson(psalm))
 
-export default post => asBufferPlain(inner(post))
+export default psalm => asBufferPlain(inner(psalm))
 export {
     asBufferPlain 
 }

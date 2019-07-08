@@ -1,12 +1,12 @@
-const inner = post => {
-    const innerPost = {...post}
-    delete innerPost.pid
-    delete innerPost.proofs
-    delete innerPost.proofKey
-    delete innerPost.proofSignature
-    delete innerPost.directKey
-    delete innerPost.contentMap
-    return innerPost
+const inner = psalm => {
+    const innerPsalm = {...psalm}
+    delete innerPsalm.pid
+    delete innerPsalm.proofs
+    delete innerPsalm.proofKey
+    delete innerPsalm.proofSignature
+    delete innerPsalm.directKey
+    delete innerPsalm.contentMap
+    return innerPsalm
 }
 
 export default inner

@@ -11,46 +11,46 @@ const PROTOCOL_VERSION = 0
 const createPost = async ({body, attachments, nid, opid, tags, proofs, conversationId}) => {
     const timestamp = new Date().getTime() // millisecond from epoch
 
-    const post = {
+    const psalm = {
         timestamp,
         //links
         version: PROTOCOL_VERSION
     }
     if (body) {
         const cid = await toCID(body)
-        Object.assign(post, {body: {cid: await toCID(body), text: body}})
+        Object.assign(psalm, {body: {cid: await toCID(body), text: body}})
     }
     if (opid) {
-        Object.assign(post, {opid})
+        Object.assign(psalm, {opid})
     }
     if (tags) {
-        Object.assign(post, {tags})
+        Object.assign(psalm, {tags})
     }
     if (conversationId) {
-        Object.assign(post, {conversationId})
+        Object.assign(psalm, {conversationId})
     }
     if (attachments && attachments.length > 0) {
-        Object.assign(post, {attachments})
+        Object.assign(psalm, {attachments})
     }
 
     /*------------------------
        inner post is complete
       ------------------------*/
-    const bsonPost = asBufferPlain(post)// is it good enough?
-    const pid = bs58.encode(nacl.hash(asBufferPlain({post, nid})))
-    const [proofKey, proofSignature] = crypto.proof.signOrigin(bsonPost).map(Buffer.from).map(bs58.encode)
-    const directKey = bs58.encode(Buffer.from(crypto.direct.signOrigin(bsonPost)))
+    const binaryPsalm = asBufferPlain(psalm)// is it good enough?
+    const pid = bs58.encode(nacl.hash(asBufferPlain({psalm, nid})))
+    const [proofKey, proofSignature] = crypto.proof.signOrigin(binaryPsalm).map(Buffer.from).map(bs58.encode)
+    const directKey = bs58.encode(Buffer.from(crypto.direct.signOrigin(binaryPsalm)))
 
     if (proofs) {
-        Object.assign(post, {proofs: proofs.map(proof => {
+        Object.assign(psalm, {proofs: proofs.map(proof => {
             const result = ({
                 signature: bs58.encode(Buffer.from(crypto.proof.signDerived(
-                    bsonPost, asBuffer(proof.post) ))),
+                    binaryPsalm, asBuffer(proof.post) ))),
                 type: proof.type,
                 pid: proof.post.pid
             })
             const verification = crypto.proof.verify(
-                bsonPost,
+                binaryPsalm,
                 bs58.decode(result.signature),
                 asBuffer(proof.post),
                 bs58.decode(proof.post.proofSignature),
@@ -62,7 +62,7 @@ const createPost = async ({body, attachments, nid, opid, tags, proofs, conversat
         )})
     }
 
-    Object.assign(post, {
+    Object.assign(psalm, {
         pid,
         proofKey,
         proofSignature,
@@ -70,7 +70,7 @@ const createPost = async ({body, attachments, nid, opid, tags, proofs, conversat
         //proofs
     })
 
-    return post
+    return psalm
 }
 
 export default createPost

@@ -23,12 +23,12 @@ const mantrasaProcessed = new Set()
     TODO: regularize the scheme
 */
 
-let postInitialized = false
+let poemataInitialized = false
 
 const addHandlers = ({
     pr,
     peers,
-    posts,
+    poemata,
     getStateChangeHandler,
     storePost,
     contentStore
@@ -39,12 +39,12 @@ const addHandlers = ({
             peers.add(id)
             getStateChangeHandler()('put peer', {nid: id})
         }
-        if (!postInitialized) {
+        if (!poemataInitialized) {
             try {
-                const newPosts = await getPosts(id, pr)
-                for (const post of newPosts) {
-                    if (!posts.find(localPost => localPost.pid == post.pid)) {
-                        storePost(post)
+                const newPoemata = await getPosts(id, pr)
+                for (const newPoema of newPoemata) {
+                    if (!poemata.find(localPoema => localPoema.pid == newPoema.pid)) {
+                        storePost(newPoema)
                     }
                     //posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
                     //stateChangeHandler()
@@ -53,7 +53,7 @@ const addHandlers = ({
                 log.error("Error during saving a post", error)
                 // do nothing
             }
-            postInitialized = true
+            poemataInitialized = true
             log.info('posts initialized')
             getStateChangeHandler()({type: 'posts initialized'})
         }
@@ -82,7 +82,7 @@ const addHandlers = ({
         }
         switch (message.type) {
             case 'put post': {
-                if (!posts.find(post => post.pid === message.post.pid)) {
+                if (!poemata.find(poema => poema.pid === message.post.pid)) {
                     broadcast(forwardedMessage, false, peers, pr)
                     // TODO: optimize: do not sent the post to nodes we know already have it
                     storePost(message.post)
@@ -127,7 +127,7 @@ const addHandlers = ({
             break
 
             case 'get posts': {
-                send(forwardedMessage.origin, {type: 'put posts', posts, inReplyTo: message.mid}, false, pr)
+                send(forwardedMessage.origin, {type: 'put posts', posts: poemata, inReplyTo: message.mid}, false, pr)
                 broadcast(forwardedMessage, false, peers, pr)
             }
             break

@@ -9,10 +9,10 @@ async function setup(state) {
     postgres = new Client()
     await postgres.connect();
 
-    state.posts = []
+    state.poemata = []
     for (const {pid, opid, timestamp, rest} of
         (await postgres.query('SELECT * FROM posts ORDER BY timestamp')).rows) {
-        state.posts.push({pid, opid, timestamp: parseInt(timestamp),...JSON.parse(rest)})
+        state.poemata.push({pid, opid, timestamp: parseInt(timestamp),...JSON.parse(rest)})
     }
 
     let content = [];

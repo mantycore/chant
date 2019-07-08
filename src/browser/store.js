@@ -4,6 +4,7 @@ import bs58 from 'bs58'
 
 const initialState = {
     peers: new Set(),
+    poemata: [],
     suwar: [],
     contentStore: new Map(),
     rengashu: [],
@@ -33,7 +34,7 @@ const initialState = {
 }
 
 function copy(draft, action) {
-    draft.posts = [...action.state.posts]
+    draft.poemata = [...action.state.poemata]
     draft.suwar = [...action.state.suwar]
     draft.rengashu = [...action.state.rengashu]
     draft.contentStore = new Map(action.state.contentStore)
