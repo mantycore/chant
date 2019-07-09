@@ -1,0 +1,18 @@
+.thread {
+/* #posts > div > div - post with thread; but this style only should apply in tag view */
+    margin-bottom: 40px;
+}
+.thread .post, .thread .more {
+    width: auto;
+    box-sizing: border;
+    margin-left: 50px;
+
+}
+.thread .more {
+    font-style: italic;
+    padding-left: 10px;
+}
+.thread .more a {
+    text-decoration: none;
+    color: #bbb;
+}
