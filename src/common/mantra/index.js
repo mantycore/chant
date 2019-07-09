@@ -12,7 +12,7 @@ const has = (set, nid) =>
 const mantrasaProcessed = new Set()
 
 /*
-    messages scheme:
+    mantras scheme:
     'ping' -> 'pong'
     'get posts' -> 'put posts'
     'get content' -> 'content found'
@@ -59,43 +59,43 @@ const addHandlers = ({
         }
     })
 
-    pr.on('message', async (message, from) => {
+    pr.on('message', async (mantra, from) => {
         if (!has(peers, from)) {
             peers.add(from)
             getStateChangeHandler()('put peer', {nid: from})
         }
-        if (message.type !== 'ping' && message.type !== 'pong') {
-            log.info('RECV', from.toString('hex', 0, 2), message)
+        if (mantra.type !== 'ping' && mantra.type !== 'pong') {
+            log.info('RECV', from.toString('hex', 0, 2), mantra)
         }
-        const forwardedMessage = Object.assign({}, message, {origin: message.origin ? (
-            'data' in message.origin
-            ? Buffer.from(message.origin.data) // origin deserialized from text
-            : message.origin // from bson
+        const forwardedMantra = Object.assign({}, mantra, {origin: mantra.origin ? (
+            'data' in mantra.origin
+            ? Buffer.from(mantra.origin.data) // origin deserialized from text
+            : mantra.origin // from bson
         ) : from})
         {
-            const umid = `${forwardedMessage.origin.toString('hex')}:${message.mid}`
+            const umid = `${forwardedMantra.origin.toString('hex')}:${mantra.mid}`
             if (mantrasaProcessed.has(umid)) {
                 return
             } else {
                 mantrasaProcessed.add(umid)
             }
         }
-        switch (message.type) {
+        switch (mantra.type) {
             case 'put post': {
-                if (!poemata.find(poema => poema.pid === message.post.pid)) {
-                    broadcast(forwardedMessage, false, peers, pr)
+                if (!poemata.find(poema => poema.pid === mantra.post.pid)) {
+                    broadcast(forwardedMantra, false, peers, pr)
                     // TODO: optimize: do not sent the post to nodes we know already have it
-                    storePost(message.post)
+                    storePost(mantra.post)
                 }
-                //message.post.body = await getContent(message.post.bodyCid)
+                //mantra.post.body = await getContent(mantra.post.bodyCid)
             }
             break
 
             /*case 'put content': { //not used for now
-                const cid = await toCID(message.payload);
+                const cid = await toCID(mantra.payload);
                 if (!contentStore.get(cid)) {
-                    contentStore.set(cid, message.payload)
-                    broadcast(forwardedMessage) 
+                    contentStore.set(cid, mantra.payload)
+                    broadcast(forwardedMantra) 
                      // TODO: optimize: do not sent the post to nodes we know already have it
                      // TODO: optimize: send only to server nodes? or, better, send to all nodes, but only server nodes should store it.
                 }
@@ -103,37 +103,37 @@ const addHandlers = ({
             break*/
 
             case 'get content': { // todo: split to query (~= head) and get
-                const payload = contentStore.get(message.cid)
+                const payload = contentStore.get(mantra.cid)
                 if (payload) {
-                    send(forwardedMessage.origin, {type: 'content found', payload, inReplyTo: message.mid}, /*binary*/ true, pr)
+                    send(forwardedMantra.origin, {type: 'content found', payload, inReplyTo: mantra.mid}, /*binary*/ true, pr)
                 } else {
-                    broadcast(forwardedMessage, true, peers, pr)
+                    broadcast(forwardedMantra, true, peers, pr)
                 }
             }
             break
 
             case 'content found': {
-                handleReply(message, message.payload)
+                handleReply(mantra, mantra.payload)
             }
             break
 
             case 'ping': {
-                send(from, {type: 'pong', inReplyTo: message.mid}, false, pr)
+                send(from, {type: 'pong', inReplyTo: mantra.mid}, false, pr)
             }
             break
 
             case 'pong': 
-                handleReply(message)
+                handleReply(mantra)
             break
 
             case 'get posts': {
-                send(forwardedMessage.origin, {type: 'put posts', posts: poemata, inReplyTo: message.mid}, false, pr)
-                broadcast(forwardedMessage, false, peers, pr)
+                send(forwardedMantra.origin, {type: 'put posts', posts: poemata, inReplyTo: mantra.mid}, false, pr)
+                broadcast(forwardedMantra, false, peers, pr)
             }
             break
 
             case 'put posts': {
-                handleReply(message, message.posts)
+                handleReply(mantra, mantra.posts)
             }
             break
         }

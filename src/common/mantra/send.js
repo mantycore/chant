@@ -1,28 +1,28 @@
 // @flow
-import type { Message, MessageWithId } from 'Mantra/.flow/'
+import type { Mantra, MantraWithId } from 'Mantra/.flow/'
 import log from 'Common/log.js'
 
 const send = (
     id: any,
-    message: Message | MessageWithId,
+    mantra: Mantra | MantraWithId,
     binary: boolean = false,
     pr: any
 ) => {
-    const newMessage = Object.assign({}, message)
+    const newMantra = Object.assign({}, mantra)
     let mid: string
 
-    if (typeof message.mid === 'string') {
-        mid = message.mid
+    if (typeof mantra.mid === 'string') {
+        mid = mantra.mid
     } else {
         mid = new Date().toISOString()
-        Object.assign(((newMessage: any): MessageWithId), {mid})
+        Object.assign(((newMantra: any): MantraWithId), {mid})
         // I do not want to create a new object, so
-        // I need to unstafely cast Message to MessageWithId
+        // I need to unsafely cast Mantra to MantraWithId
     }
-    if (message.type !== 'ping' && message.type !== 'pong') {
-        log.info("SEND", id.toString('hex', 0, 2), message)
+    if (mantra.type !== 'ping' && mantra.type !== 'pong') {
+        log.info("SEND", id.toString('hex', 0, 2), mantra)
     }
-    pr.send(id, newMessage, binary)
+    pr.send(id, newMantra, binary)
     return mid
 }
 

@@ -13,10 +13,10 @@ const waitForReply = (mid, resolve, reject, timeout = 1000) => {
     }
 }
 
-const handleReply = (message, resolution, callback) => {
-    if (repliesPending.has(message.inReplyTo)) {
-        const {resolve, reject} = repliesPending.get(message.inReplyTo)
-        repliesPending.delete(message.inReplyTo)
+const handleReply = (mantra, resolution, callback) => {
+    if (repliesPending.has(mantra.inReplyTo)) {
+        const {resolve, reject} = repliesPending.get(mantra.inReplyTo)
+        repliesPending.delete(mantra.inReplyTo)
         resolve(resolution) // we can also use sender, etc
     }
 }

@@ -1,13 +1,13 @@
 import send from './send.js'
 
-const broadcast = (message, binary = false, /* add */ peers, pr) => {
-    const newMessage = Object.assign({}, message)
+const broadcast = (mantra, binary = false, /* add */ peers, pr) => {
+    const newMantra = Object.assign({}, mantra)
     let mid // TODO: think about better solution
     for (const peer of peers.values()) {
         // TODO: add already processed nodes
-        if (!message.origin || !(peer.equals(message.origin))) {
-            mid = send(peer, newMessage, binary, pr)
-            Object.assign(newMessage, {mid})
+        if (!mantra.origin || !(peer.equals(mantra.origin))) {
+            mid = send(peer, newMantra, binary, pr)
+            Object.assign(newMantra, {mid})
         }
     }
     return mid

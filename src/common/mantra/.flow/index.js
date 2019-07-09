@@ -1,12 +1,12 @@
 // @flow
-export type MessageWithId = {
+export type MantraWithId = {
     mid: string,
     type: string,
     payload: MicroJSON,
     inReplyTo: ?string
 }
 
-export type Message = {
+export type Mantra = {
     type: string,
     payload: MicroJSON,
     inReplyTo: ?string
