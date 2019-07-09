@@ -5,7 +5,7 @@
 
 /* ---- I column ---- */
 
-.maya-tags-list { /* also column*/
+.maya-tags-list { /* also column */
     width: 9em;
     min-width: 9em;
 }
@@ -42,6 +42,3 @@
     overflow-y: scroll;
 }
 
-.surah-item {
-    margin-bottom: 3em;
-}
