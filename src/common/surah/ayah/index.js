@@ -52,9 +52,14 @@ const ayat = (payload, psalm, directSide, suwar, poemata) => {
 
                                 resultPsalm.ayat = resultPsalm.ayat || []
                                 for (const curAyah of versionPsalm.proofs) {
-                                    if (!surah.origin.proofs || !surah.origin.proofs.find(originalAyah => originalAyah.pid === curAyah.pid)) {
+                                    if (!surah.origin.proofs
+                                        || !surah.origin.proofs.find(originalAyah => originalAyah.pid === curAyah.pid)) {
                                         // todo: decide if it is necessary or safe to push updating proofs
-                                        resultPsalm.ayat.push({...curAyah, from: versionPsalm.pid})
+                                        // todo: DRY with below
+                                        const original = poemata.find(psalm => psalm.pid === curAyah.pid)
+                                        // what if it is haiku? try to decrypt?
+                                        const isGenuine = verify(psalm, curAyah, original)
+                                        resultPsalm.ayat.push({...curAyah, from: versionPsalm.pid, isGenuine})
                                     }
                                 }
                                 
