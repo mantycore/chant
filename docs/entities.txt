@@ -1,0 +1,10 @@
+Mantra is a peer-relay user message.
+
+Poem (pl. Poemata) is supertype of Psalm and Haiku.
+Psalm (pl. Psalmoi) is a simple post or an update to one.
+Haiku (coll. Kushu, not yet used) is a Psalm encrypted with the DirectKey's of one or more other Psalms.
+
+Surah (pl. Suwar) is a aggregated versions of one post.
+
+Sutra (pl. Sutrani) is a public thread.
+Renga (coll. Rengashu) is a private conversation, decrypted from Haiku.
