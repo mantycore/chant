@@ -1,5 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
+import style from './Meta.css'
 
 const Meta = ({surah, dispatch}) => <div className={style['meta']}>
     <span className={style['meta-link']}>
@@ -8,11 +9,11 @@ const Meta = ({surah, dispatch}) => <div className={style['meta']}>
         </a>
     </span>
 
-    {revoked ? ['POST REVOKED'] : [ //TODO: see history?
+    {surah.result.revoked ? ['POST REVOKED'] : [ //TODO: see history?
         ...(surah.my ? [
-            <span className={style['action']} onClick={dispatch.update(surah, state)}>Update</span>,
+            <span className={style['action']} onClick={dispatch.update(surah)}>Update</span>,
             '\u00A0',
-            <span className={style['action']} onClick={dispatch.revoke(surah.origin, state)}>Revoke</span>
+            <span className={style['action']} onClick={dispatch.revoke(surah)}>Revoke</span>
         ] : []),
         '\u00A0',
         <span><a href={`#/${surah.pid}/direct`}>Direct</a></span>,
@@ -24,10 +25,8 @@ const Meta = ({surah, dispatch}) => <div className={style['meta']}>
 export default connect(
     state => ({}),
     dispatch => ({dispatch: {
-        revoke: surah => () => dispatch({type: 'react surahitem meta revoke', surah}),
-        update: surah => () => dispatch({type: 'react surahitem meta update', surah})
+        revoke: surah => () => dispatch({type: 'react surah-item meta revoke', surah}),
+        update: surah => () => dispatch({type: 'react surah-item meta update', surah})
             //if it is safe to pass post instead of pid?
-    }}
+    }})
 )(Meta)
-
-

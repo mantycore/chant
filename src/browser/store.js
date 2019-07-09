@@ -1,4 +1,6 @@
-import { createStore } from 'redux'
+import { createStore, applyMiddleware } from 'redux'
+import { mergeMap } from 'rxjs/operators'
+import { ofType, combineEpics, createEpicMiddleware } from 'redux-observable'
 import produce from 'immer'
 import bs58 from 'bs58'
 
@@ -76,7 +78,7 @@ function handleUrl(draft) {
 }
 
 function reducer(state = initialState, action) {
-    // console.log("RDCR", action)
+    console.log("RDCR", action)
     const newState = produce(state, draft => {
         switch (action.type) {
             case 'attachment load start':
@@ -164,5 +166,27 @@ function reducer(state = initialState, action) {
     return newState
 }
 
-const store = createStore(reducer)
+const epic = combineEpics(
+    (action$, state$) => action$.pipe(
+        ofType('react surah-item meta revoke'),
+        mergeMap(async action => {
+            if (window.confirm("Really revoke the post?")) {
+                await state$.value.revoke(post)
+                return {type: 'epic surah-item revoke success'}
+            }
+            return {type: 'epic surah-item revoke cancel'}
+        })
+    )
+    //action$ => action$.ofType('react surah-item meta update')
+)
+
+const epicMiddleware = createEpicMiddleware()
+
+const store = createStore(
+    reducer,
+    applyMiddleware(epicMiddleware)
+)
+
+epicMiddleware.run(epic)
+
 export default store

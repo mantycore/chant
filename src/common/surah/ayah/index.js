@@ -6,6 +6,13 @@ export { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import crypto from 'Common/crypto.js'
 
+
+function verifyByPid(psalm, ayah, poemata) { //TODO: move to verify.js
+    const original = poemata.find(psalm => psalm.pid === ayah.pid)
+    // what if it is haiku? try to decrypt?
+    return verify(psalm, ayah, original)  // from, from.ayah, from.ayah.pid
+}
+
 const ayat = (payload, psalm, directSide, suwar, poemata) => {
     let surah
 
@@ -38,7 +45,7 @@ const ayat = (payload, psalm, directSide, suwar, poemata) => {
             if (resultPsalm.proofs) {
                 resultPsalm.ayat = []
                 for (const ayah of resultPsalm.proofs) {
-                    resultPsalm.ayat.push({...ayah, from: surah.origin.pid})
+                    resultPsalm.ayat.push({...ayah, from: surah.origin.pid, isGenuine: verifyByPid(surah.origin, ayah, poemata)})
                 }
             }
 
@@ -55,11 +62,7 @@ const ayat = (payload, psalm, directSide, suwar, poemata) => {
                                     if (!surah.origin.proofs
                                         || !surah.origin.proofs.find(originalAyah => originalAyah.pid === curAyah.pid)) {
                                         // todo: decide if it is necessary or safe to push updating proofs
-                                        // todo: DRY with below
-                                        const original = poemata.find(psalm => psalm.pid === curAyah.pid)
-                                        // what if it is haiku? try to decrypt?
-                                        const isGenuine = verify(psalm, curAyah, original)
-                                        resultPsalm.ayat.push({...curAyah, from: versionPsalm.pid, isGenuine})
+                                        resultPsalm.ayat.push({...curAyah, from: versionPsalm.pid, isGenuine: verifyByPid(versionPsalm, curAyah, poemata)})
                                     }
                                 }
                                 
@@ -118,10 +121,7 @@ const ayat = (payload, psalm, directSide, suwar, poemata) => {
             if (psalm.proofs) {
                 surah.result.ayat = []
                 for (const ayah of psalm.proofs) {
-                    const original = poemata.find(psalm => psalm.pid === ayah.pid)
-                    // what if it is haiku? try to decrypt?
-                    const isGenuine = verify(psalm, ayah, original)
-                    surah.result.ayat.push({...ayah, from: surah.pid, isGenuine})
+                    surah.result.ayat.push({...ayah, from: surah.pid, isGenuine: verifyByPid(psalm, ayah, poemata)})
                 }
             }
             if (directSide) {

@@ -6,8 +6,12 @@
 /* ---- I column ---- */
 
 .maya-tags-list { /* also column */
-    width: 9em;
-    min-width: 9em;
+    width: 5em;
+    min-width: 5em;
+
+    padding-top: 15px;
+    padding-left: 15px;
+    font-family: monospace;
 }
 
 /* ---- II column ---- */
@@ -15,14 +19,29 @@
 .tag-column {
     width: 12em;
     min-width: 12em;
+    display: flex;
+    flex-direction: column;
+
+    padding-top: 15px;
 }
 
 .tag-meta {
     height: 4em;
 }
 
+.tag-sutrani-list {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
 .sutra-item {
-    margin-bottom: 3em;
+
+    margin-bottom: 1em;
+    font-size: 14px;
+}
+
+.sutra-pid {
+    font-family: monospace;
 }
 
 /* ---- III column ---- */
@@ -39,6 +58,8 @@
 
 .sutra-suwar-list {
     flex-grow: 1;
-    overflow-y: scroll;
+    overflow-y: auto;
+
+    padding-left: 50px;
 }
 

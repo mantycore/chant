@@ -1,7 +1,4 @@
-:import("index.js") {
-    surah-item: surah-item;
-    revoked: revoked;
-}
+:import("index.css") { surah-item: surah-item; revoked: revoked; }
 
 .meta {
     /* margin-top: 3px; */
@@ -12,14 +9,14 @@
     transition: opacity 100ms ease-out;
 }
 
-:ref(.surah-item):hover .meta {
+.surah-item:hover .meta {
     opacity: 100;
     visibility: visible;
     transition: opacity 200ms ease-in;
 }
 
-:ref(.surah-item.revoked):hover .meta,
-:ref(.surah-item.revoked):hover .meta a {
+.surah-item.revoked:hover .meta,
+.surah-item.revoked:hover .meta a {
     color: #a44
 }
 

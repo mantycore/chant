@@ -14,11 +14,13 @@ const selectTags = state => Object.entries(state.suwar.reduce((acc, cur) => {
 const selectSutraniByTag = (state, tag) => tag &&
     state.suwar.filter(surah => surah.result.tags && surah.result.tags.includes(tag)) // TODO: sort on the latest comment in the thread = bump (if not sage)
 
-const selectSuwarBySutraPid = (state, pid) => pid &&
-    state.suwar.filter(surah => surah.result.opid === pid)
+const selectSuwarBySutraPid = (state, pid) => pid && state.suwar.filter(surah => surah.result.opid === pid)
+
+const selectSurahByPid = (state, pid) => pid && state.suwar.find(surah => surah.pid === pid)
 
 export {
     selectTags,
     selectSutraniByTag,
-    selectSuwarBySutraPid
+    selectSuwarBySutraPid,
+    selectSurahByPid
 }

@@ -1,18 +1,20 @@
-.thread {
+:import("index.css") { surah-item: surah-item; }
+
+.sutra {
 /* #posts > div > div - post with thread; but this style only should apply in tag view */
     margin-bottom: 40px;
 }
-.thread .post, .thread .more {
+.sutra .surah-item, .sutra .more {
     width: auto;
     box-sizing: border;
     margin-left: 50px;
 
 }
-.thread .more {
+.sutra .more {
     font-style: italic;
     padding-left: 10px;
 }
-.thread .more a {
+.sutra .more a {
     text-decoration: none;
     color: #bbb;
 }
