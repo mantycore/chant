@@ -7,6 +7,8 @@ import {
 } from 'Browser/selectors/'
 import style from './Maya.css'
 
+import SurahItem from './SurahItem/'
+
 const connector = connect(
     state => ({
         state,
@@ -18,8 +20,6 @@ const connector = connect(
     }})
 )
 
-const SurahItem = connector(({surah, state, newState, dispatch}) =>
-    <div className={style['surah-item']}>{surah.pid.substring(0, 8)} {surah.result.body && surah.result.body.text}</div>)
 
 const SutraItem = connector(({sutra, state, newState, dispatch}) =>
     <div className={style['sutra-item']} onClick={() => dispatch.updateSutra(sutra.pid)}>

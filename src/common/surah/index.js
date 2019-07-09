@@ -8,7 +8,8 @@ const aggregate = (
     contentStore,
     getStateChangeHandler,
     rengashu,
-    getAndStoreContent
+    getAndStoreContent,
+    poemata
 ) => {
     let psalm, directSide
     if (payload.to) {
@@ -27,7 +28,8 @@ const aggregate = (
         payload, // TODO: not needed, remove?
         psalm,
         directSide,
-        suwar // modified as a effect
+        suwar, // modified as a effect
+        poemata
     )
 
     addSurahToRenga(

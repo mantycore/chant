@@ -1,0 +1,18 @@
+.mark {
+    font-family: monospace;
+    text-decoration: none;
+    word-break: break-all;
+    word-wrap: break-word;
+}
+
+.mark:hover {
+    text-decoration: underline;
+}
+
+.mark.genuine {
+    color: #494;
+}
+
+.mark.counterfeit {
+    color: #a44;
+}

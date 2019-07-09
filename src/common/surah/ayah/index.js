@@ -6,7 +6,7 @@ export { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import crypto from 'Common/crypto.js'
 
-const ayat = (payload, psalm, directSide, suwar) => {
+const ayat = (payload, psalm, directSide, suwar, poemata) => {
     let surah
 
     if (directSide !== 'unknown') {
@@ -113,7 +113,10 @@ const ayat = (payload, psalm, directSide, suwar) => {
             if (psalm.proofs) {
                 surah.result.ayat = []
                 for (const ayah of psalm.proofs) {
-                    surah.result.ayat.push({...ayah, from: surah.pid})
+                    const original = poemata.find(psalm => psalm.pid === ayah.pid)
+                    // what if it is haiku? try to decrypt?
+                    const isGenuine = verify(psalm, ayah, original)
+                    surah.result.ayat.push({...ayah, from: surah.pid, isGenuine})
                 }
             }
             if (directSide) {

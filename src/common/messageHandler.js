@@ -60,7 +60,8 @@ export default state => {
         contentStore, // modified as a result
         () => stateChangeHandler, // called as a result
         rengashu, // modified as a result
-        getAndStoreContent
+        getAndStoreContent,
+        poemata
     ))
     // TODO: move to a separate module -------------------------------------------------------------
     //const generatePId = () => `${pr.id.toString('hex')}:${new Date().toISOString()}`
@@ -84,7 +85,8 @@ export default state => {
             contentStore, // modified as a result
             () => stateChangeHandler, // called as a result
             rengashu, // modified as a result
-            getAndStoreContent
+            getAndStoreContent,
+            poemata
         )
         stateChangeHandler('put post', {poema, surah})
     }

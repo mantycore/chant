@@ -1,10 +1,6 @@
 import React, {useRef, useEffect} from 'react'
 import { connect } from 'react-redux'
 import MarkdownIt from 'markdown-it'
-import { Buffer } from 'buffer'
-import bs58 from 'bs58'
-import crypto from 'Common/crypto.js'
-import asBuffer from 'Psalm/asBuffer.js'
 import style from './Posts.css'
 
 //TODO: handle this in aggregate
@@ -91,7 +87,7 @@ const renderBody = (surah, state) => {
 }
 
 const Post = ({surah, state, dispatch, mini = false, renga = null}) => {
-    const updateProof = post.result.proofs && surah.result.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
+    const updateProof = surah.result.proofs && surah.result.proofs.find(proof => proof.type === 'delete' || proof.type === 'put')
     const revoked = surah.result.revoked
     const thread = renga
         ? renga.suwar.slice(1)

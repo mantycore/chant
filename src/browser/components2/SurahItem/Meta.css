@@ -1,0 +1,38 @@
+:import("index.js") {
+    surah-item: surah-item;
+    revoked: revoked;
+}
+
+.meta {
+    /* margin-top: 3px; */
+    opacity: 0;
+    font-family: monospace;
+    display: flex;
+    color: #bbb;
+    transition: opacity 100ms ease-out;
+}
+
+:ref(.surah-item):hover .meta {
+    opacity: 100;
+    visibility: visible;
+    transition: opacity 200ms ease-in;
+}
+
+:ref(.surah-item.revoked):hover .meta,
+:ref(.surah-item.revoked):hover .meta a {
+    color: #a44
+}
+
+.meta a {
+    text-decoration: none;
+    color: #bbb;
+    font-family: monospace;
+}
+
+.action {
+    cursor: pointer;
+}
+
+.meta-link {
+    flex-grow: 1; 
+}

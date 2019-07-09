@@ -1,0 +1,32 @@
+/* ---- Post ---- */
+
+.surah-item {
+    /* padding-bottom: 6px; */
+    border-bottom: 1px dotted #bbb;
+    padding: 0 10px;
+}
+
+.surah-item.my {
+    border-bottom: 1px dotted #6a6;
+    border-left: 1px dotted #6a6;
+}
+
+.surah-item.revoked {
+    padding: 3px 0;
+    background-color: #bbb;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    border-bottom: 1px dotted #a44;
+}
+
+.surah-item .body :first-child {
+    margin-top: 0;
+    /* margin-top: 3px; */
+}
+
+/* ---- Post.Sutra ---- */
+
+:export {
+    surah-item: surah-item;
+    revoked: revoked;
+}
