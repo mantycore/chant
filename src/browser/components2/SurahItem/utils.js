@@ -1,3 +1,5 @@
+import style from "./Marks.css"
+
 const md = new MarkdownIt()
 
 const mark = style['mark']
