@@ -1,9 +1,8 @@
-import React, {useState, useRef} from 'react'
+import React, {useRef} from 'react'
 import { connect } from 'react-redux'
-import style from './PostForm.css'
+import style from './index.css'
 
 const PostForm = ({state, dispatch}) => {
-    const [filesToLoad, setFilesToLoad] = useState([])
     //const bodyRef = useRef(null)// instead of controlled attribute
     const helperRef = useRef(null)
     let placeholder, disabled, encrypted;
@@ -60,31 +59,6 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
         encrypted = false
     }
 
-    const submit = async e => {
-        const body = state.postBeingEdited.body //bodyRef.current.value
-        
-        if (state.postBeingEdited.mode === 'patch') {
-            let post = {body} // so far, only post body can be updated
-            await state.updatePost(post, state.postBeingEdited.post.origin, 'patch')
-        } else {
-            let post = {body, filesToLoad}
-            Object.assign(post, protoPost)
-            const pid = await state.putPost(post)
-
-            if (state.postsMode === 'direct') {
-                const path = window.location.hash.match('#(.*)')[1].split('/')
-                path[3] = pid
-                window.location.hash = path.slice(0,4).join('/')
-            }
-        }
-        setFilesToLoad([])
-        dispatch.submitSuccess()
-        //bodyRef.current.value = ''
-        //hack
-        const postDiv = document.getElementById('posts')
-        postDiv.scrollTop = postDiv.scrollHeight - postDiv.clientHeight; 
-    }
-
     const onDragOver = e => {
         e.stopPropagation();
         e.preventDefault();
@@ -94,7 +68,7 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
     const onDrop = e => {
         e.stopPropagation()
         e.preventDefault()
-        setFilesToLoad(e.dataTransfer.files)
+        dispatch.setFilesToLoad(e.dataTransfer.files)
     }
 
     const proxy = e => {
@@ -102,18 +76,22 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
     }
 
     const helperChange = e => {
-        setFilesToLoad(e.target.files)
+        dispatch.setFilesToLoad(e.target.files)
     }
 
     const onKeyPress = event => {
         if (event.key === 'Enter' && (event.ctrlKey || event.shiftKey) ) {
-            submit()
+            dispatch.submit()
         }
-    } 
+    }
+
+    const submit = () => {
+        dispatch.submit({protoPost})
+    }
 
     return <div className={style["post-form-outer"]}>
-        {Array.from(filesToLoad).length > 0 ? 
-            <div className={style["files"]}>{Array.from(filesToLoad).map(file =>
+        {Array.from(state.filesToLoad).length > 0 ? 
+            <div className={style["files"]}>{Array.from(state.filesToLoad).map(file =>
                 <p>{[file.name, file.type, file.size].map(field =>
                     <span>{field}</span>
                 )}</p>
@@ -147,13 +125,21 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
 }
 
 export default connect(
-    state => ({state}),
+    state => ({
+        state: {
+            ...state,
+            filesToLoad: state.newState.postForm.filesToLoad
+        }
+    }),
     dispatch => ({dispatch: {
-        unlockPassword: () => dispatch({type: 'unlock password'}),
-        changePassword: event => dispatch({type: 'change password', event}),
-        acceptPassword: () => dispatch({type: 'accept password'}),
+        unlockPassword: () => dispatch({type: 'react post-form unlock password'}),
+        changePassword: event => dispatch({type: 'react post-form change password', event}),
+        acceptPassword: () => dispatch({type: 'react post-form accept password'}),
 
         bodyChange: event => dispatch({type: 'post body change', event}),
+
+        setFilesToLoad: files => dispatch({type: 'react post-form files change', files}),
+        submit: params => dispatch({type: 'react post-form submit', ...params}),
         submitSuccess: () => dispatch({type: 'post submit success'}),
         cancelUpdate: () => dispatch({type: 'cancel post update'}),
     }})

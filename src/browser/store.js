@@ -32,6 +32,13 @@ const initialState = {
         maya: {
             tag: 'd',
             sutraPid: null
+        },
+        suwarList: {
+            scrollTrigger: 0
+        },
+        postForm: {
+            //move from postBeingEdited
+            filesToLoad: []
         }
     }
 }
@@ -123,19 +130,6 @@ function reducer(state = initialState, action) {
                     draft.passwordEditable = false
                 }
                 break
-            case 'unlock password':
-                draft.passwordEditable = true
-                break
-            case 'change password':
-                draft.secretCode = action.value.target.value
-                break
-            case 'accept password':
-                //ouch, effects
-                localStorage.setItem('Secret code', draft.secretCode)
-                draft.crypto.setPassphrase(draft.secretCode)
-
-                draft.initiation = false
-                break
 
             case 'update post':
                 draft.postBeingEdited.body = action.post.result.body.text
@@ -146,10 +140,41 @@ function reducer(state = initialState, action) {
                 draft.postBeingEdited.body = action.event.target.value
                 break
             case 'cancel post update':
+                draft.postBeingEdited.body = ''
+                draft.postBeingEdited.mode = 'put'
+                draft.postBeingEdited.post = null
+                draft.newState.postForm.filesToLoad = []
+                break
+
+            case 'epic post-form submit success':
             case 'post submit success':
                 draft.postBeingEdited.body = ''
                 draft.postBeingEdited.mode = 'put'
                 draft.postBeingEdited.post = null
+                draft.newState.postForm.filesToLoad = []
+                draft.newState.suwarList.scrollTrigger ++
+                break
+
+            /* ----- */
+
+            case 'react post-form files change':
+                draft.newState.postForm.filesToLoad = action.files
+                break
+
+            /* ----- */
+
+            case 'react post-form unlock password':
+                draft.passwordEditable = true
+                break
+            case 'react post-form change password':
+                draft.secretCode = action.value.target.value
+                break
+            case 'react post-form accept password':
+                //ouch, effects
+                localStorage.setItem('Secret code', draft.secretCode)
+                draft.crypto.setPassphrase(draft.secretCode)
+
+                draft.initiation = false
                 break
 
             /* ----- */
@@ -194,6 +219,32 @@ const epic = combineEpics(
                 }
             })()
         ))
+    ),
+
+    (action$, state$) => action$.pipe(
+        ofType('react post-form submit'),
+        mergeMap(async action => {
+            const state = state$.value
+            const body = state.postBeingEdited.body //bodyRef.current.value
+            const filesToLoad = state.newState.postForm.filesToLoad
+
+            if (state.postBeingEdited.mode === 'patch') {
+                let post = {body} // so far, only post body can be updated
+                await state.updatePost(post, state.postBeingEdited.post.origin, 'patch')
+                return {type: 'epic post-form submit success'}
+            } else {
+                let post = {body, filesToLoad}
+                Object.assign(post, action.protoPost) //todo: move protopost to state?
+                const pid = await state.putPost(post)
+
+                if (state.postsMode === 'direct') {
+                    const path = window.location.hash.match('#(.*)')[1].split('/')
+                    path[3] = pid
+                    window.location.hash = path.slice(0,4).join('/')
+                }
+                return {type: 'epic post-form submit success'}
+            }
+        })
     )
     //action$ => action$.ofType('react surah-item meta update')
 )

@@ -8,7 +8,9 @@ import {
 } from 'Browser/selectors/'
 import style from './Maya.css'
 
+import SuwarList from './SuwarList/'
 import SurahItem from './SurahItem/'
+import PostForm from './PostForm/'
 
 const connector = connect(
     state => ({
@@ -85,14 +87,8 @@ const Maya = ({state, newState, dispatch}) => {
         </div>
         <div className={style['sutra-column']}>
             {/*<div className={style['sutra-meta']}>OP</div>*/}
-            <div className={style['sutra-suwar-list']}>
-                {oSurah && <SurahItem {...{surah: oSurah, mini: true}} />}
-                {suwar
-                    ? suwar.map(surah => <SurahItem {...{surah}} />)
-                    : "" /*Suwar placeholder*/
-                }
-            </div>
-            <div>surah form</div>
+            <SuwarList {...{origin: oSurah, suwar}} />
+            <PostForm />
         </div>
     </div>
 }

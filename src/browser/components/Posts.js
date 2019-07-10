@@ -135,6 +135,8 @@ const Post = ({surah, state, dispatch, mini = false, renga = null}) => {
     </div>
 }
 
+/* =========================================================================================================================================================== */
+
 const Posts = ({state, dispatch}) => {
     const findReplies = surah => state.suwar.filter(curSurah =>
         curSurah.to && curSurah.to.filter(to => to.pid === surah.pid).length > 0)
