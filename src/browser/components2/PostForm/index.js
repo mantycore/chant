@@ -27,26 +27,26 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
             }</div>
         </div>
     }
-    if (state.postsMode === 'directs list') {
+    if (state.newState.maya.mode === 'directs list') {
         placeholder = `⚿ List of your direct conversations ⚿`
         disabled = true
         encrypted = true
     }
-    if (state.postsMode === 'direct') {
+    if (state.newState.maya.mode === 'direct') {
         protoPost.to = state.opost.pid
         placeholder = `⚿ Encrypted direct message to ~${protoPost.to.substring(0, 8)} ⚿`
         encrypted = true
     }
-    if (state.postsMode === 'direct conversation') {
-        const renga = state.rengashu.find(curRenga => curRenga.id === state.conversationId)
+    if (state.newState.maya.mode === 'direct conversation') {
+        const renga = state.rengashu.find(curRenga => curRenga.id === state.newState.maya.rengaId)
         protoPost.to = renga.suwar[0].my ? renga.secondPid : renga.firstPid // can fail if the conversation is malformed
         // think about it. What if both sides are mine?
-        protoPost.conversationId = state.conversationId
+        protoPost.conversationId = state.newState.maya.rengaId
         placeholder = `⚿ Encrypted direct message to ~${protoPost.to.substring(0, 8)} ⚿`
         encrypted = true
     }
-    if (state.postsMode === 'thread') {
-        protoPost.opid = state.opost.pid
+    if (state.newState.maya.mode === 'thread') {
+        protoPost.opid = state.newState.maya.sutraPid
         placeholder = `Public message in reply to ~${protoPost.opid.substring(0, 8)}`
         encrypted = false
     } else if (state.postsMode === 'tag') {
