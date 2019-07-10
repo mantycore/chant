@@ -4,6 +4,7 @@ import style from './index.css'
 import Meta from './Meta.js'
 import Sutra from './Sutra.js'
 import { renderBody } from './utils.js'
+import Attachments from './Attachments/'
 
 /* copied and modified from v0 Posts.Post */
 
@@ -18,7 +19,7 @@ const SurahItem = ({surah, sutra, mini = false}) => <div>
 
         {surah.result.revoked ? [] : [
             ...(surah.result.body ? [ <div className={style['body']} dangerouslySetInnerHTML={{__html: renderBody(surah)}} /> ] : []),
-            /*...(surah.result.attachments ? [<Attachments {...{attachments: surah.result.attachments}} />] : []),*/
+            ...(surah.result.attachments ? [<Attachments {...{attachments: surah.result.attachments}} />] : []),
         ]}
     </div>
 

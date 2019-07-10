@@ -1,0 +1,15 @@
+.image {
+    max-height: 400px;
+    padding-right: 10px; /* todo: find a cleaner way to align them */
+}
+
+.image-placeholder {
+    height: 400px;
+    width: 300px;
+    margin-right: 10px;
+    background-color: #aaa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}

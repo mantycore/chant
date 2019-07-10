@@ -1,5 +1,6 @@
 import { createStore, applyMiddleware } from 'redux'
-import { mergeMap } from 'rxjs/operators'
+import { Observable } from 'rxjs'
+import { merge, mergeMap } from 'rxjs/operators'
 import { ofType, combineEpics, createEpicMiddleware } from 'redux-observable'
 import produce from 'immer'
 import bs58 from 'bs58'
@@ -161,6 +162,9 @@ function reducer(state = initialState, action) {
                 }
                 break
 
+            case 
+                break
+
         }
     })
     return newState
@@ -176,6 +180,21 @@ const epic = combineEpics(
             }
             return {type: 'epic surah-item revoke cancel'}
         })
+    )
+    (action$, state$) action$.pipe(
+        ofType('react surah-item image download':)
+        mergeMap(async ({cid}) => merge(
+            Observable.of({type: 'epic image download start'}),
+            (async () => {
+                try {
+                    await state.getAndStoreContent(cid)
+                    dispatch({type: 'epic image download success', cid})
+                } catch (error) {
+                    console.log(error);
+                    dispatch({type: 'epic image download fail', cid})
+                }
+            })()
+        ))
     )
     //action$ => action$.ofType('react surah-item meta update')
 )
