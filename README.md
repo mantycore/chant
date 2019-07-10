@@ -57,6 +57,11 @@ In the fine tradition of Tlön, we gave the parts of the arhitecture short, luci
         <td>(unencrypted Psalm)</td>
         <td>direct private message,<br />asymmetrically encrypted (Haiku)</td>
         <td>Haiku contains a psalm encrypted with the public keys of one or more other psalms, forming the basis for direct private conversations (renga).</td>
+    </tr>
+    <tr>
+        <td>encryption abstraction</td>
+        <td colspan="2">the common supertype of Psalm and Haiku (Poem)</td>
+        <td>Poem is just an supertype for ease of transport. Transport only cares for fields common between encrypted and unecrypted posts: id, timestamp, and the protocol version.</td>
     </tr> 
     <tr>
         <td>content routing</td>
@@ -75,7 +80,7 @@ In the fine tradition of Tlön, we gave the parts of the arhitecture short, luci
         <td />
     </tr>
     <tr>
-        <td>WebRTC</td>
+        <td>WebRTC</td><td />
     </tr>
 </table>
 
