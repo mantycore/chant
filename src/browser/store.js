@@ -82,15 +82,15 @@ function reducer(state = initialState, action) {
     console.log("RDCR", action)
     const newState = produce(state, draft => {
         switch (action.type) {
-            case 'epic attachment server-download start':
+            case 'epic attachment download start':
             case 'attachment load start':
                 draft.attachmentIsLoading[action.cid] = 'loading'
                 break
-            case 'epic attachment server-download failure':
+            case 'epic attachment download failure':
             case 'attachment load failure':
-                draft.attachmentIsLoading[action.cid] = 'fail'
+                draft.attachmentIsLoading[action.cid] = 'failure'
                 break
-            case 'epic attachment server-download success':
+            case 'epic attachment download success':
             case 'attachment load success':
                 draft.attachmentIsLoading[action.cid] = 'loaded'
                 break
@@ -183,7 +183,7 @@ const epic = combineEpics(
     (action$, state$) => action$.pipe(
         ofType('react surah-item/attachment download'),
         mergeMap(({cid}) => merge(
-            of({type: 'epic attachment download start'}),
+            of({type: 'epic attachment download start', cid}),
             (async () => {
                 try {
                     await state$.value.getAndStoreContent(cid)

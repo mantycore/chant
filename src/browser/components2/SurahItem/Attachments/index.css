@@ -3,3 +3,14 @@
     flex-direction: row;
     margin-bottom: 16;
 }
+
+.info-field {
+	margin-right: 0.5em;
+}
+
+.attachment .action, .attachment a {
+	text-decoration: underline;
+	/* font-weight: bold; */ 
+	color: #aaa;
+	cursor: pointer;
+}

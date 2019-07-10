@@ -5,10 +5,12 @@ import {binaryToUrl, format} from './utils.js'
 
 const Image = ({attachment, status, buffer, dispatch}) =>
     status === 'loaded'
-        ? <img
-            src={binaryToUrl(buffer, attachment.type)}
-            className={style.image}
-        />
+        ? <a href={binaryToUrl(buffer, attachment.type)} download={attachment.name}>
+            <img
+                src={binaryToUrl(buffer, attachment.type)}
+                className={style.image}
+            />
+        </a>
         : <div
             onClick={dispatch.download(attachment.cid)}
             className={style['image-placeholder']}
