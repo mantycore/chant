@@ -16,8 +16,8 @@ const connector = connect(
         newState: state.newState
     }),
     dispatch => ({dispatch: {
-        updateSutra: pid => dispatch({type: 'react maya sutra update', pid}),
-        updateTag: tag => dispatch({type: 'react maya tag update', tag}),
+        updateSutra: pid => dispatch({type: 'react maya/sutra update', pid}),
+        updateTag: tag => dispatch({type: 'react maya/tag update', tag}),
     }})
 )
 
@@ -39,36 +39,47 @@ const brief = text => {
     return result2
 }
 
-const SutraItem = connector(({sutra, state, newState, dispatch}) =>
-    <div className={style['sutra-item']} onClick={() => dispatch.updateSutra(sutra.pid)}>
-        <span className={style['sutra-pid']}>#{sutra.pid.substring(0, 8)}</span> {sutra.result.body && brief(sutra.result.body.text)}
+const SutraItem = connector(({sutra, highlighted, dispatch}) =>
+    <div className={[
+        style['sutra-item'],
+        ...(highlighted ? [style['highlighted']] : [])
+    ].join(' ')} onClick={() => dispatch.updateSutra(sutra.pid)}>
+        # {sutra.result.body && brief(sutra.result.body.text)}
     </div>)
 
-const TagItem = connector(({tag, state, newState, dispatch}) =>
-    <div className={style['tag-item']} onClick={() => dispatch.updateTag(tag[0])}>/{tag[0]}/</div>)
+//<span className={style['sutra-pid']}>#{sutra.pid.substring(0, 8)}</span>
+
+const TagItem = connector(({tag, highlighted, dispatch}) =>
+    <div className={[
+        style['tag-item'],
+        ...(highlighted ? [style['highlighted']] : [])
+    ].join(' ')} onClick={() => dispatch.updateTag(tag[0])}>/{tag[0]}/</div>)
 
 const Maya = ({state, newState, dispatch}) => {
     const {tag, sutraPid} = newState.maya
 
     //TODO: move to connector
     const tags = selectTags(state)
+    if (tags) {
+        tags.sort((a, b) => b[1] - a[1])
+    }
     const sutrani = selectSutraniByTag(state, tag)
     if (sutrani) {
-        sutrani.sort((a, b) => {
-            const suwarA = selectSuwarBySutraPid(a) || [{origin: {timestamp: new Date().valueOf()}}]
-            const suwarB = selectSuwarBySutraPid(b) || [{origin: {timestamp: new Date().valueOf()}}]
-            return suwarA[suwarA.length - 1].origin.timestamp - suwarB[suwarB.length - 1].origin.timestamp 
+        sutrani.sort((oSurahA, oSurahB) => {
+            const suwarA = [oSurahA, ...selectSuwarBySutraPid(state, oSurahA.pid)]
+            const suwarB = [oSurahB, ...selectSuwarBySutraPid(state, oSurahB.pid)]
+            return suwarB[suwarB.length - 1].origin.timestamp - suwarA[suwarA.length - 1].origin.timestamp
         })
     }
     const suwar = selectSuwarBySutraPid(state, sutraPid)
     const oSurah = selectSurahByPid(state, sutraPid)
 
     return <div className={style['maya']}>
-        <div className={style['maya-tags-list']}>{tags.map(tag => <TagItem {...{tag}} />)}</div>
+        <div className={style['maya-tags-list']}>{tags.map(curTag => <TagItem {...{tag: curTag, highlighted: curTag[0] === tag}} />)}</div>
         <div className={style['tag-column']}>
             {/*<div className={style['tag-meta']} />*/}
             <div className={style['tag-sutrani-list']}>{sutrani
-            ? sutrani.map(sutra => <SutraItem {...{sutra}} />)
+            ? sutrani.map(sutra => <SutraItem {...{sutra, highlighted: sutra.pid === sutraPid}} />)
             : "" /*"Sutrani placeholder"*/
             }</div>
         </div>

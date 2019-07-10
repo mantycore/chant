@@ -25,8 +25,8 @@ const Meta = ({surah, dispatch}) => <div className={style['meta']}>
 export default connect(
     state => ({}),
     dispatch => ({dispatch: {
-        revoke: surah => () => dispatch({type: 'react surah-item meta revoke', surah}),
-        update: surah => () => dispatch({type: 'react surah-item meta update', surah})
+        revoke: surah => () => dispatch({type: 'react surah-item/meta revoke', surah}),
+        update: surah => () => dispatch({type: 'react surah-item/meta update', surah})
             //if it is safe to pass post instead of pid?
     }})
 )(Meta)

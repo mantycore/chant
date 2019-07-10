@@ -32,6 +32,6 @@ export default connect(
             && state.contentStore.get(props.attachment.cid).buffer
     }),
     dispatch => ({dispatch: {
-        download: cid => () => dispatch({type: 'react surah-item image download', cid})
+        download: cid => () => dispatch({type: 'react surah-item/attachment download', cid})
     }})
 )(Image)

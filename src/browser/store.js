@@ -1,6 +1,6 @@
 import { createStore, applyMiddleware } from 'redux'
-import { Observable } from 'rxjs'
-import { merge, mergeMap } from 'rxjs/operators'
+import { of, merge } from 'rxjs'
+import { mergeMap, map } from 'rxjs/operators'
 import { ofType, combineEpics, createEpicMiddleware } from 'redux-observable'
 import produce from 'immer'
 import bs58 from 'bs58'
@@ -82,12 +82,15 @@ function reducer(state = initialState, action) {
     console.log("RDCR", action)
     const newState = produce(state, draft => {
         switch (action.type) {
+            case 'epic attachment server-download start':
             case 'attachment load start':
                 draft.attachmentIsLoading[action.cid] = 'loading'
                 break
+            case 'epic attachment server-download failure':
             case 'attachment load failure':
                 draft.attachmentIsLoading[action.cid] = 'fail'
                 break
+            case 'epic attachment server-download success':
             case 'attachment load success':
                 draft.attachmentIsLoading[action.cid] = 'loaded'
                 break
@@ -151,20 +154,16 @@ function reducer(state = initialState, action) {
 
             /* ----- */
 
-            case 'react maya sutra update':
+            case 'react maya/sutra update':
                 draft.newState.maya.sutraPid = action.pid
                 break
 
-            case 'react maya tag update':
+            case 'react maya/tag update':
                 if (draft.newState.maya.tag !== action.tag) {
                     draft.newState.maya.sutraPid = null
                     draft.newState.maya.tag = action.tag
                 }
                 break
-
-            case 
-                break
-
         }
     })
     return newState
@@ -172,7 +171,7 @@ function reducer(state = initialState, action) {
 
 const epic = combineEpics(
     (action$, state$) => action$.pipe(
-        ofType('react surah-item meta revoke'),
+        ofType('react surah-item/meta revoke'),
         mergeMap(async action => {
             if (window.confirm("Really revoke the post?")) {
                 await state$.value.revoke(post)
@@ -180,18 +179,18 @@ const epic = combineEpics(
             }
             return {type: 'epic surah-item revoke cancel'}
         })
-    )
-    (action$, state$) action$.pipe(
-        ofType('react surah-item image download':)
-        mergeMap(async ({cid}) => merge(
-            Observable.of({type: 'epic image download start'}),
+    ),
+    (action$, state$) => action$.pipe(
+        ofType('react surah-item/attachment download'),
+        mergeMap(({cid}) => merge(
+            of({type: 'epic attachment download start'}),
             (async () => {
                 try {
-                    await state.getAndStoreContent(cid)
-                    dispatch({type: 'epic image download success', cid})
+                    await state$.value.getAndStoreContent(cid)
+                    return {type: 'epic attachment download success', cid}
                 } catch (error) {
                     console.log(error);
-                    dispatch({type: 'epic image download fail', cid})
+                    return {type: 'epic attachment download failure', cid}
                 }
             })()
         ))

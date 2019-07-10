@@ -3,15 +3,26 @@
     height: 100vh;
 }
 
+.highlighted {
+    background-color: #eee;
+}
+
 /* ---- I column ---- */
 
 .maya-tags-list { /* also column */
     width: 5em;
     min-width: 5em;
 
-    padding-top: 15px;
-    padding-left: 15px;
-    font-family: monospace;
+    padding-top: 8px;
+    padding-left: 1em;
+    /*font-family: monospace;*/
+    text-align: center;
+}
+
+.tag-item {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    cursor: pointer;
 }
 
 /* ---- II column ---- */
@@ -22,7 +33,8 @@
     display: flex;
     flex-direction: column;
 
-    padding-top: 15px;
+    padding-top: 8px;
+    padding-left: 1em;
 }
 
 .tag-meta {
@@ -35,9 +47,10 @@
 }
 
 .sutra-item {
-
-    margin-bottom: 1em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
     font-size: 14px;
+    cursor: pointer;
 }
 
 .sutra-pid {
