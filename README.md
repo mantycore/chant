@@ -60,8 +60,8 @@ In the fine tradition of Tlön, we gave the parts of the arhitecture short, luci
     </tr>
     <tr>
         <td>encryption abstraction</td>
-        <td colspan="2">the common supertype of Psalm and Haiku (Poem)</td>
-        <td>Poem is just an supertype for ease of transport. Transport only cares for fields common between encrypted and unecrypted posts: id, timestamp, and the protocol version.</td>
+        <td colspan="2">the common supertype of Psalm and Haiku (Poema)</td>
+        <td>Poema is just an supertype for ease of transport. Transport only cares for fields common between encrypted and unecrypted posts: id, timestamp, and the protocol version.</td>
     </tr> 
     <tr>
         <td>content routing</td>
