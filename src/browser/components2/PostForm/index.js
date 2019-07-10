@@ -132,15 +132,15 @@ export default connect(
         }
     }),
     dispatch => ({dispatch: {
-        unlockPassword: () => dispatch({type: 'react post-form unlock password'}),
-        changePassword: event => dispatch({type: 'react post-form change password', event}),
-        acceptPassword: () => dispatch({type: 'react post-form accept password'}),
+        unlockPassword: () => dispatch({type: 'react post-form unlock password'}), // react post-form#password unlock
+        changePassword: event => dispatch({type: 'react post-form change password', event}), // react post-form#password change
+        acceptPassword: () => dispatch({type: 'react post-form accept password'}), // // react post-form#password accept
 
-        bodyChange: event => dispatch({type: 'post body change', event}),
+        bodyChange: event => dispatch({type: 'post body change', event}), // react post-form body change
 
         setFilesToLoad: files => dispatch({type: 'react post-form files change', files}),
         submit: params => dispatch({type: 'react post-form submit', ...params}),
-        submitSuccess: () => dispatch({type: 'post submit success'}),
-        cancelUpdate: () => dispatch({type: 'cancel post update'}),
+        submitSuccess: () => dispatch({type: 'post submit success'}), // -> epic
+        cancelUpdate: () => dispatch({type: 'cancel post update'}), // react post-form#update cancel
     }})
 )(PostForm)

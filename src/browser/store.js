@@ -102,11 +102,11 @@ function reducer(state = initialState, action) {
                 draft.attachmentIsLoading[action.cid] = 'loaded'
                 break
 
-            case 'hashchange':
+            case 'hashchange': // from browser entry file
                 handleUrl(draft)
                 break
 
-            case 'update':
+            case 'update': // from common
                 copy(draft, action)
                 // hacky, improve
                 if (action.mhType === 'posts initialized') {
@@ -114,7 +114,7 @@ function reducer(state = initialState, action) {
                     handleUrl(draft)
                 }
                 break
-            case 'init':
+            case 'init': // from redux entry file
                 copy(draft, action)
                 //handleUrl(draft)
                 draft.getAndStoreContent = action.state.getAndStoreContent
@@ -131,15 +131,15 @@ function reducer(state = initialState, action) {
                 }
                 break
 
-            case 'update post':
+            case 'update post': // react surah-item/meta update (?)
                 draft.postBeingEdited.body = action.post.result.body.text
                 draft.postBeingEdited.mode = 'patch'
                 draft.postBeingEdited.post = action.post
                 break
-            case 'post body change':
+            case 'post body change': // react post-form body change
                 draft.postBeingEdited.body = action.event.target.value
                 break
-            case 'cancel post update':
+            case 'cancel post update': // react post-form#update cancel
                 draft.postBeingEdited.body = ''
                 draft.postBeingEdited.mode = 'put'
                 draft.postBeingEdited.post = null
@@ -205,9 +205,10 @@ const epic = combineEpics(
             return {type: 'epic surah-item revoke cancel'}
         })
     ),
+    
     (action$, state$) => action$.pipe(
         ofType('react surah-item/attachment download'),
-        mergeMap(({cid}) => merge(
+        mergeMap(({cid}) => merge( // switchMap? concat?
             of({type: 'epic attachment download start', cid}),
             (async () => {
                 try {
