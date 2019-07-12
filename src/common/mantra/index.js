@@ -39,7 +39,7 @@ const addHandlers = ({
             peers.add(id)
             getStateChangeHandler()('put peer', {nid: id})
         }
-        if (!postInitialized) {
+        //if (!postInitialized) {
             try {
                 const newPosts = await getPosts(id, pr)
                 for (const post of newPosts) {
@@ -53,10 +53,12 @@ const addHandlers = ({
                 log.error("Error during saving a post", error)
                 // do nothing
             }
-            postInitialized = true
-            log.info('posts initialized')
-            getStateChangeHandler()({type: 'posts initialized'})
-        }
+            if (!postInitialized) {
+                postInitialized = true
+                //log.info('posts initialized')
+                getStateChangeHandler()({type: 'posts initialized'})
+            }
+        //}
     })
 
     pr.on('message', async (message, from) => {

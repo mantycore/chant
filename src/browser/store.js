@@ -38,7 +38,8 @@ function handleUrl(draft) {
     draft.tag = null
     const matchData = window.location.hash.match('#(.*)')
     if (!matchData) {
-        window.location.hash = "#/4ZtbyWyXQvtypNdUaGCUqpYKB3VjjC291QA8RGxLzEqhL1qyozfiQvbgkhRxLhMMcweqQSzdapcYfRZuXsYHMiDQ"
+        //window.location.hash = "#/4ZtbyWyXQvtypNdUaGCUqpYKB3VjjC291QA8RGxLzEqhL1qyozfiQvbgkhRxLhMMcweqQSzdapcYfRZuXsYHMiDQ"
+        window.location.hash = "#/d/"
         return
     }
     const path = matchData[1].split('/')
@@ -63,7 +64,8 @@ function handleUrl(draft) {
         draft.postsMode = 'tag'
         draft.tag = path[1]
     } else {
-        window.location.hash = "#/4ZtbyWyXQvtypNdUaGCUqpYKB3VjjC291QA8RGxLzEqhL1qyozfiQvbgkhRxLhMMcweqQSzdapcYfRZuXsYHMiDQ"
+        //window.location.hash = "#/4ZtbyWyXQvtypNdUaGCUqpYKB3VjjC291QA8RGxLzEqhL1qyozfiQvbgkhRxLhMMcweqQSzdapcYfRZuXsYHMiDQ"
+        window.location.hash = "#/d/"
     }
 }
 
@@ -113,7 +115,7 @@ function reducer(state = initialState, action) {
                 draft.passwordEditable = true
                 break
             case 'change password':
-                draft.secretCode = action.value.target.value
+                draft.secretCode = action.event.target.value
                 break
             case 'accept password':
                 //ouch, effects

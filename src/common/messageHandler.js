@@ -38,7 +38,7 @@ export default state => {
             stateChangeHandler('put attachment', {cid, attachment: storageAttachment})
             return {cid, attachment: storageAttachment}
         } catch (e) {
-            console.log("Exception durig getting content file #", cid, e)
+            console.log("Exception during getting content file #", cid, e)
             throw e
         }
     }
