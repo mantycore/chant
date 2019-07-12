@@ -117,24 +117,24 @@ const ayat = (payload, psalm, directSide, suwar) => {
                 }
             }
             if (directSide) {
-                Object.assign(surah, {to: post.to, encrypted: directSide})
+                Object.assign(surah, {to: payload.to, encrypted: directSide})
             }
             suwar.push(surah)
         }
     } else {
         const minimalPost = {
-            pid: post.pid,
-            timestamp: post.timestamp,
-            version: post.version
+            pid: payload.pid,
+            timestamp: payload.timestamp,
+            version: payload.version
         }
         surah = {
-            pid: post.pid,
+            pid: payload.pid,
             posts: [minimalPost],
             origin: minimalPost,
             //latest: minimalPost,
             result: minimalPost,
             my: false,
-            to: post.to,
+            to: payload.to,
             encrypted: 'unknown'
         }
         //push to suwar?

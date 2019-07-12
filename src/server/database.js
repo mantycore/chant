@@ -21,11 +21,14 @@ async function stateChangeHandler(type, payload) {
     switch (type) {
         case 'put post': {
             const {pid, opid, timestamp, ...rest} = payload.post
-            await db.run(`
-                INSERT
-                    INTO posts(pid, opid, timestamp, rest)
-                    VALUES (?, ?, ?, ?)`,
-                    [pid, opid, timestamp, JSON.stringify(rest)])
+            const count = (await db.all(`SELECT * FROM posts WHERE pid=?`, pid)).length
+            if (count && count === 0) {
+                await db.run(`
+                    INSERT
+                        INTO posts(pid, opid, timestamp, rest)
+                        VALUES (?, ?, ?, ?)`,
+                        [pid, opid, timestamp, JSON.stringify(rest)])
+            }
         }
         break
         case 'put attachment': {
@@ -36,11 +39,14 @@ async function stateChangeHandler(type, payload) {
                 return
             }
             const {buffer, ...rest} = payload.attachment
-            await db.run(`
-                INSERT
-                    INTO attachments(cid, timestamp, rest, buffer)
-                    VALUES (?, ?, ?, ?)`,
-                    [payload.cid, new Date().getTime(), JSON.stringify(rest), buffer])
+            const count = (await db.all(`SELECT * FROM attachments WHERE cid=?`, payload.cid)).length
+            if (count && count === 0) {
+                await db.run(`
+                    INSERT
+                        INTO attachments(cid, timestamp, rest, buffer)
+                        VALUES (?, ?, ?, ?)`,
+                        [payload.cid, new Date().getTime(), JSON.stringify(rest), buffer])
+            }
         }
         break
         case 'put peer':
