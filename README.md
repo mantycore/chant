@@ -7,7 +7,9 @@ written with preserving the traditions of internet anonymity in mind. The main i
 
 # Installation
 
-The installation and usage is typical for a node project:
+Setup instructions for release 0.0.2 are [here](https://chant.anoma.li/#/4MTHN1j31rnc1qP7iQZZAHWACS6LumRNMnc8HP3e3qbUtJdxV9xFgoUs6t5AYWu4ycNxtY3L1CaW7TYgpSY3MbMf) (in Russian).
+
+In brief, the installation and usage is typical for a node project:
 
     npm install
     
