@@ -93,22 +93,27 @@ function reducer(state = initialState, action) {
             /* ----- */
 
             case 'react maya/sutra update':
-                if (draft.newState.maya.sutraPid != action.pid) {
-                    draft.newState.maya.mode = 'thread'
-                    draft.newState.maya.sutraPid = action.pid
-                    draft.newState.suwarList.scrollTrigger ++ //TODO: scroll to a specific post in thread. #/pid/head ?
-                    window.location.hash = `#/${action.pid}` //TODO: think about it
+                if (draft.newState.maya.sutraPid !== action.pid) {
+                    window.location.hash = `#/${action.pid}/` //TODO: think about it
                 }
                 break
 
             case 'react maya/tag update':
                 //if (draft.newState.maya.tag !== action.tag) {
-                    draft.newState.maya.mode = 'tag'
-                    draft.newState.maya.sutraPid = null
-                    draft.newState.maya.tag = action.tag
                     window.location.hash = `#/${action.tag}/` //TODO: think about it
                 //}
                 break
+
+            case 'react maya rengashu-list':
+                if (draft.newState.maya.mode !== 'directs list') {
+                    window.location.hash = `#directs` //TODO: think about it
+                }
+                break
+
+            case 'react maya/renga update':
+                if (draft.newState.maya.rengaId !== action.id) {
+                    window.location.hash = `#${action.id}`
+                }
         }
     })
     return newState

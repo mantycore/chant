@@ -33,7 +33,7 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
         encrypted = true
     }
     if (state.newState.maya.mode === 'direct') {
-        protoPost.to = state.opost.pid
+        protoPost.to = state.newState.maya.sutraPid
         placeholder = `⚿ Encrypted direct message to ~${protoPost.to.substring(0, 8)} ⚿`
         encrypted = true
     }
@@ -49,8 +49,8 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
         protoPost.opid = state.newState.maya.sutraPid
         placeholder = `Public message in reply to ~${protoPost.opid.substring(0, 8)}`
         encrypted = false
-    } else if (state.postsMode === 'tag') {
-        protoPost.tags = [state.tag]
+    } else if (state.newState.maya.mode === 'tag') {
+        protoPost.tags = [state.newState.maya.tag]
         placeholder = `Public message to /${protoPost.tags.join('/')}/`
         encrypted = false
     } else if (state.postsMode === 'tilde') {
@@ -81,7 +81,7 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
 
     const onKeyPress = event => {
         if (event.key === 'Enter' && (event.ctrlKey || event.shiftKey) ) {
-            dispatch.submit()
+            submit()
         }
     }
 

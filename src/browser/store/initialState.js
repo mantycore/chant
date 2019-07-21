@@ -25,7 +25,8 @@ const initialState = {
         maya: {
             mode: 'tag', //not yet used
             tag: 'd',
-            sutraPid: null
+            sutraPid: null,
+            rengaId: null
         },
         suwarList: {
             scrollTrigger: 0

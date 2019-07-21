@@ -10,7 +10,8 @@ import crypto from 'Common/crypto.js'
 function verifyByPid(psalm, ayah, poemata) { //TODO: move to verify.js
     const original = poemata.find(psalm => psalm.pid === ayah.pid)
     // what if it is haiku? try to decrypt?
-    return verify(psalm, ayah, original)  // from, from.ayah, from.ayah.pid
+    if (!original) { console.warn("original psalm not found while verifying an ayah", ayah, psalm) }
+    return original && verify(psalm, ayah, original)  // from, from.ayah, from.ayah.pid
 }
 
 const ayat = (payload, psalm, directSide, suwar, poemata) => {
@@ -21,10 +22,31 @@ const ayat = (payload, psalm, directSide, suwar, poemata) => {
             ayah.type === 'put' ||
             ayah.type === 'patch' ||
             ayah.type === 'delete')
-        // there should be no more than one
+        // there should be no more than one update type ayah per psalm
         if (updateAyah) {
-            //case 1: post has put/delete proofs, so there must be an original in pa
-            surah = suwar.find(curSurah => curSurah.pid === updateAyah.pid) // TODO: or else
+            //case 1: post has put/delete proofs, so there must be an original in surah
+            surah = suwar.find(curSurah => curSurah.pid === updateAyah.pid)
+            if (!surah) {
+                // This means that the choir is in erroneous state:
+                // it have the update psalm, but no original psalm.
+                // We more or less can handle it. Also
+                // TODO: try to rerequest the original psalm.
+
+                console.warn('original psalm not found while constructing a surah', updateAyah, psalm)
+                surah = {
+                    pid: psalm.pid,
+                    psalmoi: [],
+                    origin: {...psalm}, // ???
+                    result: {...psalm},
+                    //TODO: move to a separate file?
+                    my: bs58.decode(psalm.directKey).equals(      // Buffer
+                        Buffer.from(                             // Buffer
+                            crypto.direct.signOrigin(            // Uint8Array
+                                asBuffer(psalm))))                // Buffer
+                }
+
+                suwar.push(surah)
+            }
             surah.psalmoi.push(psalm)
             surah.psalmoi.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
             //surah.latest = surah.psalmoi[surah.psalmoi.length - 1]

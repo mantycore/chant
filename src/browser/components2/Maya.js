@@ -4,7 +4,9 @@ import {
     selectTags,
     selectSutraniByTag,
     selectSuwarBySutraPid,
-    selectSurahByPid
+    selectSurahByPid,
+    selectRengashu,
+    selectRenga
 } from 'Browser/selectors/'
 import style from './Maya.css'
 
@@ -20,8 +22,20 @@ const connector = connect(
     dispatch => ({dispatch: {
         updateSutra: pid => dispatch({type: 'react maya/sutra update', pid}),
         updateTag: tag => dispatch({type: 'react maya/tag update', tag}),
+        rengashuList: () => dispatch({type: 'react maya rengashu-list'}),
+        updateRenga: id => dispatch({type: 'react maya/renga update', id}),
     }})
 )
+
+const formatDate = date => {
+    const now = new Date()
+    const utc = date.toISOString().match(/^\d\d([^T]+)T(\d\d:\d\d)/)
+    if (now - date < 1000 * 60 * 60 * 24) {
+        return utc[2] 
+    } else {
+        return utc[1] 
+    }
+}
 
 //const SurahItem = connector(({surah}) => <div>{surah.result.body && surah.result.body.text}</div>)
 const brief = text => {
@@ -41,13 +55,22 @@ const brief = text => {
     return result2
 }
 
-const SutraItem = connector(({sutra, highlighted, dispatch}) =>
-    <div className={[
+const SutraItem = connector(({sutra, highlighted, dispatch}) => {
+    const latest = sutra[sutra.length - 1]
+    return <div className={[
         style['sutra-item'],
         ...(highlighted ? [style['highlighted']] : [])
-    ].join(' ')} onClick={() => dispatch.updateSutra(sutra.pid)}>
-        # {sutra.result.body && brief(sutra.result.body.text)}
-    </div>)
+    ].join(' ')} onClick={() => dispatch.updateSutra(sutra[0].pid)}>
+        <div style={{display: 'flex'}}>
+            <strong style={{flexGrow: 1}}># {sutra[0].result.body && brief(sutra[0].result.body.text)}</strong><br/>
+            <span style={{color: '#777'}}>{formatDate(new Date(latest.result.timestamp))}</span>
+        </div>
+        {sutra.length > 1 && <>
+            {latest.my && "You: "}
+            <span style={{color: '#777'}}>{latest.result.body && brief(latest.result.body.text)}</span>
+        </>}
+    </div>
+})
 
 //<span className={style['sutra-pid']}>#{sutra.pid.substring(0, 8)}</span>
 
@@ -57,40 +80,86 @@ const TagItem = connector(({tag, highlighted, dispatch}) =>
         ...(highlighted ? [style['highlighted']] : [])
     ].join(' ')} onClick={() => dispatch.updateTag(tag[0])}>/{tag[0]}/</div>)
 
-const Maya = ({state, newState, dispatch}) => {
-    const {tag, sutraPid} = newState.maya
+const RengaItem = connector(({renga, highlighted, dispatch}) => {
+    const latest = renga.suwar[renga.suwar.length - 1]
+    return (<div className={[
+        style['sutra-item'],
+        ...(highlighted ? [style['highlighted']] : [])
+    ].join(' ')} onClick={() => dispatch.updateRenga(renga.id)}>
+        <div style={{display: 'flex'}}>
+            <strong style={{flexGrow: 1}}>@ {renga.suwar[0].result.body && brief(renga.suwar[0].result.body.text)}</strong><br/>
+            <span style={{color: '#777'}}>{formatDate(new Date(latest.result.timestamp))}</span>
+        </div>
+        {latest.my && "You: "}
+        <span style={{color: '#777'}}>{latest.result.body && brief(latest.result.body.text)}</span>
+    </div>)
+})
 
+const Maya = ({state, newState, dispatch}) => {
+    const rengaMode = newState.maya.mode === 'direct'
+                   || newState.maya.mode === 'direct conversation'
+                   || newState.maya.mode === 'directs list'
     //TODO: move to connector
     const tags = selectTags(state)
-    if (tags) {
-        tags.sort((a, b) => b[1] - a[1])
-    }
-    const sutrani = selectSutraniByTag(state, tag)
-    if (sutrani) {
-        sutrani.sort((oSurahA, oSurahB) => {
-            const suwarA = [oSurahA, ...selectSuwarBySutraPid(state, oSurahA.pid)]
-            const suwarB = [oSurahB, ...selectSuwarBySutraPid(state, oSurahB.pid)]
-            return suwarB[suwarB.length - 1].origin.timestamp - suwarA[suwarA.length - 1].origin.timestamp
-        })
-    }
-    const suwar = selectSuwarBySutraPid(state, sutraPid)
-    const oSurah = selectSurahByPid(state, sutraPid)
+    const {tag, sutraPid, rengaId} = newState.maya
 
-    return <div className={style['maya']}>
-        <div className={style['maya-tags-list']}>{tags.map(curTag => <TagItem {...{tag: curTag, highlighted: curTag[0] === tag}} />)}</div>
-        <div className={style['tag-column']}>
-            {/*<div className={style['tag-meta']} />*/}
-            <div className={style['tag-sutrani-list']}>{sutrani
-            ? sutrani.map(sutra => <SutraItem {...{sutra, highlighted: sutra.pid === sutraPid}} />)
-            : "" /*"Sutrani placeholder"*/
-            }</div>
+    const tagList = (
+        <div className={style['maya-tags-list']}>
+            <div className={[
+                style['tag-item'],
+                ...(rengaMode ? [style['highlighted']] : [])
+            ].join(' ')} onClick={dispatch.rengashuList}>/@/</div>
+            {tags.map(curTag => <TagItem {...{tag: curTag, highlighted: curTag[0] === tag}} />)}
         </div>
-        <div className={style['sutra-column']}>
-            {/*<div className={style['sutra-meta']}>OP</div>*/}
-            <SuwarList {...{origin: oSurah, suwar}} />
-            <PostForm />
+    )
+
+    if (rengaMode) { //todo: two different components?
+        const rengashu = selectRengashu(state)
+        let oSurah = null, suwar = null
+        if (newState.maya.mode === 'direct') {
+            oSurah = selectSurahByPid(state, sutraPid)
+        } else if (newState.maya.rengaId) {
+            [oSurah, suwar] = selectRenga(state, rengaId)
+        }
+
+        return <div className={style['maya']}>
+            {tagList}
+            <div className={style['tag-column']}>
+                {/*<div className={style['tag-meta']} />*/}
+                <div className={style['tag-sutrani-list']}>{
+                    rengashu.map(renga => <RengaItem {...{renga, highlighted: renga.id === rengaId}} />)
+                }</div>
+            </div>
+            <div className={style['sutra-column']}>
+                {/*<div className={style['sutra-meta']}>OP</div>*/}
+                {/* special component for renga suwar? */}
+                <SuwarList {...{origin: oSurah, suwar}} />
+                <PostForm />
+            </div>
         </div>
-    </div>
+
+    } else {
+        const sutrani = selectSutraniByTag(state, tag)
+        const suwar = selectSuwarBySutraPid(state, sutraPid)
+        const oSurah = selectSurahByPid(state, sutraPid)
+
+        return <div className={style['maya']}>
+            {tagList}
+            <div className={style['tag-column']}>
+                {/*<div className={style['tag-meta']} />*/}
+                <div className={style['tag-sutrani-list']}>{sutrani
+                ? sutrani.map(sutra => <SutraItem {...{sutra, highlighted: sutra[0].pid === sutraPid}} />)
+                : "" /*"Sutrani placeholder"*/
+                }</div>
+            </div>
+            <div className={style['sutra-column']}>
+                {/*<div className={style['sutra-meta']}>OP</div>*/}
+                <SuwarList {...{origin: oSurah, suwar}} />
+                <PostForm />
+            </div>
+        </div>
+    }
+
 }
 
 export default connector(Maya)

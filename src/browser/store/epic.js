@@ -54,7 +54,7 @@ const epic = combineEpics(
                 return {type: 'epic post-form submit success'}
             }
         })
-    )
+    ),
     //action$ => action$.ofType('react surah-item meta update')
 
     (action$, state$) => action$.pipe(
