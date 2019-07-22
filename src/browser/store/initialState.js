@@ -23,7 +23,7 @@ const initialState = {
 
     newState: {
         maya: {
-            mode: 'tag', //not yet used
+            mode: 'tag',
             tag: 'd',
             sutraPid: null,
             rengaId: null

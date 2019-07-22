@@ -10,15 +10,16 @@ const has = (set, nid) =>
     Array.from(set.values()).reduce((acc, cur) => acc || cur.equals(nid), false)
 
 const mantrasaProcessed = new Set()
-
+const VERSION = 3
 /*
     mantras scheme:
-    'ping' -> 'pong'
-    'get posts' -> 'put posts'
-    'get content' -> 'content found'
+    'ping' -> 'pong'                   (req ping              res ping)
+    'get posts' -> 'put posts'          req poemata get       res poemata get
+    'get content' -> 'content found'    req content get       res content get
 
-    'put post' (=> 'get content')
-    'put content'
+    'put post' (=> 'get content')       req poema put         res poema put
+                                        req content put perm  res content put perm
+    'put content'                       req content put       res content put
 
     TODO: regularize the scheme
 */
@@ -81,7 +82,8 @@ const addHandlers = ({
             }
         }
         switch (mantra.type) {
-            case 'put post': {
+            case 'req poema put': // v3
+            case 'put post': { // v0
                 if (!poemata.find(poema => poema.pid === mantra.post.pid)) {
                     broadcast(forwardedMantra, false, peers, pr)
                     // TODO: optimize: do not sent the post to nodes we know already have it
@@ -102,7 +104,8 @@ const addHandlers = ({
             }
             break*/
 
-            case 'get content': { // todo: split to query (~= head) and get
+            case 'req content get': // v3
+            case 'get content': { // v0; todo: split to query (~= head) and get
                 const payload = contentStore.get(mantra.cid)
                 if (payload) {
                     send(forwardedMantra.origin, {type: 'content found', payload, inReplyTo: mantra.mid}, /*binary*/ true, pr)
@@ -112,7 +115,8 @@ const addHandlers = ({
             }
             break
 
-            case 'content found': {
+            case 'res content get': // v3
+            case 'content found': { // v0
                 handleReply(mantra, mantra.payload)
             }
             break
@@ -126,13 +130,15 @@ const addHandlers = ({
                 handleReply(mantra)
             break
 
-            case 'get posts': {
+            case 'req poemata get': // v3
+            case 'get posts': { // v0
                 send(forwardedMantra.origin, {type: 'put posts', posts: poemata, inReplyTo: mantra.mid}, false, pr)
                 broadcast(forwardedMantra, false, peers, pr)
             }
             break
 
-            case 'put posts': {
+            case 'res poemata get': // v3
+            case 'put posts': { // v0
                 handleReply(mantra, mantra.posts)
             }
             break
