@@ -91,7 +91,8 @@ function reducer(state = initialState, action) {
                 break
 
             /* ----- */
-
+            //TODO: move to epics; or just add hrefs to interface
+            
             case 'react maya/sutra update':
                 if (draft.newState.maya.sutraPid !== action.pid) {
                     window.location.hash = `#/${action.pid}/` //TODO: think about it

@@ -32,7 +32,8 @@ const addHandlers = ({
     poemata,
     getStateChangeHandler,
     storePost,
-    contentStore
+    contentStore,
+    isServerNode
 }) => {
     pr.on('peer', async id => {
         log.info('PEER', id.toString('hex', 0, 2))
@@ -93,6 +94,17 @@ const addHandlers = ({
             }
             break
 
+            case 'req content put perm': // v3
+                if (isServerNode) {
+                    send(forwardedMantra.origin, {type: 'res content put perm', permission: true, inReplyTo: mantra.mid}, false, pr)
+                    broadcast(forwardedMantra, false, peers, pr) // idea: mantra itself should have a broadcast flag :)
+                }
+            break
+
+            case 'res content put perm': // v3
+                handleReply(mantra)
+            break
+
             /*case 'put content': { //not used for now
                 const cid = await toCID(mantra.payload);
                 if (!contentStore.get(cid)) {
@@ -104,11 +116,24 @@ const addHandlers = ({
             }
             break*/
 
+            case 'req content put': // v3
+                const cid = await toCID(mantra.payload)
+                if (!contentStore.get(cid)) {
+                    contentStore.set(cid, mantra.payload)
+                    // do not rebroadcast?
+                    send(forwardedMantra.origin, {type: 'res content put perm', status: 'success', inReplyTo: mantra.mid}, false, pr)
+                }
+            break
+
+            case 'res content put': // v3
+                handleReply(mantra)
+            break
+
             case 'req content get': // v3
             case 'get content': { // v0; todo: split to query (~= head) and get
                 const payload = contentStore.get(mantra.cid)
                 if (payload) {
-                    send(forwardedMantra.origin, {type: 'content found', payload, inReplyTo: mantra.mid}, /*binary*/ true, pr)
+                    send(forwardedMantra.origin, {type: 'res content get', payload, inReplyTo: mantra.mid}, /*binary*/ true, pr)
                 } else {
                     broadcast(forwardedMantra, true, peers, pr)
                 }

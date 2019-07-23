@@ -309,6 +309,7 @@ export default state => {
         getStateChangeHandler: () => stateChangeHandler,
         storePost,
         contentStore,
+        isServerNode
     })
 }
 
