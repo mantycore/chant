@@ -6,7 +6,7 @@ const waitForReply = (mid, resolve, reject, timeout = 1000) => {
     if (timeout) {
         setTimeout(() => {
           if (repliesPending.has(mid)) {
-            reject()
+            reject(new Error("timeout waiting for res mantra", mid))
             repliesPending.delete(mid)
           }
         }, timeout)
@@ -14,9 +14,9 @@ const waitForReply = (mid, resolve, reject, timeout = 1000) => {
 }
 
 const handleReply = (mantra, resolution, callback) => {
-    if (repliesPending.has(mantra.inReplyTo)) {
-        const {resolve, reject} = repliesPending.get(mantra.inReplyTo)
-        repliesPending.delete(mantra.inReplyTo)
+    if (repliesPending.has(mantra.re)) {
+        const {resolve, reject} = repliesPending.get(mantra.re)
+        repliesPending.delete(mantra.re)
         resolve(resolution) // we can also use sender, etc
     }
 }

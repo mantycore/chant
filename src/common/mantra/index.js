@@ -54,7 +54,7 @@ const addHandlers = ({
                     //stateChangeHandler()
                 }
             } catch (error) {
-                log.error("Error during saving a post", error)
+                log.error("Error during getting and storing poemata from a remote node", error)
                 // do nothing
             }
             poemataInitialized = true

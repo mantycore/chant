@@ -34,7 +34,7 @@ process.on('SIGTERM', async () => {
 async function stateChangeHandler(type, payload) {
     switch (type) {
         case 'put post': {
-            const {pid, opid, timestamp, ...rest} = payload.post
+            const {pid, opid, timestamp, ...rest} = payload.poema
             await postgres.query(`
                 INSERT
                     INTO posts(pid, opid, timestamp, rest)
