@@ -23,7 +23,7 @@ import aggregate from './surah/'
 
 export default state => {
     const {isServerNode, pr} = state
-    const peers = new Set()
+    const peers = new Map()
     const contentStore = state.contentStore || new Map()
 
     let writeAttachment = () => {}
@@ -252,7 +252,11 @@ export default state => {
     setInterval(async () => {
         for (const peer of peers.values()) {
             try {
-                await ping(peer, pr) // mantra/request
+                const payload = {
+                    type: isServerNode ? 'server' : 'browser',
+                    persistent: isServerNode //TODO: think about better capabilities format
+                }
+                await ping(payload, peer.nid, pr) // mantra/request
             } catch (error) {
                 peers.delete(peer)
                 stateChangeHandler('delete peer', {nid: peer})

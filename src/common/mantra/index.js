@@ -6,8 +6,18 @@ import { handleReply } from './reply.js'
 import { getPosts } from './request/get/'
 
 // Set.prototype.has, but for .equals equality
-const has = (set, nid) =>
-    Array.from(set.values()).reduce((acc, cur) => acc || cur.equals(nid), false)
+//const has = (map, nid) =>
+//    Array.from(map.keys()).find(cur => cur.equals(nid))
+
+const insertPeer = (peers, nid, payload, getStateChangeHandler) => {
+    if (peers.has(nid.toString('hex'))) { return }
+    upsertPeer(peers, nid, payload, getStateChangeHandler)
+}
+
+const upsertPeer = (peers, nid, payload, getStateChangeHandler) => {
+    peers.set(nid.toString('hex'), {nid, ...payload})
+    getStateChangeHandler()('put peer', {nid})
+}
 
 const mantrasaProcessed = new Set()
 const VERSION = 3
@@ -39,10 +49,7 @@ const addHandlers = ({
 }) => {
     pr.on('peer', async id => {
         log.info('PEER', id.toString('hex', 0, 2))
-        if (!has(peers, id)) {
-            peers.add(id)
-            getStateChangeHandler()('put peer', {nid: id})
-        }
+        insertPeer(peers, id, {}, getStateChangeHandler)
         if (!poemataInitialized) {
             try {
                 const newPoemata = await getPosts(id, pr)
@@ -64,10 +71,7 @@ const addHandlers = ({
     })
 
     pr.on('message', async (mantra, from) => {
-        if (!has(peers, from)) {
-            peers.add(from)
-            getStateChangeHandler()('put peer', {nid: from})
-        }
+        insertPeer(peers, from, {}, getStateChangeHandler)
         if (mantra.type !== 'ping' && mantra.type !== 'pong') {
             log.info('RECV', from.toString('hex', 0, 2), mantra)
         }
@@ -153,11 +157,17 @@ const addHandlers = ({
             break
 
             case 'ping': {
-                send(from, {type: 'pong', re: mantra.mid}, false, pr)
+                upsertPeer(peers, from, mantra.payload, getStateChangeHandler)
+                const payload = { //todo: dry with ping
+                    type: isServerNode ? 'server' : 'browser',
+                    persistent: isServerNode //TODO: think about better capabilities format
+                }
+                send(from, {type: 'pong', payload, re: mantra.mid}, false, pr)
             }
             break
 
-            case 'pong': 
+            case 'pong':
+                upsertPeer(peers, from, mantra.payload, getStateChangeHandler)
                 handleReply(mantra)
             break
 
