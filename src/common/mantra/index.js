@@ -141,7 +141,7 @@ const addHandlers = ({
             break
 
             case 'res content put':
-                handleReply(mantra, mantra.payload)
+                handleReplies(mantra, mantra.status)
             break
 
             case 'req content get': {// todo: split to query (~= head) and get to minimize traffic
