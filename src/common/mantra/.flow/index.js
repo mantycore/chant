@@ -2,14 +2,14 @@
 export type MantraWithId = {
     mid: string,
     type: string,
-    payload: MicroJSON,
-    inReplyTo: ?string
+    payload: ?MicroJSON,
+    re: ?string
 }
 
 export type Mantra = {
     type: string,
-    payload: MicroJSON,
-    inReplyTo: ?string
+    payload: ?MicroJSON,
+    re: ?string
 }
 
 export type MicroJSON = (string | number | Array<MicroJSON> | {[string]: MicroJSON})

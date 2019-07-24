@@ -13,8 +13,10 @@ const mantrasaProcessed = new Set()
 const VERSION = 3
 /*
     mantras scheme:
-    'ping' -> 'pong'                   (req ping              res ping)
+    'ping' -> 'pong'                   (req status get        res status get)
+
     'get posts' -> 'put posts'          req poemata get       res poemata get
+                                        req content head      res content head ?
     'get content' -> 'content found'    req content get       res content get
 
     'put post' (=> 'get content')       req poema put         res poema put
@@ -83,27 +85,33 @@ const addHandlers = ({
             }
         }
         switch (mantra.type) {
-            case 'req poema put': // v3
-            case 'put post': { // v0
-                if (!poemata.find(poema => poema.pid === mantra.post.pid)) {
+            case 'req poema put': {
+                if (!poemata.find(poema => poema.pid === mantra.payload.pid)) {
                     broadcast(forwardedMantra, false, peers, pr)
                     // TODO: optimize: do not sent the post to nodes we know already have it
-                    storePost(mantra.post)
+                    storePost(mantra.payload)
                 }
                 //mantra.post.body = await getContent(mantra.post.bodyCid)
             }
             break
 
-            case 'req content put perm': // v3
+            case 'res poema put':
+            break
+
+            /*
+            permission to put content will be handled by ping/pong
+
+            case 'req content put perm':
                 if (isServerNode) {
-                    send(forwardedMantra.origin, {type: 'res content put perm', permission: true, inReplyTo: mantra.mid}, false, pr)
+                    send(forwardedMantra.origin, {type: 'res content put perm', status: true, re: mantra.mid}, false, pr)
                     broadcast(forwardedMantra, false, peers, pr) // idea: mantra itself should have a broadcast flag :)
                 }
             break
 
-            case 'res content put perm': // v3
+            case 'res content put perm':
                 handleReply(mantra)
             break
+            */
 
             /*case 'put content': { //not used for now
                 const cid = await toCID(mantra.payload);
@@ -116,38 +124,36 @@ const addHandlers = ({
             }
             break*/
 
-            case 'req content put': // v3
+            case 'req content put':
                 const cid = await toCID(mantra.payload)
                 if (!contentStore.get(cid)) {
                     contentStore.set(cid, mantra.payload)
                     // do not rebroadcast?
-                    send(forwardedMantra.origin, {type: 'res content put perm', status: 'success', inReplyTo: mantra.mid}, false, pr)
+                    send(forwardedMantra.origin, {type: 'res content put perm', status: 'success', re: mantra.mid}, false, pr)
                 }
             break
 
-            case 'res content put': // v3
+            case 'res content put':
                 handleReply(mantra)
             break
 
-            case 'req content get': // v3
-            case 'get content': { // v0; todo: split to query (~= head) and get
-                const payload = contentStore.get(mantra.cid)
+            case 'req content get': {// todo: split to query (~= head) and get to minimize traffic
+                const payload = contentStore.get(mantra.params.cid)
                 if (payload) {
-                    send(forwardedMantra.origin, {type: 'res content get', payload, inReplyTo: mantra.mid}, /*binary*/ true, pr)
+                    send(forwardedMantra.origin, {type: 'res content get', payload, re: mantra.mid}, /*binary*/ true, pr)
                 } else {
                     broadcast(forwardedMantra, true, peers, pr)
                 }
             }
             break
 
-            case 'res content get': // v3
-            case 'content found': { // v0
+            case 'res content get': {
                 handleReply(mantra, mantra.payload)
             }
             break
 
             case 'ping': {
-                send(from, {type: 'pong', inReplyTo: mantra.mid}, false, pr)
+                send(from, {type: 'pong', re: mantra.mid}, false, pr)
             }
             break
 
@@ -155,16 +161,14 @@ const addHandlers = ({
                 handleReply(mantra)
             break
 
-            case 'req poemata get': // v3
-            case 'get posts': { // v0
-                send(forwardedMantra.origin, {type: 'put posts', posts: poemata, inReplyTo: mantra.mid}, false, pr)
+            case 'req poemata get': {
+                send(forwardedMantra.origin, {type: 'res poemata get', payload: poemata, re: mantra.mid}, false, pr)
                 broadcast(forwardedMantra, false, peers, pr)
             }
             break
 
-            case 'res poemata get': // v3
-            case 'put posts': { // v0
-                handleReply(mantra, mantra.posts)
+            case 'res poemata get': {
+                handleReply(mantra, mantra.payload)
             }
             break
         }

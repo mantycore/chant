@@ -70,7 +70,7 @@ export default state => {
     const putContent = async payload => {
         const cid = await toCID(payload)
         contentStore.set(cid, payload)
-        broadcast({type: 'put content', payload}, false, peers, pr)
+        broadcast({type: 'req content put', payload}, false, peers, pr)
         return cid
     }
 
@@ -106,7 +106,7 @@ export default state => {
             bs58.decode(origin.proofKey)
         ))*/
         putPostToStore(psalm)
-        broadcast({type: 'put post', post: psalm}, false, peers, pr)
+        broadcast({type: 'req poema put', payload: psalm}, false, peers, pr)
     }
 
     const updatePost = async (update, origin, mode) => {
@@ -139,7 +139,7 @@ export default state => {
             psalm = await createPost(/*...*/)
         }
         putPostToStore(psalm)
-        broadcast({type: 'put post', post: psalm}, false, peers, pr)
+        broadcast({type: 'req poema put', payload: psalm}, false, peers, pr)
     }
 
     const putPost = async({body, filesToLoad, opid, tags, to, conversationId}) => {
@@ -154,6 +154,7 @@ export default state => {
             proofs = signaturesMarkup
                 .map(s => s.substring(1))
                 .map(pid => poemata.find(poema => poema.pid === pid))
+                .filter(poema => poema) //filter out nonexistent
                 .map(poema => ({type: 'hand', post: poema}))
         }
 
@@ -166,6 +167,8 @@ export default state => {
             proofs,
             conversationId
         })
+
+        let poema
 
         if (to) {
             const nonce = bs58.decode(psalm.pid).slice(0, 24)
@@ -228,9 +231,7 @@ export default state => {
             //const [filesFull, attachments] = await processFiles(filesToLoad, encrypt)
 
             //const decrypted = crypto.direct.decrypt(encrypted, Buffer.from(microjson(inner(toPost))))
-            putPostToStore(haiku)
-            broadcast({type: 'put post', post: haiku}, false, peers, pr)
-            return haiku.pid
+            poema = haiku
         } else {
             if (psalm.body) {
                 contentStore.set(psalm.body.cid, {type: 'text/plain', text: body, cid: psalm.body.cid}) // todo: regularize with files?
@@ -240,10 +241,12 @@ export default state => {
                 contentStore.set(file.cid, file)
             })
 
-            putPostToStore(psalm)
-            broadcast({type: 'put post', post: psalm}, false, peers, pr)
-            return psalm.pid
+            poema = psalm
         }
+
+        putPostToStore(poema)
+        broadcast({type: 'req poema put', payload: poema}, false, peers, pr)
+        return poema.pid
     }
     // --- THINGS THAT USE GETTERS II ---
     setInterval(async () => {
