@@ -31,7 +31,7 @@ export default connect(
             ? 'loaded'
             : state.attachmentIsLoading[props.attachment.cid],
         buffer: state.contentStore.has(props.attachment.cid)
-            && state.contentStore.get(props.attachment.cid).buffer
+            && state.contentStore.get(props.attachment.cid).payload.buffer
     }),
     dispatch => ({dispatch: {
         download: cid => () => dispatch({type: 'react surah-item/attachment download', cid})

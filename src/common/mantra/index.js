@@ -2,8 +2,9 @@ import { Buffer } from 'buffer'
 import log from 'Common/log.js'
 import send from './send.js'
 import broadcast from './broadcast.js'
-import { handleReply } from './reply.js'
+import { handleReply, handleReplies } from './reply.js'
 import { getPosts } from './request/get/'
+import toCID from 'Common/cid.js'
 
 // Set.prototype.has, but for .equals equality
 //const has = (map, nid) =>
@@ -129,20 +130,22 @@ const addHandlers = ({
             break*/
 
             case 'req content put':
-                const cid = await toCID(mantra.payload)
+                const cid = await toCID(mantra.payload.buffer) 
                 if (!contentStore.get(cid)) {
-                    contentStore.set(cid, mantra.payload)
+                    contentStore.set(cid, {payload: mantra.payload}) //todo: counts
+                    getStateChangeHandler()('put attachment', {cid, attachment: {payload: mantra.payload}})
+
                     // do not rebroadcast?
-                    send(forwardedMantra.origin, {type: 'res content put perm', status: 'success', re: mantra.mid}, false, pr)
                 }
+                send(forwardedMantra.origin, {type: 'res content put', status: {persistent: isServerNode}, re: mantra.mid}, false, pr)
             break
 
             case 'res content put':
-                handleReply(mantra)
+                handleReply(mantra, mantra.payload)
             break
 
             case 'req content get': {// todo: split to query (~= head) and get to minimize traffic
-                const payload = contentStore.get(mantra.params.cid)
+                const payload = contentStore.get(mantra.params.cid).payload //todo: think about it
                 if (payload) {
                     send(forwardedMantra.origin, {type: 'res content get', payload, re: mantra.mid}, /*binary*/ true, pr)
                 } else {
@@ -181,6 +184,15 @@ const addHandlers = ({
                 handleReply(mantra, mantra.payload)
             }
             break
+
+            /* --- TEST --- */
+            case 'req test put': {
+                send(forwardedMantra.origin, {type: 'res test put', payload: {status: 'OK', counter: mantra.payload}, re: mantra.mid}, false, pr)
+            }
+
+            case 'res test put': {
+                handleReplies(mantra, mantra.payload)
+            }
         }
     })
 }

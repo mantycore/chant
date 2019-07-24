@@ -5,13 +5,12 @@ import bs58 from 'bs58'
 import nacl from 'tweetnacl'
 import base64 from 'base64-js'
 
-
 import toCID from './cid.js'
 import crypto from './crypto.js'
 
-
 import addHandlers from './mantra/'
 import { getContent, ping } from './mantra/request/get/'
+import { putContents } from './mantra/request/put/'
 import broadcast from './mantra/broadcast.js'
 
 import createPost from './psalm/createPost.js'
@@ -38,11 +37,11 @@ export default state => {
         try {
             const attachment = await getContent(cid, peers, pr) // mantra/request
             const storageAttachment = {...attachment, buffer: attachment.buffer} //BSON: buffer(Binary).buffer; msgpack: just buffer
-            contentStore.set(cid, storageAttachment) //TODO: on server, store only metadata in the contentStore, and load buffer only on request
-            if (isServerNode) {
+            contentStore.set(cid, {payload: storageAttachment}) //TODO: on server, store only metadata in the contentStore, and load buffer only on request
+            /*if (isServerNode) {
                 await writeAttachment(storageAttachment)
-            }
-            stateChangeHandler('put attachment', {cid, attachment: storageAttachment})
+            }*/
+            stateChangeHandler('put attachment', {cid, attachment: {payload: storageAttachment}})
             return {cid, attachment: storageAttachment}
         } catch (e) {
             console.log("Exception durig getting content file #", cid, e)
@@ -88,6 +87,7 @@ export default state => {
             getAndStoreContent,
             poemata
         )
+        console.log(poema, surah)
         stateChangeHandler('put post', {poema, surah})
     }
 
@@ -181,8 +181,9 @@ export default state => {
             if (psalm.body) {
                 const encryptedBody = nacl.secretbox(Buffer.from(body), nonce, secretKey.itself)
                 const cid = await toCID(encryptedBody)
-                contentStore.set(cid, {type: 'application/octet-stream', buffer: encryptedBody, cid})
-                contentStore.set(psalm.body.cid, {type: 'text/plain', text: body, cid: psalm.body.cid, private: true}) // todo: regularize with files?
+                const buffer = Buffer.from(body)
+                contentStore.set(cid, {payload: {type: 'application/octet-stream', buffer: encryptedBody, cid, size: encryptedBody.length, name: cid}, replicated: 0, persisted: 0})
+                contentStore.set(psalm.body.cid, {payload: {type: 'text/plain', buffer, cid: psalm.body.cid, size: buffer.length}, private: true})
                 contentMap[psalm.body.cid] = cid
             }
 
@@ -190,8 +191,8 @@ export default state => {
                 //{buffer: buffers[i], cid: cids[i], type: file.type, name: file.name, size: file.size}
                 const encryptedAttachment = nacl.secretbox(file.buffer, nonce, secretKey.itself)
                 const cid = await toCID(encryptedAttachment)
-                contentStore.set(cid, {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length})
-                contentStore.set(file.cid, {...file, private: true})
+                contentStore.set(cid, {payload: {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length, name: cid}, replicated: 0, persisted: 0})
+                contentStore.set(file.cid, {payload: file, private: true})
                 contentMap[file.cid] = cid
             }
 
@@ -232,20 +233,23 @@ export default state => {
 
             //const decrypted = crypto.direct.decrypt(encrypted, Buffer.from(microjson(inner(toPost))))
             poema = haiku
+            await putContents(Array.from(contentMap.values()).map(cid => contentStore.get(cid)), peers, pr)
         } else {
             if (psalm.body) {
-                contentStore.set(psalm.body.cid, {type: 'text/plain', text: body, cid: psalm.body.cid}) // todo: regularize with files?
+                const buffer = Buffer.from(body) //TODO: support both plain and markdown text
+                contentStore.set(psalm.body.cid, {payload: {type: 'text/markdown', buffer, cid: psalm.body.cid, size: buffer.length, name: 'index.md'}, replicated: 0, persisted: 0})
             }
 
             filesFull.forEach(file => {
-                contentStore.set(file.cid, file)
+                contentStore.set(file.cid, {payload: file, replicated: 0, persisted: 0})
             })
 
             poema = psalm
+            console.log("results", await putContents(filesFull.map(({cid}) => contentStore.get(cid)), peers, pr))
         }
 
         putPostToStore(poema)
-        broadcast({type: 'req poema put', payload: poema}, false, peers, pr)
+        broadcast({type: 'req poema put', payload: poema}, false, peers, pr) //TODO: await for reply, display replication count
         return poema.pid
     }
     // --- THINGS THAT USE GETTERS II ---

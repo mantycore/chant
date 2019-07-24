@@ -20,7 +20,7 @@ async function setup(state) {
         (await postgres.query('SELECT * FROM attachments')).rows) {
         const json = JSON.parse(rest)
         const buffer = await readAttachment({cid, ...json}) //TODO: read only on request
-        content.push([cid, {cid, timestamp: parseInt(timestamp), buffer, ...json}])
+        content.push([cid, {payload: {cid, timestamp: parseInt(timestamp), buffer, ...json}}])
     }
     state.contentStore = new Map(content)
 }
@@ -49,8 +49,8 @@ async function stateChangeHandler(type, payload) {
                 // but this is a possibility in future.
                 return
             }
-            const {buffer, ...rest} = payload.attachment
-            await writeAttachment(payload.attachment)
+            const {buffer, ...rest} = payload.attachment.payload
+            await writeAttachment(payload.attachment.payload)
             await postgres.query(`
                 INSERT
                     INTO attachments(cid, timestamp, rest)

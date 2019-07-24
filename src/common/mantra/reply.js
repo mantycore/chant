@@ -13,15 +13,28 @@ const waitForReply = (mid, resolve, reject, timeout = 1000) => {
     }
 }
 
-const handleReply = (mantra, resolution, callback) => {
+const waitForReplies = (mid, observer, timeout = 1000) => {
+    waitForReply(mid, observer.next.bind(observer), observer.complete.bind(observer), timeout) //TODO: mechanism to call observer.error
+}
+
+const handleReply = (mantra, resolution) => {
     if (repliesPending.has(mantra.re)) {
-        const {resolve, reject} = repliesPending.get(mantra.re)
+        const {resolve} = repliesPending.get(mantra.re)
         repliesPending.delete(mantra.re)
+        resolve(resolution) // we can also use sender, etc
+    }
+}
+
+const handleReplies = (mantra, resolution) => {
+    if (repliesPending.has(mantra.re)) {
+        const {resolve} = repliesPending.get(mantra.re)
         resolve(resolution) // we can also use sender, etc
     }
 }
 
 export {
     waitForReply,
-    handleReply
+    waitForReplies,
+    handleReply,
+    handleReplies
 }
