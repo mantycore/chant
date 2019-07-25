@@ -60,6 +60,7 @@ async function stateChangeHandler(type, payload) {
         break
         case 'put peer':
         case 'delete peer':
+        case 'posts initialized':
         break
         default:
             console.log('Unknown storage action', type)

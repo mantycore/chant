@@ -245,7 +245,7 @@ export default state => {
             })
 
             poema = psalm
-            console.log("results", await putContents(filesFull.map(({cid}) => contentStore.get(cid)), peers, pr))
+            await putContents(filesFull.map(({cid}) => contentStore.get(cid)), peers, pr)
         }
 
         putPostToStore(poema)

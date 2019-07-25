@@ -12,6 +12,7 @@ const putContent = (payload, peers, pr) => {
 
 const putContents = async (contents, peers, pr, contentStore) => {
     const contentsWithReplies = contents.map(content => ({content, reply$: putContent(content.payload, peers, pr).pipe(share())}))
+
     contentsWithReplies.forEach(({content, reply$}) => reply$.subscribe(reply => {
         //TODO: do it better, maybe have a Map of nodes that replicated this content
         content.replicated += 1
@@ -21,8 +22,7 @@ const putContents = async (contents, peers, pr, contentStore) => {
         //TODO: notify that it is updated
     }))
 
-    const result = combineLatest(contentsWithReplies.map(({reply$}) => reply$.pipe(first()))).pipe(timeout(2500)).toPromise()
-    return result
+    return combineLatest(contentsWithReplies.map(({reply$}) => reply$.pipe(first()))).pipe(timeout(2500)).toPromise()
 }
 
 export {
