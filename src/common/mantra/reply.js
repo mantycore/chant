@@ -13,8 +13,18 @@ const waitForReply = (mid, resolve, reject, timeout = 1000) => {
     }
 }
 
-const waitForReplies = (mid, observer, timeout = 1000) => {
-    waitForReply(mid, observer.next.bind(observer), observer.complete.bind(observer), timeout) //TODO: mechanism to call observer.error
+const waitForReplies = (mid, peers, observer, timeout = 1000) => {
+    const peersMap = peers.reduce((acc, cur) => {acc[cur] = false; return acc;}, {})
+    repliesPending.set(mid, {observer, peers: peersMap, timestamp: new Date()})
+
+    if (timeout) {
+        setTimeout(() => {
+          if (repliesPending.has(mid)) {
+            observer.error(new Error("timeout waiting for res mantra", mid))
+            repliesPending.delete(mid)
+          }
+        }, timeout)
+    }
 }
 
 const handleReply = (mantra, resolution) => {
@@ -25,10 +35,15 @@ const handleReply = (mantra, resolution) => {
     }
 }
 
-const handleReplies = (mantra, resolution) => {
+const handleReplies = (from, mantra, resolution) => {
     if (repliesPending.has(mantra.re)) {
-        const {resolve} = repliesPending.get(mantra.re)
-        resolve(resolution) // we can also use sender, etc
+        const {observer, peers} = repliesPending.get(mantra.re)
+        observer.next(resolution) // we can also use sender, etc
+        peers[from] = true
+        if (Object.values(peers).reduce((acc, cur) => acc && cur, true)) {
+            observer.complete()
+            repliesPending.delete(mantra.re)
+        }
     }
 }
 

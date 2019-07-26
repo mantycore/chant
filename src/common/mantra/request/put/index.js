@@ -7,7 +7,7 @@ const putContent = (payload, peers, pr) => {
     const persistingPeers = Array.from(peers.values()).filter(peer => peer.persistent)
     const mid = broadcast({type: 'req content put', ...(payload ? {payload} : {})}, true, persistingPeers, pr)
 
-    return new Observable(observer => waitForReplies(mid, observer))
+    return new Observable(observer => waitForReplies(mid, persistingPeers.map(peer => peer.nid.toString('hex')), observer))
 }
 
 const putContents = async (contents, peers, pr, contentStore) => {

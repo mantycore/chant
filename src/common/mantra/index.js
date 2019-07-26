@@ -51,7 +51,7 @@ const addHandlers = ({
         insertPeer(peers, id, {}, getStateChangeHandler)
 
         /* TODO: maybe do it on any new peer, not only on peer event? Study the peer-repaly protocol better. */
-        if (isServerNode) {
+        if (true /*isServerNode*/) {
             try {
                 const newPoemata = await getPosts(id, pr)
                 for (const newPoema of newPoemata) {
@@ -142,7 +142,7 @@ const addHandlers = ({
             break
 
             case 'res content put':
-                handleReplies(mantra, mantra.status)
+                handleReplies(from.toString('hex'), mantra, mantra.status)
             break
 
             case 'req content get': {// todo: split to query (~= head) and get to minimize traffic
@@ -236,15 +236,6 @@ const addHandlers = ({
                 handleReply(mantra, mantra.payload)
             }
             break
-
-            /* --- TEST --- */
-            case 'req test put': {
-                send(forwardedMantra.origin, {type: 'res test put', payload: {status: 'OK', counter: mantra.payload}, re: mantra.mid}, false, pr)
-            }
-
-            case 'res test put': {
-                handleReplies(mantra, mantra.payload)
-            }
         }
     })
 }
