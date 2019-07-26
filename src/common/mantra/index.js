@@ -67,6 +67,8 @@ const addHandlers = ({
             }
             log.info('posts initialized')
             getStateChangeHandler()({type: 'posts initialized'})
+        } else {
+            //getStateChangeHandler()({type: 'peer new', payload: })
         }
     })
 
@@ -160,6 +162,7 @@ const addHandlers = ({
 
             case 'ping': {
                 upsertPeer(peers, from, mantra.payload, getStateChangeHandler)
+                getStateChangeHandler()({type: 'peer status', payload: mantra.payload})
                 const payload = { //todo: dry with ping
                     type: isServerNode ? 'server' : 'browser',
                     persistent: isServerNode //TODO: think about better capabilities format
@@ -170,6 +173,7 @@ const addHandlers = ({
 
             case 'pong':
                 upsertPeer(peers, from, mantra.payload, getStateChangeHandler)
+                getStateChangeHandler()({type: 'peer status', payload: mantra.payload})
                 handleReply(mantra)
             break
 

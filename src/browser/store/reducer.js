@@ -90,31 +90,6 @@ function reducer(state = initialState, action) {
                 draft.initiation = false
                 break
 
-            /* ----- */
-            //TODO: move to epics; or just add hrefs to interface
-            
-            case 'react maya/sutra update':
-                if (draft.newState.maya.sutraPid !== action.pid) {
-                    window.location.hash = `#/${action.pid}/` //TODO: think about it
-                }
-                break
-
-            case 'react maya/tag update':
-                //if (draft.newState.maya.tag !== action.tag) {
-                    window.location.hash = `#/${action.tag}/` //TODO: think about it
-                //}
-                break
-
-            case 'react maya rengashu-list':
-                if (draft.newState.maya.mode !== 'directs list') {
-                    window.location.hash = `#directs` //TODO: think about it
-                }
-                break
-
-            case 'react maya/renga update':
-                if (draft.newState.maya.rengaId !== action.id) {
-                    window.location.hash = `#${action.id}`
-                }
         }
     })
     return newState

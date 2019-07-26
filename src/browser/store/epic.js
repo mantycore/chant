@@ -64,8 +64,49 @@ const epic = combineEpics(
             state$.value.crypto.setPassphrase(draft.secretCode)
             return {type: 'epic post-form#password accepted'}
         })
-    )
+    ),
 
+    /* ---- */
+
+    (action$, state$) => action$.pipe(
+        ofType('react maya/sutra update'),
+        map(action => {
+            if (state$.value.newState.maya.sutraPid !== action.pid) {
+                window.location.hash = `#/${action.pid}/` //TODO: think about it
+            }
+            return {type: 'epic navigation complete'}
+        })
+    ),
+
+    (action$, state$) => action$.pipe(
+        ofType('react maya/tag update'),
+        map(action => {
+            //if (state$.value.newState.maya.tag !== action.tag) {
+                window.location.hash = `#/${action.tag}/` //TODO: think about it
+            //}
+            return {type: 'epic navigation complete'}
+        })
+    ),
+
+    (action$, state$) => action$.pipe(
+        ofType('react maya rengashu-list'),
+        map(action => {
+            if (state$.value.newState.maya.mode !== 'directs list') {
+                window.location.hash = `#directs` //TODO: think about it
+            }
+            return {type: 'epic navigation complete'}
+        })
+    ),
+
+    (action$, state$) => action$.pipe(
+        ofType('react maya/renga update'),
+        map(action => {
+            if (state$.value.newState.maya.rengaId !== action.id) {
+                window.location.hash = `#${action.id}`
+            }
+            return {type: 'epic navigation complete'}
+        })
+    )
 )
 
 export default epic
