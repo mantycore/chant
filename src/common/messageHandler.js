@@ -233,7 +233,7 @@ export default state => {
 
             //const decrypted = crypto.direct.decrypt(encrypted, Buffer.from(microjson(inner(toPost))))
             poema = haiku
-            await putContents(Array.from(contentMap.values()).map(cid => contentStore.get(cid)), peers, pr)
+            await putContents(Object.values(contentMap).map(cid => contentStore.get(cid)), peers, pr)
         } else {
             if (psalm.body) {
                 const buffer = Buffer.from(body) //TODO: support both plain and markdown text

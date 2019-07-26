@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import style from './Image.css'
 import {binaryToUrl, format} from './utils.js'
 
-const Image = ({attachment, status, storedContent, dispatch}) =>
+const Image = ({attachment, status, storedContent, dispatch}) => 
     status === 'loaded'
         ? <div>
             <a href={binaryToUrl(storedContent.payload.buffer, attachment.type)} download={attachment.name}>
@@ -12,7 +12,7 @@ const Image = ({attachment, status, storedContent, dispatch}) =>
                     className={style.image}
                 />
             </a>
-            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+            <div style={{display: 'flex', justifyContent: 'flex-end', marginRight: 10}}>
                 {storedContent.replicated && <span>✆ {storedContent.replicated}</span>} {
                     storedContent.persisted && <span>✇ {storedContent.persisted}</span>}
            </div>

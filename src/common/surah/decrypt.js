@@ -53,10 +53,13 @@ const decrypt = (
             if (!contentStore.has(cidPlain)) {
                 getAndStoreContent(cidEncrypted).then(result => {
                     const {cid, attachment} = result
-                    const contents = [psalm.body, ...(psalm.attachments ? psalm.attachments : [])]
+                    const contents = [
+                        ...(psalm.body ? [psalm.body] : []),
+                        ...(psalm.attachments ? psalm.attachments : [])
+                    ]
                     const content = contents.find(c => c.cid === cidPlain)
                     const decryptedAttachment = Buffer.from(nacl.secretbox.open(attachment.buffer, nonce, secretKey))
-                    contentStore.set(cidPlain, {...content, buffer: decryptedAttachment})
+                    contentStore.set(cidPlain, {payload: {...content, buffer: decryptedAttachment}})
                     getStateChangeHandler()('put attachment', {cid: cidPlain, attachment: {...content, buffer: decryptedAttachment}, private: true})
                 })
             }
