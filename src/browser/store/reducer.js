@@ -2,8 +2,8 @@ import produce from 'immer'
 import initialState from './initialState.js'
 import { copy, handleUrl } from './utils.js'
 
-function reducer(state = initialState, action) {
-    console.log("RDCR", action)
+function reducer(state, action) {
+    //console.log("RDCR", action)
     const newState = produce(state, draft => {
         switch (action.type) {
             case 'epic attachment download start':

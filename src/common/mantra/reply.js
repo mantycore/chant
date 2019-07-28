@@ -6,7 +6,7 @@ const waitForReply = (mid, resolve, reject, timeout = 1000) => {
     if (timeout) {
         setTimeout(() => {
           if (repliesPending.has(mid)) {
-            reject(new Error("timeout waiting for res mantra", mid))
+            reject(new Error(`timeout waiting for res mantra ${mid}`))
             repliesPending.delete(mid)
           }
         }, timeout)
@@ -20,7 +20,7 @@ const waitForReplies = (mid, peers, observer, timeout = 1000) => {
     if (timeout) {
         setTimeout(() => {
           if (repliesPending.has(mid)) {
-            observer.error(new Error("timeout waiting for res mantra", mid))
+            observer.error(new Error(`timeout waiting for res mantra ${mid}`))
             repliesPending.delete(mid)
           }
         }, timeout)

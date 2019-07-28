@@ -72,25 +72,25 @@ const addHandlers = ({
         }
     })
 
-    pr.on('message', async (mantra, from) => {
-        insertPeer(peers, from, {}, getStateChangeHandler)
-        if (mantra.type !== 'ping' && mantra.type !== 'pong') {
-            log.info('RECV', from.toString('hex', 0, 2), mantra)
-        }
-        const forwardedMantra = Object.assign({}, mantra, {origin: mantra.origin ? (
-            'data' in mantra.origin
-            ? Buffer.from(mantra.origin.data) // origin deserialized from text
-            : mantra.origin // from bson
-        ) : from})
-        {
-            const umid = `${forwardedMantra.origin.toString('hex')}:${mantra.mid}`
-            if (mantrasaProcessed.has(umid)) {
-                return
-            } else {
-                mantrasaProcessed.add(umid)
-            }
-        }
-        switch (mantra.type) {
+/**/pr.on('message', async (mantra, from) => {
+/**/    insertPeer(peers, from, {}, getStateChangeHandler)
+/**/    if (mantra.type !== 'ping' && mantra.type !== 'pong') {
+/**/        log.info('RECV', from.toString('hex', 0, 2), mantra)
+/**/    }
+/**/    const forwardedMantra = Object.assign({}, mantra, {origin: mantra.origin ? (
+/**/        'data' in mantra.origin
+/**/        ? Buffer.from(mantra.origin.data) // origin deserialized from text
+/**/        : mantra.origin // from bson
+/**/    ) : from})
+/**/    {
+/**/        const umid = `${forwardedMantra.origin.toString('hex')}:${mantra.mid}`
+/**/        if (mantrasaProcessed.has(umid)) {
+/**/            return
+/**/        } else {
+/**/            mantrasaProcessed.add(umid)
+/**/        }
+/**/    }
+/**/    switch (mantra.type) {
             case 'req poema put': {
                 if (!poemata.find(poema => poema.pid === mantra.payload.pid)) {
                     broadcast(forwardedMantra, false, peers, pr)
@@ -145,40 +145,40 @@ const addHandlers = ({
                 handleReplies(from.toString('hex'), mantra, mantra.status)
             break
 
-            case 'req content get': {// todo: split to query (~= head) and get to minimize traffic
-                const payload = contentStore.get(mantra.params.cid).payload //todo: think about it
-                if (payload) {
-                    send(forwardedMantra.origin, {type: 'res content get', payload, re: mantra.mid}, /*binary*/ true, pr)
-                } else {
-                    broadcast(forwardedMantra, true, peers, pr)
-                }
-            }
-            break
+/**/        case 'req content get': {// todo: split to query (~= head) and get to minimize traffic
+/**/            const payload = contentStore.get(mantra.params.cid).payload //todo: think about it
+/**/            if (payload) {
+/**/                send(forwardedMantra.origin, {type: 'res content get', payload, re: mantra.mid}, /*binary*/ true, pr)
+/**/            } else {
+/**/                broadcast(forwardedMantra, true, peers, pr)
+/**/            }
+/**/        }
+/**/        break
 
-            case 'res content get': {
-                handleReply(mantra, mantra.payload)
-            }
-            break
+/**/        case 'res content get': {
+/**/            handleReply(mantra, mantra.payload)
+/**/        }
+/**/        break
 
-            case 'ping': {
-                upsertPeer(peers, from, mantra.payload, getStateChangeHandler)
-                getStateChangeHandler()({type: 'peer status', payload: mantra.payload})
-                const payload = { //todo: dry with ping
-                    type: isServerNode ? 'server' : 'browser',
-                    persistent: isServerNode //TODO: think about better capabilities format
-                }
-                send(from, {type: 'pong', payload, re: mantra.mid}, false, pr)
-            }
-            break
+/**/        case 'ping': {
+/**/            upsertPeer(peers, from, mantra.payload, getStateChangeHandler)
+/**/            getStateChangeHandler()({type: 'peer status', payload: mantra.payload})
+/**/            const payload = { //todo: dry with ping
+/**/                type: isServerNode ? 'server' : 'browser',
+/**/                persistent: isServerNode //TODO: think about better capabilities format
+/**/            }
+/**/            send(from, {type: 'pong', payload, re: mantra.mid}, false, pr)
+/**/        }
+/**/        break
 
-            case 'pong':
-                upsertPeer(peers, from, mantra.payload, getStateChangeHandler)
-                getStateChangeHandler()({type: 'peer status', payload: mantra.payload})
-                handleReply(mantra)
-            break
+/**/        case 'pong':
+/**/            upsertPeer(peers, from, mantra.payload, getStateChangeHandler)
+/**/            getStateChangeHandler()({type: 'peer status', payload: mantra.payload})
+/**/            handleReply(mantra)
+/**/        break
 
-            case 'req poemata get': {
-                let payload = poemata
+/**/        case 'req poemata get': {
+/**/            let payload = poemata
                 let params = mantra.params
                 if (params) {
                     payload = poemata.filter(poema => 
@@ -227,15 +227,15 @@ const addHandlers = ({
                     // (It is also very ironic that hokku is the only unencrypted poema in renga; while haiku is an encrypted psalm.
                     // Think about terminology better.)
                 }
-                send(forwardedMantra.origin, {type: 'res poemata get', payload, re: mantra.mid}, false, pr)
-                broadcast(forwardedMantra, false, peers, pr)
-            }
-            break
+/**/            send(forwardedMantra.origin, {type: 'res poemata get', payload, re: mantra.mid}, false, pr)
+/**/            broadcast(forwardedMantra, false, peers, pr)
+/**/        }
+/**/        break
 
-            case 'res poemata get': {
-                handleReply(mantra, mantra.payload)
-            }
-            break
+/**/        case 'res poemata get': {
+/**/            handleReply(mantra, mantra.payload)
+/**/        }
+/**/        break
         }
     })
 }

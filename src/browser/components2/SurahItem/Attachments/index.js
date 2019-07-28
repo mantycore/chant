@@ -20,11 +20,11 @@ const PureAttachment = ({attachment, status, buffer, dispatch}) => <p className=
 
 const Attachment = connect(
     (state, props) => ({
-        status: state.contentStore.has(props.attachment.cid)
+        status: props.attachment.cid in state.poema.contents
             ? 'loaded'
-            : state.attachmentIsLoading[props.attachment.cid],
-        buffer: state.contentStore.has(props.attachment.cid)
-            && state.contentStore.get(props.attachment.cid).payload.buffer
+            : state.attachmentIsLoading[props.attachment.cid], //TODO: update
+        storedContent: props.attachment.cid in state.poema.contents
+            && state.poema.contents[props.attachment.cid].payload.buffer
     }),
     (dispatch, props) => ({dispatch: {
         download: () => dispatch({type: 'react surah-item/attachment download', cid: props.attachment.cid})

@@ -6,12 +6,15 @@ import {binaryToUrl, format} from './utils.js'
 const Image = ({attachment, status, storedContent, dispatch}) => 
     status === 'loaded'
         ? <div>
-            <a href={binaryToUrl(storedContent.payload.buffer, attachment.type)} download={attachment.name}>
+            {storedContent.payload.buffer
+            ? <a href={binaryToUrl(storedContent.payload.buffer, attachment.type)} download={attachment.name}>
                 <img
                     src={binaryToUrl(storedContent.payload.buffer, attachment.type)}
                     className={style.image}
                 />
             </a>
+            : `Error displaying content ${JSON.stringify(storedContent)}`
+            }
             <div style={{display: 'flex', justifyContent: 'flex-end', marginRight: 10}}>
                 {storedContent.replicated && <span>✆ {storedContent.replicated}</span>} {
                     storedContent.persisted && <span>✇ {storedContent.persisted}</span>}
@@ -33,11 +36,11 @@ const Image = ({attachment, status, storedContent, dispatch}) =>
 
 export default connect(
     (state, props) => ({ 
-        status: state.contentStore.has(props.attachment.cid)
+        status: props.attachment.cid in state.poema.contents
             ? 'loaded'
-            : state.attachmentIsLoading[props.attachment.cid],
-        storedContent: state.contentStore.has(props.attachment.cid)
-            && state.contentStore.get(props.attachment.cid)
+            : state.attachmentIsLoading[props.attachment.cid], //TODO: update
+        storedContent: props.attachment.cid in state.poema.contents
+            && state.poema.contents[props.attachment.cid]
     }),
     dispatch => ({dispatch: {
         download: cid => () => dispatch({type: 'react surah-item/attachment download', cid})

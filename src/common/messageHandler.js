@@ -33,20 +33,20 @@ export default state => {
     let stateChangeHandler = () => {} // TODO: replace with messages
     const onStateChange = handler => stateChangeHandler = handler
     // --- THINGS THAT USE GETTERS ---
-    const getAndStoreContent = async cid => {
-        try {
-            const attachment = await getContent(cid, peers, pr) // mantra/request
+/**/const getAndStoreContent = async cid => {
+/**/    try {
+/**/        const attachment = await getContent(cid, peers, pr) // mantra/request
             const storageAttachment = {...attachment, buffer: attachment.buffer} //BSON: buffer(Binary).buffer; msgpack: just buffer
-            contentStore.set(cid, {payload: storageAttachment}) //TODO: on server, store only metadata in the contentStore, and load buffer only on request
+/**/        contentStore.set(cid, {payload: storageAttachment}) //TODO: on server, store only metadata in the contentStore, and load buffer only on request
             /*if (isServerNode) {
                 await writeAttachment(storageAttachment)
             }*/
             stateChangeHandler('put attachment', {cid, attachment: {payload: storageAttachment}})
             return {cid, attachment: storageAttachment}
-        } catch (e) {
-            console.log("Exception durig getting content file #", cid, e)
-            throw e
-        }
+/**/    } catch (e) {
+/**/        console.log("Exception durig getting content file #", cid, e)
+/**/        throw e
+/**/    }
     }
     // TODO: move to a separate module -------------------------------------------------------------
     const poemata = state.poemata || [] //could also contain haikus 
@@ -77,7 +77,7 @@ export default state => {
         if (poema.opid === null) {
             delete poema.opid // hacky, improve
         }
-        poemata.push(poema)
+/**/    poemata.push(poema)
         const surah = aggregate(
             poema,
             suwar, // modified as a result
@@ -87,7 +87,7 @@ export default state => {
             getAndStoreContent,
             poemata
         )
-        console.log(poema, surah)
+        //console.log(poema, surah)
         stateChangeHandler('put post', {poema, surah})
     }
 
@@ -253,38 +253,38 @@ export default state => {
         return poema.pid
     }
     // --- THINGS THAT USE GETTERS II ---
-    setInterval(async () => {
-        for (const peer of peers.values()) {
-            try {
-                const payload = {
-                    type: isServerNode ? 'server' : 'browser',
-                    persistent: isServerNode //TODO: think about better capabilities format
-                }
-                await ping(payload, peer.nid, pr) // mantra/request
-            } catch (error) {
-                peers.delete(peer)
-                stateChangeHandler('delete peer', {nid: peer})
-            }
-        }
-    }, 10000)
+/**/setInterval(async () => {
+/**/    for (const peer of peers.values()) {
+/**/        try {
+/**/            const payload = {
+/**/                type: isServerNode ? 'server' : 'browser',
+/**/                persistent: isServerNode //TODO: think about better capabilities format
+/**/            }
+/**/            await ping(payload, peer.nid, pr) // mantra/request
+/**/        } catch (error) {
+/**/            peers.delete(peer)
+/**/            stateChangeHandler('delete peer', {nid: peer})
+/**/        }
+/**/    }
+/**/}, 10000)
 
     const storePost = poema => {
-        putPostToStore(poema) //TODO: simplify calls and naming scheme
+/**/    putPostToStore(poema) //TODO: simplify calls and naming scheme
 
-        if (isServerNode) {
-            if (poema.attachments) {
-                poema.attachments.map(async attachment => {
-                    if (!contentStore.get(attachment.cid)) {
-                        try {
+/**/    if (isServerNode) {
+/**/        if (poema.attachments) {
+/**/            poema.attachments.map(async attachment => {
+/**/                if (!contentStore.get(attachment.cid)) {
+/**/                    try {
                             await getAndStoreContent(attachment.cid) //stateChangeHandler is fired inside; think if it is good solution
-                        } catch(e) {
-                            console.log("timeout (10s) on waiting the attachment", attachment)
-                        }
-                    }
-                })
-            }
-        }
-    }
+/**/                    } catch(e) {
+/**/                        console.log("timeout (10s) on waiting the attachment", attachment)
+/**/                    }
+/**/                }
+/**/            })
+/**/        }
+/**/    }
+/**/}
 
     Object.assign(state, {
         peers,
