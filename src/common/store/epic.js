@@ -64,7 +64,7 @@ export default combineEpics(
             const state = state$.value
 
             // was in storePost
-            if (/*state.init.isServerNode &&*/ poema.attachments) {
+            if (state.init.isServerNode && poema.attachments) {
                 poema.attachments.map(async attachment => {
                     if (!(attachment.cid in state.poema.contents)) {
                         subscriber.next({type: 'mantra req content get', cid: attachment.cid})

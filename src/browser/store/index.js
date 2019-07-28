@@ -15,10 +15,15 @@ import surahInitialState from 'Surah/store/initialState.js'
 
 import { combineEpics } from 'redux-observable'
 
+const logger = (state, action) => {
+    console.log('RDCR', action)
+    return state
+}
+
 /* combine things */
 const initialState = Object.assign({}, commonInitialState, surahInitialState, mayaInitialState)
 const reducer = (state = initialState, action) =>
-    [mayaReducer, surahReducer, commonReducer]
+    [logger, mayaReducer, surahReducer, commonReducer]
         .reduce((state, reducer) => reducer(state, action), state)
 const epic = combineEpics(commonEpic, surahEpic, mayaEpic)
 

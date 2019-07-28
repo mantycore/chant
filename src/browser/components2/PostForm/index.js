@@ -8,11 +8,11 @@ const PostForm = ({state, dispatch}) => {
     let placeholder, disabled, encrypted;
      
     let protoPost = {}
-    if (state.initiation) {
+    if (state.init.initiation) {
         return <div className={style["post-form-outer"]}>
             <div className={style["post-form"]}>
                 <button onClick={dispatch.unlockPassword}>Enter your own</button>
-                <input {...{type: 'text', className: style['encrypted'], value: state.secretCode, disabled: !state.passwordEditable, onChange: dispatch.changePassword}} />
+                <input {...{type: 'text', className: style['encrypted'], value: state.init.secretCode, disabled: !state.passwordEditable, onChange: dispatch.changePassword}} />
                 <button onClick={dispatch.acceptPassword}>Accept</button>
             </div>
             <div className={style["initiation-message"]}>{
@@ -38,7 +38,7 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
         encrypted = true
     }
     if (state.newState.maya.mode === 'direct conversation') {
-        const renga = state.rengashu.find(curRenga => curRenga.id === state.newState.maya.rengaId)
+        const renga = state.surah.rengashu.find(curRenga => curRenga.id === state.newState.maya.rengaId)
         protoPost.to = renga.suwar[0].my ? renga.secondPid : renga.firstPid // can fail if the conversation is malformed
         // think about it. What if both sides are mine?
         protoPost.conversationId = state.newState.maya.rengaId

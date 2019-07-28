@@ -45,6 +45,7 @@ export default combineEpics(
             )
 
             subscriber.next({type: 'surah store', surah, ...(renga ? {renga} : {})})
+            subscriber.complete()
         }))
     ),
 
@@ -64,7 +65,7 @@ export default combineEpics(
             return {
                 type: 'haiku content get',
                 cid: cidPlain,
-                content: {payload: {...originalContent, buffer: decryptedContentBuffer}}
+                content: {...originalContent, buffer: decryptedContentBuffer}
             }
         })
     )

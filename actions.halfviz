@@ -1,0 +1,43 @@
+
+init -> pr peer
+init -> pr mantra
+init -> ping
+
+pr peer -> poema store from remote
+poema store from remote -> mantra req content get
+mantra req content get -> mantra res content get
+mantra req content get -> mantra err content get
+
+pr mantra -> pr mantra success
+pr mantra -> pr mantra error
+pr mantra -> mantra ping
+pr mantra -> mantra pong
+
+ping -> ping success
+ping -> ping timeout
+ping success {color: gray}
+
+; green actions are hantdled in reducer
+init {color: green}
+pr peer {color: green}
+pr mantra {color: green}
+pr peer -- pr mantra
+pr mantra success {color: green}
+poema store from remote {color: green}
+mantra ping {color: green}
+mantra pong {color: green}
+ping timeout {color: green}
+mantra ping -- mantra pong
+mantra res content get {color: green}
+
+-- {color: seagreen}
+mantra res content get -> haiku content get
+haiku content get {color: seagreen}
+
+-- {color: darkgoldenrod}
+mantra res content get -> terma content store
+terma content store {color: goldenrod}
+haiku content get -> terma content store
+
+poema store from remote -> terma poema store
+terma poema store {color: goldenrod}

@@ -1,7 +1,7 @@
 import produce from 'immer'
 
 export default (state, action) => {
-    console.log("RDCR Common", action)
+    //console.log("RDCR Common", action)
     return produce(state, draft => {
         switch (action.type) {
             case 'init': {
