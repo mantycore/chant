@@ -1,5 +1,4 @@
 import { Buffer } from 'buffer'
-import BSON from 'bson'
 import crypto from 'Common/crypto.js'
 import bs58 from 'bs58'
 import nacl from 'tweetnacl'

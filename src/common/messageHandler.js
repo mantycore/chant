@@ -1,5 +1,4 @@
 import { Buffer } from 'buffer'
-import BSON from 'bson'
 import msgpack from 'msgpack-lite'
 import bs58 from 'bs58'
 import nacl from 'tweetnacl'
@@ -96,15 +95,6 @@ export default state => {
             nid: pr.id,
             proofs: [{type: 'delete', post: origin}]
         })
-
-        /*console.log(post)
-        console.log(crypto.proof.verify(
-            BSON.serialize(inner(post)),
-            bs58.decode(post.proofs[0].signature),
-            BSON.serialize(inner(origin)),
-            bs58.decode(origin.proofSignature),
-            bs58.decode(origin.proofKey)
-        ))*/
         putPostToStore(psalm)
         broadcast({type: 'req poema put', payload: psalm}, false, peers, pr)
     }
@@ -308,7 +298,6 @@ export default state => {
 
         Buffer,
         toCID,
-        BSON,
         // microjson,
         crypto
     })
