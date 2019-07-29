@@ -64,7 +64,7 @@ export default combineEpics(
             const decryptedContentBuffer = Buffer.from(nacl.secretbox.open(content.buffer, nonce, secretKey))
 
             return {
-                type: 'pracriti content put',
+                type: 'prakriti content put',
                 cid: cidPlain,
                 content: {...originalContent, buffer: decryptedContentBuffer}
             }

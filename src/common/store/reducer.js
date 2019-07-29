@@ -39,11 +39,37 @@ export default (state, action) => {
             }
             break
 
-            case 'prakriti content put': {
-                // was in getAndStoreContent
-                draft.poema.contents[action.cid] = {payload: action.content}
+            /* :::: */
+
+            case 'mantra req content get': {
+                let content = draft.poema.contents[action.cid]
+                if (!content) {
+                    content = draft.poema.contents[action.cid] = {status: {}}
+                }
+                content.status.isLoading = 'loading'
             }
             break
+
+            case 'mantra err content get': {
+                let content = draft.poema.contents[action.cid]
+                if (!content) {
+                    content = draft.poema.contents[action.cid] = {status: {}}
+                }
+                content.status.isLoading = 'failure'
+            }
+            break
+
+            /* matra res content get */
+            case 'prakriti content put': {
+                // was in getAndStoreContent
+                draft.poema.contents[action.cid] = {
+                    status: {isLoading: 'loaded'}, //TODO: change for more peers
+                    payload: action.content
+                }
+            }
+            break
+
+            /* :::: */
 
             case 'prakriti peer put': {
                 // was in Mantra/ (on message switch)

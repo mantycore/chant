@@ -64,7 +64,7 @@ export default combineEpics(
             // was in storePost
             subscriber.next({type: 'prakriti poema put', poema})
 
-            if (/*state.init.isServerNode &&*/ poema.attachments) {
+            if (state.init.isServerNode && poema.attachments) {
                 poema.attachments.map(async attachment => {
                     if (!(attachment.cid in state.poema.contents)) {
                         subscriber.next({type: 'mantra req content get', cid: attachment.cid})
@@ -104,7 +104,7 @@ export default combineEpics(
             } catch (error) {
                 console.warn('Error downloading content', error, cid)
                 return {
-                    type: 'mantra err content get'
+                    type: 'mantra err content get', cid
                 } 
             }
         })
@@ -116,7 +116,7 @@ export default combineEpics(
     ),
 
     (action$, state$) => action$.pipe(
-        ofType('mantra pr message'),
+        ofType('mantra pr message'), // incoming mantra
         mergeMap(({mantra, nid}) => new Observable(subscriber => {
             // was in Mantra/ (on message)
             const state = state$.value
@@ -140,6 +140,7 @@ export default combineEpics(
                 subscriber.next({type: 'mantra pr message success', umid})
 
                 switch (mantra.type) {
+                    /* called from mantra.incoming.poema */
                     case 'req content get': {
                         const content = state.poema.contents[mantra.params.cid] //todo: think about it
                         if (content) {
@@ -157,6 +158,7 @@ export default combineEpics(
                     }
                     break
 
+                    /* called from mantra.interval.ping */
                     case 'ping': {
                         const payload = nodeStatus(state)
                         send(nid, {type: 'pong', payload, re: mantra.mid}, false, pr)
@@ -166,10 +168,12 @@ export default combineEpics(
 
                     case 'pong': {
                         handleReply(mantra /*, mantra.payload*/)
+                        /* todo: move to mantra interval ping?*/
                         subscriber.next({type: 'prakriti peer put', nid, payload: mantra.payload})
                     }
                     break
 
+                    /* called from mantra.pr.peer */
                     case 'req poemata get': {
                         const payload = state.poema.poemata
                         send(originNid, {type: 'res poemata get', payload, re: mantra.mid}, false, pr)

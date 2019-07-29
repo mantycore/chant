@@ -14,11 +14,12 @@ const epic = combineEpics(
         })
     ),
     
-    (action$, state$) => action$.pipe(
+    /*(action$, state$) => action$.pipe(
         ofType('react surah-item/attachment download'),
         mergeMap(({cid}) => merge( // switchMap? concat?
             of({type: 'epic attachment download start', cid}),
             (async () => {
+                return {type: 'mantra req content get', cid}
                 try {
                     await state$.value.getAndStoreContent(cid)
                     return {type: 'epic attachment download success', cid}
@@ -28,7 +29,27 @@ const epic = combineEpics(
                 }
             })()
         ))
+    ),*/
+
+    (action$, state$) => action$.pipe(
+        ofType('react surah-item/attachment download'),
+        map(({cid}) => ({type: 'mantra req content get', cid}))
     ),
+
+    /* Not like the previous async version, these actions are emitted
+       on any incoming content, not only triggered by the mapping above.
+       Think about this! */
+    /*(action$, state$) => action$.pipe(
+        ofType('prakriti content put'),
+        map(({cid}) => ({type: 'epic attachment download success', cid}))
+    ),
+
+    (action$, state$) => action$.pipe(
+        ofType('mantra err contetn get'),
+        map(({cid}) => ({type: 'epic attachment download failure', cid}))
+    ),*/
+
+    /* :::::::::::::::: */
 
     (action$, state$) => action$.pipe(
         ofType('react post-form submit'),
@@ -61,7 +82,7 @@ const epic = combineEpics(
         ofType('react post-form accept password'), // -> #password accept
         map(() => {
             localStorage.setItem('Secret code', draft.secretCode)
-            state$.value.crypto.setPassphrase(draft.secretCode)
+            state$.value.init.crypto.setPassphrase(draft.secretCode)
             return {type: 'epic post-form#password accepted'}
         })
     ),
