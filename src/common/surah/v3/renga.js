@@ -1,4 +1,4 @@
-import cloneDeep from 'lodash/fp/cloneDeep.js'
+const cloneDeep = obj => JSON.parse(JSON.stringify(obj))
 
 const addSurahToRenga = (
     payload,

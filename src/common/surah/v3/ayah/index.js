@@ -5,7 +5,8 @@ import inner from 'Psalm/inner.js'
 export { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import crypto from 'Common/crypto.js'
-import cloneDeep from 'lodash/fp/cloneDeep.js'
+
+const cloneDeep = obj => JSON.parse(JSON.stringify(obj))
 
 function verifyByPid(psalm, ayah, poemata) { //TODO: move to verify.js
     const original = poemata.find(psalm => psalm.pid === ayah.pid)
