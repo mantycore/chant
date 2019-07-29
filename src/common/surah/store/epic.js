@@ -9,7 +9,7 @@ import nacl from 'tweetnacl'
 
 export default combineEpics(
     (action$, state$) => action$.pipe(
-        ofType('poema store from remote'), //TODO: other poema sources!
+        ofType('prakriti poema put'),
         mergeMap(action => new Observable(subscriber => {
             const poema = action.poema
             const state = state$.value
@@ -44,15 +44,16 @@ export default combineEpics(
                 rengashu
             )
 
-            subscriber.next({type: 'surah store', surah, ...(renga ? {renga} : {})})
+            subscriber.next({type: 'prakriti surah put', surah, ...(renga ? {renga} : {})})
             subscriber.complete()
         }))
     ),
 
     (action$, state$) => action$.pipe(
-        ofType('mantra res content get'),
+        ofType('mantra incoming content'),
         filter(action => action.haiku),
         map(({cid, content, haiku}) => {
+            // was in decrypt
             const {psalm, cidPlain, secretKey, nonce} = haiku
 
             const contents = [
@@ -63,7 +64,7 @@ export default combineEpics(
             const decryptedContentBuffer = Buffer.from(nacl.secretbox.open(content.buffer, nonce, secretKey))
 
             return {
-                type: 'haiku content get',
+                type: 'pracriti content put',
                 cid: cidPlain,
                 content: {...originalContent, buffer: decryptedContentBuffer}
             }

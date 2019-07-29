@@ -33,11 +33,54 @@ mantra res content get {color: green}
 -- {color: seagreen}
 mantra res content get -> haiku content get
 haiku content get {color: seagreen}
+poema store from remote -> surah store
+surah store {color: seagreen}
+poema store from remote -> Mantra req content get
 
 -- {color: darkgoldenrod}
 mantra res content get -> terma content store
-terma content store {color: goldenrod}
+terma content store {label: terma content store (put attachment), color: goldenrod}
 haiku content get -> terma content store
 
 poema store from remote -> terma poema store
-terma poema store {color: goldenrod}
+terma poema store {label: terma poema store (put post), color: goldenrod}
+
+pr peer -> posts initialized
+Mantra res poemata get -> posts initialized
+
+mantra ping -> terma peer store
+mantra pong -> terma peer store
+ping timeout -> terma peer delete
+-- {color: maroon}
+ping -> Mantra ping
+Mantra ping {color: maroon}
+Mantra pong {color: maroon}
+Mantra ping -> mantra ping
+Mantra ping -> Mantra pong
+Mantra pong -> mantra pong
+
+pr peer -> Mantra req poemata get
+Mantra req poemata get {color: maroon}
+Mantra res poemata get {color: maroon}
+Mantra req poemata get -> Mantra res poemata get
+Mantra res poemata get -> poema store from remote
+
+
+mantra req content get -> Mantra req content get
+Mantra req content get -> Mantra res content get
+Mantra req content get {color: maroon}
+Mantra res content get {color: maroon}
+Mantra res content get -> mantra res content get
+Mantra ping -> ping timeout
+
+-- {color: black}
+poema store from remote -- storePost
+storePost {color: black}
+mantra req content get -- getAndStoreContent
+poema store from remote -- putPostToStore
+putPostToStore {color: black}
+storePost -> putPostToStore
+getAndStoreContent {color: black}
+storePost -> mantra req content get
+putPostToStore -> surah store
+putPostToStore -> terma poema store

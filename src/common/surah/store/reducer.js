@@ -2,7 +2,7 @@ import produce from 'immer'
 
 export default (state, action) => produce(state, draft => {
     switch (action.type) {
-        case 'surah store': {
+        case 'prakriti surah put': {
             const {suwar, rengashu} = draft.surah
 
             const surah = suwar.find(curSurah => curSurah.pid === action.surah.pid)
@@ -24,11 +24,6 @@ export default (state, action) => produce(state, draft => {
                 rengashu.sort(((a, b) => new Date(b.latest) - new Date(a.latest))) // descending
             }
 
-        }
-        case 'haiku content get': {
-            // was in decrypt
-            // equivalent to mantra res content get
-            draft.poema.contents[action.cid] = {payload: action.content}
         }
         break
     }

@@ -12,8 +12,10 @@ export default (state, action) => {
             }
             break
 
-            case 'pr peer': /* NB: split handler should the need for different logic arise */
-            case 'pr mantra': {
+            /* NB: split handler should the need for different logic arise */
+            /* also consider naming it 'prakriti peer create' or something */
+            case 'mantra pr peer':
+            case 'mantra pr message': {
                 // was in Mantra/ (on peer, on message)
                 const hexNid = action.nid.toString('hex')
                 const peers = draft.mantra.peers
@@ -23,27 +25,27 @@ export default (state, action) => {
             }
             break
 
-            case 'pr mantra success': {
+            /* prakriti mantra put? */
+            case 'mantra pr message success': {
                 // was in Mantra/ (on message)
                 draft.mantra.mantrasaProcessed[action.umid] = true
             }
             break
 
-            case 'poema store from remote': {
+            case 'prakriti poema put': {
                 // was in storePost => putPostToStore
                 // delete poema.opid if it is null?
                 draft.poema.poemata.push(action.poema)
             }
             break
 
-            case 'mantra res content get': {
+            case 'prakriti content put': {
                 // was in getAndStoreContent
                 draft.poema.contents[action.cid] = {payload: action.content}
             }
             break
 
-            case 'mantra ping':
-            case 'mantra pong': {
+            case 'prakriti peer put': {
                 // was in Mantra/ (on message switch)
                 const hexNid = action.nid.toString('hex')
                 const peers = draft.mantra.peers
@@ -51,7 +53,7 @@ export default (state, action) => {
             }
             break
 
-            case 'ping timeout': {
+            case 'prakriti peer delete': {
                 // was in root setInterval
                 delete draft.mantra.peers[action.hexNid]
             }

@@ -1,0 +1,32 @@
+
+init -> mantra pr peer
+init -> mantra pr message
+init -> mantra interval ping
+
+mantra pr peer -> mantra incoming poema
+
+mantra incoming poema -> prakriti poema put
+mantra incoming poema -> mantra req content get
+
+mantra req content get -> mantra incoming content
+mantra incoming content -> prakriti content put
+
+mantra pr message -> mantra pr message success
+mantra pr message -> prakriti peer put
+
+mantra interval ping -> prakriti peer delete
+
+init {color: green}
+mantra pr peer {color: green}
+mantra pr message {color: green}
+mantra pr message success {color: green}
+prakriti poema put {color: green}
+prakriti content put {color: green}
+prakriti peer put {color: green}
+prakriti peer delete {color: green}
+
+-- {color: seagreen}
+prakriti poema put -> prakriti surah put
+prakriti poema put -> mantra req content get
+mantra incoming content -> (prakriti haiku content put)
+(prakriti haiku content put) -- prakriti content put
