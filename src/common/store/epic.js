@@ -4,6 +4,7 @@ import { mergeMap, map, catchError, tap } from 'rxjs/operators'
 
 import { Buffer } from 'buffer'
 import log from 'Common/log.js'
+import observableAsync from 'Common/observableAsync.js'
 import crypto from 'Common/crypto.js' // TODO: move to Browser epic
 import send from 'Mantra/send.js'
 import broadcast from 'Mantra/broadcast.js'
@@ -16,10 +17,6 @@ function nodeStatus(state) {
         persistent: state.init.isServerNode, //TODO: think about better capabilities format
         name: 'Allium'
     }
-}
-
-function observableAsync(asyncFun) {
-    return action => new Observable(subscriber => asyncFun(action, subscriber))
 }
 
 export default combineEpics(
@@ -112,7 +109,7 @@ export default combineEpics(
 
     (action$, state$) => action$.pipe(
         ofType('mantra incoming content'),
-        map(({cid, content}) => ({type: 'prakriti content put', cid, content}))
+        map(({cid, content}) => ({type: 'prakriti content put', cid, payload: content}))
     ),
 
     (action$, state$) => action$.pipe(

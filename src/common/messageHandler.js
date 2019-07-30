@@ -1,20 +1,15 @@
-import { Buffer } from 'buffer'
 import msgpack from 'msgpack-lite'
-import bs58 from 'bs58'
-import nacl from 'tweetnacl'
-import base64 from 'base64-js'
+
+
 
 import toCID from './cid.js'
 import crypto from './crypto.js'
 
 import addHandlers from './mantra/'
 import { getContent, ping } from './mantra/request/get/'
-import { putContents } from './mantra/request/put/'
+
 import broadcast from './mantra/broadcast.js'
 
-import createPost from './psalm/createPost.js'
-import inner from './psalm/inner.js'
-import processFiles from './psalm/processFiles.js'
 import asBuffer, {asBufferPlain} from './psalm/asBuffer.js'
 
 import aggregate from './surah/'
@@ -90,158 +85,6 @@ export default state => {
         stateChangeHandler('put post', {poema, surah})
     }
 
-    const revoke = async origin => {
-        const psalm = await createPost({
-            nid: pr.id,
-            proofs: [{type: 'delete', post: origin}]
-        })
-        putPostToStore(psalm)
-        broadcast({type: 'req poema put', payload: psalm}, false, peers, pr)
-    }
-
-    const updatePost = async (update, origin, mode) => {
-        let psalm;
-
-        let proofs = []
-        if (update.body) {
-            const signaturesMarkup = update.body.match(/~[a-zA-Z0-9]{64,88}/g)
-            if (signaturesMarkup) {
-                proofs = signaturesMarkup
-                    .map(s => s.substring(1))
-                    .map(pid => poemata.find(poema => poema.pid === pid))
-                    .map(poema => ({type: 'hand', post: poema}))
-            }
-        }
-
-        if (mode === 'patch') {
-            psalm = await createPost({
-                nid: pr.id,
-                ...update,
-                proofs: [{type: 'patch', post: origin}].concat(proofs)
-            })
-        } else if (mode === 'put') { // untested, written just in case
-            const params = {
-                nid: pr.id,
-                ...(Object.assign(update, inner(origin)))
-            }
-            params.proofs = (params.proofs || []).concat(proofs)
-            params.proofs.push({type: 'put', post: origin})
-            psalm = await createPost(/*...*/)
-        }
-        putPostToStore(psalm)
-        broadcast({type: 'req poema put', payload: psalm}, false, peers, pr)
-    }
-
-    const putPost = async({body, filesToLoad, opid, tags, to, conversationId}) => {
-        if (!filesToLoad && body.match(/^\s+$/)) {
-           return
-        }
-        const [filesFull, attachments] = await processFiles(filesToLoad)
-
-        let proofs = null
-        const signaturesMarkup = body.match(/~[a-zA-Z0-9]{64,88}/g)
-        if (signaturesMarkup) {
-            proofs = signaturesMarkup
-                .map(s => s.substring(1))
-                .map(pid => poemata.find(poema => poema.pid === pid))
-                .filter(poema => poema) //filter out nonexistent
-                .map(poema => ({type: 'hand', post: poema}))
-        }
-
-        const psalm = await createPost({
-            body,
-            attachments,
-            nid: pr.id,
-            opid,
-            tags,
-            proofs,
-            conversationId
-        })
-
-        let poema
-
-        if (to) {
-            const nonce = bs58.decode(psalm.pid).slice(0, 24)
-            const toPost = suwar.find(curSurah => curSurah.pid === to)
-            const recipientDirectKey = bs58.decode(toPost.origin.directKey)
-            const secretKey = crypto.direct.secretKey(recipientDirectKey, nonce)
-
-            const contentMap = {}
-
-            if (psalm.body) {
-                const encryptedBody = nacl.secretbox(Buffer.from(body), nonce, secretKey.itself)
-                const cid = await toCID(encryptedBody)
-                const buffer = Buffer.from(body)
-                contentStore.set(cid, {payload: {type: 'application/octet-stream', buffer: encryptedBody, cid, size: encryptedBody.length, name: cid}, replicated: 0, persisted: 0})
-                contentStore.set(psalm.body.cid, {payload: {type: 'text/plain', buffer, cid: psalm.body.cid, size: buffer.length}, private: true})
-                contentMap[psalm.body.cid] = cid
-            }
-
-            for (const file of filesFull) {
-                //{buffer: buffers[i], cid: cids[i], type: file.type, name: file.name, size: file.size}
-                const encryptedAttachment = nacl.secretbox(file.buffer, nonce, secretKey.itself)
-                const cid = await toCID(encryptedAttachment)
-                contentStore.set(cid, {payload: {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length, name: cid}, replicated: 0, persisted: 0})
-                contentStore.set(file.cid, {payload: file, private: true})
-                contentMap[file.cid] = cid
-            }
-
-            Object.assign(psalm, {contentMap}) // counts as a part of outer post
-
-            const ciphertext = nacl.secretbox(asBufferPlain(psalm), nonce, secretKey.itself) //BSON instead of Buffer.from(microjson(post)?
-
-            const haiku = {
-                ciphertext: base64.fromByteArray(ciphertext),
-                to: [{
-                    pid: to,
-                    key: base64.fromByteArray(secretKey.encryptedForRecipient)
-                }],
-                senderKey: base64.fromByteArray(secretKey.encryptedForSender),
-                timestamp: psalm.timestamp,
-                pid: psalm.pid,
-                version: psalm.version
-            }
-
-            //console.log(encryptedPost)
-
-            // how to know if the sender of the post is me? try calling
-            //crypto.direct.decryptSecretKey(base64.toByteArray(encryptedPost.secretKeyForSender), nonce1)
-            // null (failure to decrypt) indicates that this is from someone's else
-
-            // const nonce1 = bs58.decode(post.pid).slice(1, 25);
-            // console.log(crypto.direct.decryptSecretKey(base64.toByteArray(encryptedPost.secretKeyForSender), nonce1))
-            /*console.log(JSON.parse(Buffer.from(nacl.secretbox.open(
-                base64.toByteArray(encryptedPost.ciphertext),
-                nonce1,
-                crypto.direct.decryptSecretKey(base64.toByteArray(encryptedPost.secretKeyForSender), nonce1)
-            )).toString()))*/
-
-            //todo: encrypted files and post body for directs
-            //const directKey = bs58.decode(toPost.directKey).directKey
-            //const encrypt = buffer => crypto.direct.encrypt(buffer, directKey)
-            //const [filesFull, attachments] = await processFiles(filesToLoad, encrypt)
-
-            //const decrypted = crypto.direct.decrypt(encrypted, Buffer.from(microjson(inner(toPost))))
-            poema = haiku
-            await putContents(Object.values(contentMap).map(cid => contentStore.get(cid)), peers, pr)
-        } else {
-            if (psalm.body) {
-                const buffer = Buffer.from(body) //TODO: support both plain and markdown text
-                contentStore.set(psalm.body.cid, {payload: {type: 'text/markdown', buffer, cid: psalm.body.cid, size: buffer.length, name: 'index.md'}, replicated: 0, persisted: 0})
-            }
-
-            filesFull.forEach(file => {
-                contentStore.set(file.cid, {payload: file, replicated: 0, persisted: 0})
-            })
-
-            poema = psalm
-            await putContents(filesFull.map(({cid}) => contentStore.get(cid)), peers, pr)
-        }
-
-        putPostToStore(poema)
-        broadcast({type: 'req poema put', payload: poema}, false, peers, pr) //TODO: await for reply, display replication count
-        return poema.pid
-    }
     // --- THINGS THAT USE GETTERS II ---
 /**/setInterval(async () => {
 /**/    for (const peer of peers.values()) {

@@ -63,12 +63,28 @@ export default (state, action) => {
             case 'prakriti content put': {
                 // was in getAndStoreContent
                 draft.poema.contents[action.cid] = {
-                    status: {isLoading: 'loaded'}, //TODO: change for more peers
-                    payload: action.content
+                    payload: action.payload,
+                    status: Object.assign({}, action.status, {isLoading: 'loaded'}) //TODO: change for more peers
                 }
             }
             break
 
+            /* TODO: think about it */
+            case 'prakriti content status replicated increment': {
+                const content = draft.poema.contents[action.cid]
+                if (content && content.status && content.status.replicated) {
+                    content.status.replicated += 1
+                }
+            }
+            break
+
+            case 'prakriti content status persisted increment': {
+                const content = draft.poema.contents[action.cid]
+                if (content && content.status && content.status.persisted) {
+                    content.status.persisted += 1
+                }
+            }
+            break
             /* :::: */
 
             case 'prakriti peer put': {
