@@ -12,14 +12,14 @@ import createPost from 'Psalm/createPost.js'
 import processFiles from 'Psalm/processFiles.js'
 import inner from 'Psalm/inner.js'
 
-const revoke = async (subsriber, origin) => {
+const revoke = async (state, subscriber, origin) => {
     const psalm = await createPost({
-        nid: pr.id,
+        nid: state.init.pr.id,
         proofs: [{type: 'delete', post: origin}]
     })
     //putPostToStore(psalm)
     subscriber.next({type: 'prakriti poema put', poema: psalm})
-    broadcast({type: 'req poema put', payload: psalm}, false, peers, pr)
+    broadcast({type: 'req poema put', payload: psalm}, false, state.mantra.peers, state.init.pr)
 }
 
 const updatePost = async (state, subscriber, update, origin, mode) => {

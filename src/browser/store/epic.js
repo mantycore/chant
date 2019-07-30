@@ -2,18 +2,20 @@ import { ofType, combineEpics } from 'redux-observable'
 import { of, merge } from 'rxjs'
 import { mergeMap, map } from 'rxjs/operators'
 import observableAsync from 'Common/observableAsync.js'
-import { putPost, updatePost } from 'Mantra/request/put/poema.js'
+import { putPost, updatePost, revoke } from 'Mantra/request/put/poema.js'
 
 const epic = combineEpics(
     (action$, state$) => action$.pipe(
         ofType('react surah-item/meta revoke'),
-        mergeMap(async action => {
+        mergeMap(observableAsync(async ({surah}, subscriber) => {
             if (window.confirm("Really revoke the post?")) {
-                await state$.value.revoke(post)
-                return {type: 'epic surah-item revoke success'}
+                await revoke(state$.value, subscriber, surah.origin)
+                subscriber.next({type: 'epic surah-item revoke success'})
+            } else {
+                subscriber.next({type: 'epic surah-item revoke cancel'})
             }
-            return {type: 'epic surah-item revoke cancel'}
-        })
+            subscriber.complete()
+        }))
     ),
     
     /*(action$, state$) => action$.pipe(

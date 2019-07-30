@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import style from './Image.css'
 import {binaryToUrl, format} from './utils.js'
 
-const Image = ({attachment, content, status, dispatch}) => 
+const Image = ({attachment, content, status, dispatch}) =>
     status === 'loaded'
         ? <div>
             {content.payload.buffer

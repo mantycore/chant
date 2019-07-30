@@ -66,7 +66,7 @@ export default combineEpics(
             return {
                 type: 'prakriti content put',
                 cid: cidPlain,
-                content: {...originalContent, buffer: decryptedContentBuffer}
+                payload: {...originalContent, buffer: decryptedContentBuffer}
             }
         })
     )
