@@ -2,6 +2,7 @@ import { ofType, combineEpics } from 'redux-observable'
 import { of, merge } from 'rxjs'
 import { mergeMap, map } from 'rxjs/operators'
 import observableAsync from 'Common/observableAsync.js'
+import { putPost, updatePost } from 'Mantra/request/put/poema.js'
 
 const epic = combineEpics(
     (action$, state$) => action$.pipe(
@@ -72,14 +73,14 @@ const epic = combineEpics(
             } else {
                 let post = {body, filesToLoad}
                 Object.assign(post, action.protoPost) //todo: move protopost to state?
-                const pid = await state.putPost(state, subscriber, post)
+                const pid = await putPost(state, subscriber, post)
 
                 if (state.newState.maya.mode === 'direct') {
                     const path = window.location.hash.match('#(.*)')[1].split('/')
                     path[3] = pid
                     window.location.hash = path.slice(0,4).join('/')
                 }
-                subsriber.next({type: 'epic post-form submit success'})
+                subscriber.next({type: 'epic post-form submit success'})
             }
             subscriber.complete()
         }))

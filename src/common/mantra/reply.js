@@ -1,26 +1,26 @@
 const repliesPending = new Map()
 
-const waitForReply = (mid, resolve, reject, timeout = 1000) => {
-    repliesPending.set(mid, {resolve, reject, timestamp: new Date()})
+const waitForReply = (mid, mantra, resolve, reject, timeout = 1000) => {
+    repliesPending.set(mid, {mantra, resolve, reject, timestamp: new Date()})
 
     if (timeout) {
         setTimeout(() => {
           if (repliesPending.has(mid)) {
-            reject(new Error(`timeout waiting for res mantra ${mid}`))
+            reject(new Error(`timeout waiting for res mantra ${mid} ${JSON.stringify(repliesPending.get(mid).mantra)}`))
             repliesPending.delete(mid)
           }
         }, timeout)
     }
 }
 
-const waitForReplies = (mid, peers, observer, timeout = 1000) => {
+const waitForReplies = (mid, mantra, peers, observer, timeout = 1000) => {
     const peersMap = peers.reduce((acc, cur) => {acc[cur] = false; return acc;}, {})
-    repliesPending.set(mid, {observer, peers: peersMap, timestamp: new Date()})
+    repliesPending.set(mid, {mantra, observer, peers: peersMap, timestamp: new Date()})
 
     if (timeout) {
         setTimeout(() => {
           if (repliesPending.has(mid)) {
-            observer.error(new Error(`timeout waiting for res mantra ${mid}`))
+            observer.error(new Error(`timeout waiting for res mantra ${mid} ${JSON.stringify(repliesPending.get(mid).mantra)}`))
             repliesPending.delete(mid)
           }
         }, timeout)

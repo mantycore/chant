@@ -129,11 +129,7 @@ export default state => {
 
         putContent,
         getContent, // mantra/request
-        putPost,
         //repliesPending, // mantra/reply internal
-
-        revoke,
-        updatePost,
 
         getAndStoreContent,
 

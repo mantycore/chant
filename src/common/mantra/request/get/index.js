@@ -11,19 +11,22 @@ const getContent = async (cid, peers, pr) => new Promise((resolve, reject) => {
         plainPeers = Object.values(peers)
     }
 
-    const mid = send(plainPeers[0].nid, {type: 'req content get', params: {cid}}, false, pr)
+    const mantra = {type: 'req content get', params: {cid}}
+    const mid = send(plainPeers[0].nid, mantra, false, pr)
     //NB! only one reply is handled. Needs fixing
-    waitForReply(mid, resolve, reject, 10000)
+    waitForReply(mid, mantra, resolve, reject, 10000)
 })
 
 const ping = async (payload, nid, pr) => new Promise((resolve, reject) => {
-    const mid = send(nid, {type: 'ping', ...(payload ? {payload} : {})}, false, pr)
-    waitForReply(mid, resolve, reject)
+    const mantra = {type: 'ping', ...(payload ? {payload} : {})}
+    const mid = send(nid, mantra, false, pr)
+    waitForReply(mid, mantra, resolve, reject)
 })
 
 const getPosts = async (nid, pr) => new Promise((resolve, reject) => {
-    const mid = send(nid, {type: 'req poemata get'}, false, pr)
-    waitForReply(mid, resolve, reject)
+    const mantra = {type: 'req poemata get'}
+    const mid = send(nid, mantra, false, pr)
+    waitForReply(mid, mantra, resolve, reject)
 })
 
 export {

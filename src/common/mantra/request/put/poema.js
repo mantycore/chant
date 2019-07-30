@@ -38,13 +38,13 @@ const updatePost = async (state, subscriber, update, origin, mode) => {
 
     if (mode === 'patch') {
         psalm = await createPost({
-            nid: pr.id,
+            nid: state.init.pr.id,
             ...update,
             proofs: [{type: 'patch', post: origin}].concat(proofs)
         })
-    } else if (mode === 'put') { // untested, written just in case
+    } else if (mode === 'put') { // unfinished and untested, written just in case
         const params = {
-            nid: pr.id,
+            nid: state.init.pr.id,
             ...(Object.assign(update, inner(origin)))
         }
         params.proofs = (params.proofs || []).concat(proofs)
@@ -53,7 +53,7 @@ const updatePost = async (state, subscriber, update, origin, mode) => {
     }
     //putPostToStore(psalm)
     subscriber.next({type: 'prakriti poema put', poema: psalm})
-    broadcast({type: 'req poema put', payload: psalm}, false, peers, pr)
+    broadcast({type: 'req poema put', payload: psalm}, false, state.mantra.peers, state.init.pr)
 }
 
 const putPost = async(state, subscriber, post) => {
@@ -77,7 +77,7 @@ const putPost = async(state, subscriber, post) => {
     const psalm = await createPost({
         body,
         attachments,
-        nid: pr.id,
+        nid: state.init.pr.id,
         opid,
         tags,
         proofs,
@@ -99,21 +99,10 @@ const putPost = async(state, subscriber, post) => {
             const encryptedBody = nacl.secretbox(Buffer.from(body), nonce, secretKey.itself)
             const cid = await toCID(encryptedBody)
             const buffer = Buffer.from(body)
-            const payload = {type: 'application/octet-stream', buffer: encryptedBody, cid, size: encryptedBody.length, name: cid}
-            subscriber.next({type: 'prakriti content put', cid, payload, status: {replicated: 0, persisted: 0}})
-            subscriber.next({
-                type: 'prakriti content put',
-                cid: psalm.body.cid,
-                payload: {
-                    type: 'text/plain',
-                    buffer,
-                    cid: psalm.body.cid,
-                    size: buffer.length
-                },
-                status: {
-                    private: true
-                }
-            })
+            const encryptedPayload = {type: 'application/octet-stream', buffer: encryptedBody, cid, size: encryptedBody.length, name: cid}
+            subscriber.next({type: 'prakriti content put', cid, payload: encryptedPayload, status: {replicated: 0, persisted: 0}})
+            const payload = {type: 'text/plain', buffer, cid: psalm.body.cid, size: buffer.length}
+            subscriber.next({type: 'prakriti content put', cid: psalm.body.cid, payload, status: {private: true}})
             contentMap[psalm.body.cid] = cid
             contentsToBroadcast.push(payload)
         }
@@ -122,18 +111,11 @@ const putPost = async(state, subscriber, post) => {
             //{buffer: buffers[i], cid: cids[i], type: file.type, name: file.name, size: file.size}
             const encryptedAttachment = nacl.secretbox(file.buffer, nonce, secretKey.itself)
             const cid = await toCID(encryptedAttachment)
-            const payload = {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length, name: cid},
+            const encryptedPayload = {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length, name: cid}
             subscriber.next({type: 'prakriti content put', cid, payload, status: {replicated: 0, persisted: 0}})
-            subscriber.next({
-                type: 'prakriti content put',
-                cid: file.cid,
-                payload: file,
-                status: {
-                    private: true
-                }
-            })
+            subscriber.next({type: 'prakriti content put', cid: file.cid, payload: file, status: {private: true}})
             contentMap[file.cid] = cid
-            contentsToBroadcast.push(payload)
+            contentsToBroadcast.push(encryptedPayload)
         }
 
         Object.assign(psalm, {contentMap}) // counts as a part of outer post
@@ -196,5 +178,7 @@ const putPost = async(state, subscriber, post) => {
 }
 
 export {
-    updatePost
+    revoke,
+    updatePost,
+    putPost
 }

@@ -141,9 +141,9 @@ const addHandlers = ({
                 send(forwardedMantra.origin, {type: 'res content put', status: {persistent: isServerNode}, re: mantra.mid}, false, pr)
             break
 
-            case 'res content put':
-                handleReplies(from.toString('hex'), mantra, mantra.status)
-            break
+/**/        case 'res content put':
+/**/            handleReplies(from.toString('hex'), mantra, mantra.status)
+/**/        break
 
 /**/        case 'req content get': {// todo: split to query (~= head) and get to minimize traffic
 /**/            const payload = contentStore.get(mantra.params.cid).payload //todo: think about it

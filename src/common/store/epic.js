@@ -137,6 +137,10 @@ export default combineEpics(
                 subscriber.next({type: 'mantra pr message success', umid})
 
                 switch (mantra.type) {
+                    case 'res content put':
+                        handleReplies(nid.toString('hex'), mantra, mantra.status)
+                    break
+
                     /* called from mantra.incoming.poema */
                     case 'req content get': {
                         const content = state.poema.contents[mantra.params.cid] //todo: think about it
