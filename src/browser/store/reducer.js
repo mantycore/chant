@@ -50,10 +50,11 @@ function reducer(state, action) {
                 }
                 break
 
-            case 'update post': // react surah-item/meta update (?)
-                draft.postBeingEdited.body = action.post.result.body.text
+            //case 'update post': // react surah-item/meta update (?)
+            case 'react surah-item/meta update':
+                draft.postBeingEdited.body = action.surah.result.body.text
                 draft.postBeingEdited.mode = 'patch'
-                draft.postBeingEdited.post = action.post
+                draft.postBeingEdited.post = action.surah
                 break
             case 'post body change': // react post-form body change
                 draft.postBeingEdited.body = action.event.target.value
