@@ -38,7 +38,7 @@ const addSurahToRenga = (
             }
         }
     }
-    rengashu.sort(((a, b) => new Date(b.latest) - new Date(a.latest))) // descending
+    //rengashu.sort(((a, b) => new Date(b.latest) - new Date(a.latest))) // descending
 }
 
 export default addSurahToRenga

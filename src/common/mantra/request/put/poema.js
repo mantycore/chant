@@ -3,6 +3,7 @@ import nacl from 'tweetnacl'
 import base64 from 'base64-js'
 import { Buffer } from 'buffer'
 
+import crypto from 'Common/crypto.js'
 import toCID from 'Common/cid.js'
 
 import broadcast from 'Mantra/broadcast.js'
@@ -11,6 +12,7 @@ import { putContents } from 'Mantra/request/put/'
 import createPost from 'Psalm/createPost.js'
 import processFiles from 'Psalm/processFiles.js'
 import inner from 'Psalm/inner.js'
+import { asBufferPlain } from 'Psalm/asBuffer.js'
 
 const revoke = async (state, subscriber, origin) => {
     const psalm = await createPost({
@@ -90,7 +92,7 @@ const putPost = async(state, subscriber, post) => {
         const nonce = bs58.decode(psalm.pid).slice(0, 24)
         const toPost = state.surah.suwar.find(curSurah => curSurah.pid === to)
         const recipientDirectKey = bs58.decode(toPost.origin.directKey)
-        const secretKey = state.init.crypto.direct.secretKey(recipientDirectKey, nonce)
+        const secretKey = crypto.direct.secretKey(recipientDirectKey, nonce)
 
         const contentMap = {}
         const contentsToBroadcast = []
@@ -112,7 +114,7 @@ const putPost = async(state, subscriber, post) => {
             const encryptedAttachment = nacl.secretbox(file.buffer, nonce, secretKey.itself)
             const cid = await toCID(encryptedAttachment)
             const encryptedPayload = {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length, name: cid}
-            subscriber.next({type: 'prakriti content put', cid, payload, status: {replicated: 0, persisted: 0}})
+            subscriber.next({type: 'prakriti content put', cid, payload: encryptedPayload, status: {replicated: 0, persisted: 0}})
             subscriber.next({type: 'prakriti content put', cid: file.cid, payload: file, status: {private: true}})
             contentMap[file.cid] = cid
             contentsToBroadcast.push(encryptedPayload)
@@ -171,7 +173,7 @@ const putPost = async(state, subscriber, post) => {
     }
 
     //putPostToStore(psalm)
-    subscriber.next({type: 'prakriti poema put', poema: psalm})
+    subscriber.next({type: 'prakriti poema put', poema})
     broadcast({type: 'req poema put', payload: poema}, false, state.mantra.peers, state.init.pr)
     //TODO: await for reply, display replication count
     return poema.pid
