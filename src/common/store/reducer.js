@@ -5,10 +5,16 @@ export default (state, action) => {
     return produce(state, draft => {
         switch (action.type) {
             case 'init': {
-                draft.init.pr = action.state.pr
+                //draft.init.pr = action.state.pr
+                draft.init.prOptions = action.state.prOptions
                 draft.init.isServerNode = action.state.isServerNode
                 draft.init.secretCode = action.state.secretCode
                 draft.init.initiation = action.state.initiation
+            }
+            break
+
+            case 'mantra init complete': {
+                draft.init.pr = action.pr
             }
             break
 

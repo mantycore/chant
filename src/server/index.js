@@ -1,30 +1,22 @@
-import process from 'process'
-import Client from 'peer-relay'
-//var toCID = require('./src/cid.js')
-import messageHandler from 'Common/messageHandler.js'
-import {setup, stateChangeHandler} from './database.js'
-import { writeAttachment } from 'Tools/files.js'
+import store from './store/'
 
 var needsHelp = process.argv.indexOf('--help') !== -1 ||
                 process.argv.indexOf('-h') !== -1 ||
                 process.argv.length < 3
 
 async function main() {
-  var opts = {
+  var prOptions = {
     port: parseInt(process.argv[2]),
     bootstrap: process.argv.length === 4 ? [ process.argv[3] ] : []
   }
 
   const state = {
-    pr: new Client(opts),
     isServerNode: true,
-    writeAttachment
+    prOptions,
+    secretCode: ''
   }
-  await setup(state)
-
-  messageHandler(state)
-  state.onStateChange(stateChangeHandler)
-
+  store.dispatch({type: 'init', state})
+  store.dispatch({type: 'terma init'})
 }
 
 if (!needsHelp) {

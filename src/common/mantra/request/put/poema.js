@@ -102,9 +102,9 @@ const putPost = async(state, subscriber, post) => {
             const cid = await toCID(encryptedBody)
             const buffer = Buffer.from(body)
             const encryptedPayload = {type: 'application/octet-stream', buffer: encryptedBody, cid, size: encryptedBody.length, name: cid}
-            subscriber.next({type: 'prakriti content put', cid, payload: encryptedPayload, status: {replicated: 0, persisted: 0}})
+            subscriber.next({type: 'prakriti content put', cid, payload: encryptedPayload, status: {replicated: 0, persisted: 0, source: 'maya'}})
             const payload = {type: 'text/plain', buffer, cid: psalm.body.cid, size: buffer.length}
-            subscriber.next({type: 'prakriti content put', cid: psalm.body.cid, payload, status: {private: true}})
+            subscriber.next({type: 'prakriti content put', cid: psalm.body.cid, payload, status: {private: true, source: 'maya'}})
             contentMap[psalm.body.cid] = cid
             contentsToBroadcast.push(payload)
         }
@@ -114,8 +114,8 @@ const putPost = async(state, subscriber, post) => {
             const encryptedAttachment = nacl.secretbox(file.buffer, nonce, secretKey.itself)
             const cid = await toCID(encryptedAttachment)
             const encryptedPayload = {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length, name: cid}
-            subscriber.next({type: 'prakriti content put', cid, payload: encryptedPayload, status: {replicated: 0, persisted: 0}})
-            subscriber.next({type: 'prakriti content put', cid: file.cid, payload: file, status: {private: true}})
+            subscriber.next({type: 'prakriti content put', cid, payload: encryptedPayload, status: {replicated: 0, persisted: 0, source: 'maya'}})
+            subscriber.next({type: 'prakriti content put', cid: file.cid, payload: file, status: {private: true, source: 'maya'}})
             contentMap[file.cid] = cid
             contentsToBroadcast.push(encryptedPayload)
         }
@@ -161,11 +161,11 @@ const putPost = async(state, subscriber, post) => {
     } else {
         if (psalm.body) {
             const buffer = Buffer.from(body) //TODO: support both plain and markdown text
-            subscriber.next({type: 'prakriti content put', cid: psalm.body.cid, payload: {type: 'text/markdown', buffer, cid: psalm.body.cid, size: buffer.length, name: 'index.md'}, status: {replicated: 0, persisted: 0}})
+            subscriber.next({type: 'prakriti content put', cid: psalm.body.cid, payload: {type: 'text/markdown', buffer, cid: psalm.body.cid, size: buffer.length, name: 'index.md'}, status: {replicated: 0, persisted: 0, source: 'maya'}})
         }
 
         filesFull.forEach(file => {
-            subscriber.next({type: 'prakriti content put', cid: file.cid, payload: file, status: {replicated: 0, persisted: 0}})
+            subscriber.next({type: 'prakriti content put', cid: file.cid, payload: file, status: {replicated: 0, persisted: 0, source: 'maya'}})
         })
 
         poema = psalm
@@ -173,7 +173,7 @@ const putPost = async(state, subscriber, post) => {
     }
 
     //putPostToStore(psalm)
-    subscriber.next({type: 'prakriti poema put', poema})
+    subscriber.next({type: 'prakriti poema put', poema, status: {source: 'maya'}})
     broadcast({type: 'req poema put', payload: poema}, false, state.mantra.peers, state.init.pr)
     //TODO: await for reply, display replication count
     return poema.pid

@@ -6,6 +6,14 @@ import { putPost, updatePost, revoke } from 'Mantra/request/put/poema.js'
 
 const epic = combineEpics(
     (action$, state$) => action$.pipe(
+        ofType('init'),
+        mergeMap(observableAsync(async (action, subscriber) => {
+            window.addEventListener('hashchange', event =>
+                subscriber.next({type: 'hashchange', event}))
+        }))
+    ),
+
+    (action$, state$) => action$.pipe(
         ofType('react surah-item/meta revoke'),
         mergeMap(observableAsync(async ({surah}, subscriber) => {
             if (window.confirm("Really revoke the post?")) {

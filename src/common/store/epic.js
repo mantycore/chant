@@ -2,7 +2,9 @@ import { ofType, combineEpics } from 'redux-observable'
 import { Observable, of, merge } from 'rxjs'
 import { mergeMap, map, catchError, tap } from 'rxjs/operators'
 
+import Client from 'peer-relay'
 import { Buffer } from 'buffer'
+import toCID from 'Common/cid.js'
 import log from 'Common/log.js'
 import observableAsync from 'Common/observableAsync.js'
 import crypto from 'Common/crypto.js' // TODO: move to Browser epic
@@ -21,9 +23,10 @@ function nodeStatus(state) {
 
 export default combineEpics(
     (action$, state$) => action$.pipe(
-        ofType('init'),
+        ofType('mantra init'),
         mergeMap(() => new Observable(subscriber => {
-            const pr = state$.value.init.pr
+            console.log(state$.value.init.prOptions)
+            const pr = new Client(state$.value.init.prOptions)
             // was in Browser/
             // TODO: move to Browser epic
             crypto.setPassphrase(state$.value.init.secretCode)
@@ -32,6 +35,7 @@ export default combineEpics(
             pr.on('message', (mantra, nid) => subscriber.next({type: 'mantra pr message', mantra, nid}))
             // was in root setInterval
             setInterval(() => subscriber.next({type: 'mantra interval ping'}), 10000)
+            subscriber.next({type: 'mantra init complete', pr})
         }))
     ),
 
@@ -59,7 +63,7 @@ export default combineEpics(
             const state = state$.value
 
             // was in storePost
-            subscriber.next({type: 'prakriti poema put', poema})
+            subscriber.next({type: 'prakriti poema put', poema, status: {source: 'choir'}})
 
             if (state.init.isServerNode && poema.attachments) {
                 poema.attachments.map(async attachment => {
@@ -109,12 +113,12 @@ export default combineEpics(
 
     (action$, state$) => action$.pipe(
         ofType('mantra incoming content'),
-        map(({cid, content}) => ({type: 'prakriti content put', cid, payload: content}))
+        map(({cid, content}) => ({type: 'prakriti content put', cid, payload: content, status: {source: 'choir'}}))
     ),
 
     (action$, state$) => action$.pipe(
         ofType('mantra pr message'), // incoming mantra
-        mergeMap(({mantra, nid}) => new Observable(subscriber => {
+        mergeMap(observableAsync(async ({mantra, nid}, subscriber) => { // async is only for CID calc
             // was in Mantra/ (on message)
             const state = state$.value
             const peers = state.mantra.peers
@@ -137,6 +141,31 @@ export default combineEpics(
                 subscriber.next({type: 'mantra pr message success', umid})
 
                 switch (mantra.type) {
+                    case 'req poema put': {
+                        if (!state.poema.poemata.find(poema =>
+                                poema.pid === mantra.payload.pid)) {
+                            broadcast(mantraToForward, false, peers, pr)
+                            // TODO: optimize: do not sent the post to nodes we know already have it
+                            subscriber.next({type: 'mantra incoming poema', poema: mantra.payload})
+                        }
+                        //mantra.post.body = await getContent(mantra.post.bodyCid)
+                    }
+                    break
+
+                    case 'res poema put':
+                        //handleReply()
+                    break
+
+                    case 'req content put':
+                        const cid = await toCID(mantra.payload.buffer) 
+                        if (!(cid in state.poema.contents)) {
+                            subscriber.next({type: 'mantra incoming content', payload: mantra.payload}) //todo: counts
+                            // do not rebroadcast?
+                        }
+                        send(originNid, {type: 'res content put', status: {persistent: state.init.isServerNode}, re: mantra.mid}, false, pr)
+                    break
+
+                    /* called back when content is put to other nodes with react post*form submit */
                     case 'res content put':
                         handleReplies(nid.toString('hex'), mantra, mantra.status)
                     break
