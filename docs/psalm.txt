@@ -1,0 +1,11 @@
+/*
+
+post structure:
+id (id)
+thread (id) // original post 
+- or -
+tags (array of strings/tagids)
+text (cid) // body
+attachments (array of cids)
+
+*/

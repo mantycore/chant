@@ -1,0 +1,15 @@
+
+/*
+    mantras scheme:
+    'ping' -> 'pong'                   (req status get        res status get)
+
+    'get posts' -> 'put posts'          req poemata get       res poemata get
+                                        req content head      res content head ?
+    'get content' -> 'content found'    req content get       res content get
+
+    'put post' (=> 'get content')       req poema put         res poema put
+                                        req content put perm  res content put perm
+    'put content'                       req content put       res content put
+
+    TODO: regularize the scheme
+*/

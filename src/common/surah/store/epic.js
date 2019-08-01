@@ -1,9 +1,9 @@
 import { ofType, combineEpics } from 'redux-observable'
 import { Observable } from 'rxjs'
 import { map, filter, mergeMap, catchError } from 'rxjs/operators'
-import decrypt from 'Surah/v3/decrypt.js'
-import ayat from 'Surah/v3/ayah/'
-import addSurahToRenga from 'Surah/v3/renga.js'
+import decrypt from 'Surah/decrypt.js'
+import ayat from 'Surah/ayah/'
+import addSurahToRenga from 'Surah/renga.js'
 export { Buffer } from 'buffer'
 import nacl from 'tweetnacl'
 

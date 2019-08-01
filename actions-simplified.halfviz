@@ -1,7 +1,8 @@
 
-init -> mantra pr peer
-init -> mantra pr message
-init -> mantra interval ping
+mantra init -> mantra pr peer
+mantra init -> mantra pr message
+mantra init -> mantra interval ping
+mantra init -> mantra init complete
 
 mantra pr peer -> mantra incoming poema
 
@@ -9,24 +10,56 @@ mantra incoming poema -> prakriti poema put
 mantra incoming poema -> mantra req content get
 
 mantra req content get -> mantra incoming content
+mantra req content get -> mantra err content get
+
 mantra incoming content -> prakriti content put
 
 mantra pr message -> mantra pr message success
+mantra pr message -> mantra incoming poema
+mantra pr message -> mantra incoming content
 mantra pr message -> prakriti peer put
+mantra pr message -> mantra pr message error
 
 mantra interval ping -> prakriti peer delete
+mantra interval ping -> mantra outgoing ping success
 
-init {color: green}
+;init {color: green}
+mantra init complete {color: green}
 mantra pr peer {color: green}
 mantra pr message {color: green}
 mantra pr message success {color: green}
 prakriti poema put {color: green}
+mantra req content get {color: green}
+mantra err content get {color: green}
 prakriti content put {color: green}
 prakriti peer put {color: green}
 prakriti peer delete {color: green}
-
+prakriti content status replicated increment {color: green}
+prakriti content status persisted increment {color: green}
+prakriti peer put {color: green}
+prakriti peer delete {color: green}
 -- {color: seagreen}
 prakriti poema put -> prakriti surah put
 prakriti poema put -> mantra req content get
 mantra incoming content -> (prakriti haiku content put)
 (prakriti haiku content put) -- prakriti content put
+
+-- {color: goldenrod}
+terma init -> terma init complete
+terma init -> prakriti poema put
+terma init -> prakriti content put
+terma init complete -> mantra init
+prakriti poema put -> terma poema put
+prakriti content put -> terma content put
+terma poema put -> terma poema put complete
+terma content put -> terma content put complete
+terma init complete {color: goldenrod}
+
+-- {color: black}
+putPost -> prakriti content put
+putPost -> prakriti poema put
+putPost -> putContents
+putContents -> prakriti content status replicated increment
+putContents -> prakriti content status persisted increment
+revoke -> prakriti poema put
+update post -> prakriti poema put

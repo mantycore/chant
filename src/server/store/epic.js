@@ -51,9 +51,9 @@ export default combineEpics(
     ),
 
     (action$, state$) => action$.pipe(
-        ofType('prakriti contetn put'),
+        ofType('prakriti content put'),
         filter(action => action.status.source !== 'terma'),
-        map(action => ({type: 'terma poema put', cid: action.cid, payload: action.payload}))
+        map(action => ({type: 'terma content put', cid: action.cid, payload: action.payload}))
     ),
 
     (action$, state$) => action$.pipe(
@@ -72,8 +72,8 @@ export default combineEpics(
     (action$, state$) => action$.pipe(
         ofType('terma content put'),
         mergeMap(async action => {
-            const {buffer, ...rest} = action.attachment.payload
-            await writeAttachment(action.attachment.payload)
+            const {buffer, ...rest} = action.payload
+            await writeAttachment(action.payload)
             await state$.value.terma.postgres.query(`
                 INSERT
                     INTO attachments(cid, timestamp, rest)

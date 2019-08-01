@@ -31,7 +31,10 @@ export default combineEpics(
             // TODO: move to Browser epic
             crypto.setPassphrase(state$.value.init.secretCode)
             // was in Mantra/
+
+            /* TODO: maybe do it on any new peer, not only on peer event? Study the peer-repaly protocol better. */
             pr.on('peer', nid => subscriber.next({type: 'mantra pr peer', nid}))
+
             pr.on('message', (mantra, nid) => subscriber.next({type: 'mantra pr message', mantra, nid}))
             // was in root setInterval
             setInterval(() => subscriber.next({type: 'mantra interval ping'}), 10000)
@@ -98,6 +101,7 @@ export default combineEpics(
                     cid,
                     ...(action.haiku ? {haiku: action.haiku} : {}),
                     content: await getContent(cid, peers, pr)
+                    //when BSON was used, we had to call buffer(Binary).buffer; with msgpack it's just buffer
                 }
                 /*if (isServerNode) {
                     await writeAttachment(storageAttachment)
@@ -159,8 +163,10 @@ export default combineEpics(
                     case 'req content put':
                         const cid = await toCID(mantra.payload.buffer) 
                         if (!(cid in state.poema.contents)) {
-                            subscriber.next({type: 'mantra incoming content', payload: mantra.payload}) //todo: counts
+                            subscriber.next({type: 'mantra incoming content', cid, content: mantra.payload}) //todo: counts
                             // do not rebroadcast?
+                            // old idea: send to all nodes, but only server nodes should store it.
+                            // also old TODO: optimize: do not sent the post to nodes we know already have it
                         }
                         send(originNid, {type: 'res content put', status: {persistent: state.init.isServerNode}, re: mantra.mid}, false, pr)
                     break
@@ -206,6 +212,56 @@ export default combineEpics(
                     /* called from mantra.pr.peer */
                     case 'req poemata get': {
                         const payload = state.poema.poemata
+
+                        let params = mantra.params
+                        if (params) {
+                            payload = poemata.filter(poema => 
+                                (!params.pid || poema.pid === params.pid) &&
+                                (!params.opid || (poema.opid && poema.opid === params.opid)) &&
+                                (!params.tag || (poema.tags && poema.tags.includes(params.tag))) &&
+                                (!params.rid || (poema.conversationId && poema.conversationId === params.rid))
+                            )
+                            // All of the selectors below may be implemented here, or may be implemented in the function
+                            // creating the req-poemata-get request, probably in Maya.
+
+                            // For each poema, it is also necessary to load all poemata having update ayah on it.
+
+                            // It is not possible to find poemata by ayah if it is encrypted,
+                            // so all updating poemata must be in the same renga as the updated one!
+                            // (Or we need to allow for update ayah to be stored in haiku unencrypted)
+
+                            // We also _could_ prefetch other kinds of ayah-linked poemata, posts referencing this with
+                            // hyperlinks or referenced by it; and maybe something more. (And also prefetch content!)
+
+                            // If we are displaying a tag, it is necessary to have all (or newest N) o-psalms in the tag.
+                            // It is also possible to preload all sutras in the tag (or newest N); this must be handled not here,
+                            // but in the code placing req-poemata-get.
+
+                            // If we are displaying a sutra, we need all the psalms in the sutra (sharing the same opid)
+                            // For each of these psalms, it that psalms starts a sutra, we also need _that_ sutra.
+                            // For each of psalms of subsutra, we also need to know if there are further subsubsutra branches,
+                            // but not necessary its psalmoi; however, current logic doesnt' allow to transfer
+                            // this kind of metadata with the psalm.
+                            // We also want a parent tag(s?) or parent sutra (or only those suwar from
+                            // parent sutra which start a subsutra themselves)
+
+                            // If we are displaying a psalm (in sutra), we want its parent sutra (or, if it is a head in a sutra, then that sutra)
+                            // and all the related objects, see above.
+
+                            // If we are displaying a renga, or a psalm belonging to renga, we want all the haiku with the matching rid.
+                            // We also want the objects to display conversations list (see below). Maybe for renga psalms it is possible
+                            // to display some parallel of subsutras (maybe a fact that there is a direct (subdirect? subrenga?) directed at 
+                            // the renga psalm).
+
+                            // To display conversations list, we want all the hokku and waki. It may be dificult to find just them.
+                            // The simplest thing is to find all haiku directed to plain psalms (but see above on subrengas)
+                            // It is also possible for user node to track rids and request only hokku + waki for specific rids;
+                            // but maybe it is easier to just store hokku + waki locally.
+
+                            // (It is also very ironic that hokku is the only unencrypted poema in renga; while haiku is an encrypted psalm.
+                            // Think about terminology better.)
+                        }
+
                         send(originNid, {type: 'res poemata get', payload, re: mantra.mid}, false, pr)
                         broadcast(mantraToForward, false, peers, pr)
                     }
@@ -219,7 +275,7 @@ export default combineEpics(
             }
             subscriber.complete()
         })),
-        catchError(error => of({type: 'pr mantra error', error}))
+        catchError(error => of({type: 'mantra pr message error', error}))
     ),
 
     (action$, state$) => action$.pipe(

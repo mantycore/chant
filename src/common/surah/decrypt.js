@@ -9,9 +9,8 @@ import asBuffer from 'Psalm/asBuffer.js'
 const decrypt = (
     haiku,
     suwar,
-    contentStore,
-    getStateChangeHandler,
-    getAndStoreContent
+    contents,
+    subscriber,
 ) => {
     let psalm, directSide
 
@@ -29,6 +28,7 @@ const decrypt = (
         let encryptedKey;
         haiku.to.forEach(recipient => {
             const originCandidate = suwar.find(curSurah => curSurah.pid === recipient.pid)
+            //TODO: if surah not found, try to get it, then re decypher
             if (originCandidate && originCandidate.my) {
                 origin = originCandidate
                 encryptedKey = base64.toByteArray(recipient.key)
@@ -50,17 +50,16 @@ const decrypt = (
     // TODO: move to another file under surah?
     if (directSide !== 'unknown') {
         Object.entries(psalm.contentMap).forEach(([cidPlain, cidEncrypted]) => {
-            if (!contentStore.has(cidPlain)) {
-                getAndStoreContent(cidEncrypted).then(result => {
-                    const {cid, attachment} = result
-                    const contents = [
-                        ...(psalm.body ? [psalm.body] : []),
-                        ...(psalm.attachments ? psalm.attachments : [])
-                    ]
-                    const content = contents.find(c => c.cid === cidPlain)
-                    const decryptedAttachment = Buffer.from(nacl.secretbox.open(attachment.buffer, nonce, secretKey))
-                    contentStore.set(cidPlain, {payload: {...content, buffer: decryptedAttachment}})
-                    getStateChangeHandler()('put attachment', {cid: cidPlain, attachment: {...content, buffer: decryptedAttachment}, private: true})
+            if (!(cidPlain in contents)) {
+                subscriber.next({
+                    type: 'mantra req content get',
+                    cid: cidEncrypted,
+                    haiku: {
+                        psalm,
+                        cidPlain,
+                        secretKey,
+                        nonce
+                    }
                 })
             }
         })
