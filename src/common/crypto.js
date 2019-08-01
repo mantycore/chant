@@ -1,5 +1,4 @@
 import nacl from 'tweetnacl'
-import BSON from 'bson'
 import { Buffer } from 'buffer'
 
 const concat = args => {
@@ -12,7 +11,6 @@ const concat = args => {
     })
     return result
 }
-//let passphrase = BSON.serialize("Owls are not that they seem")
 let passphrase = nacl.randomBytes(512)
 const salt = new Uint8Array([
     195, 43, 34, 160, 25, 196,

@@ -1,12 +1,11 @@
 import { Buffer } from 'buffer'
-import BSON from 'bson'
 import crypto from 'Common/crypto.js'
 import bs58 from 'bs58'
 import nacl from 'tweetnacl'
 import toCID from 'Common/cid.js'
 import asBuffer, { asBufferPlain } from './asBuffer.js'
 
-const PROTOCOL_VERSION = 0
+import PROTOCOL_VERSION from 'Common/version.js'
 
 const createPost = async ({body, attachments, nid, opid, tags, proofs, conversationId}) => {
     const timestamp = new Date().getTime() // millisecond from epoch

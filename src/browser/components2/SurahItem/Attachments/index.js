@@ -5,26 +5,22 @@ import { format, binaryToUrl } from './utils.js'
 import { connect } from 'react-redux'
 
 //copied from v0 PostForm
-const PureAttachment = ({attachment, status, buffer, dispatch}) => <p className={style['attachment']}>
+const PureAttachment = ({attachment, content, dispatch}) => <p className={style['attachment']}>
     🗎 {[attachment.name, attachment.type, format(attachment.size)].map(field =>
         <span className={style['info-field']}>{field}</span>)}
-    ({status === 'loaded'
-    ? <a href={binaryToUrl(buffer, attachment.type)} download={attachment.name} onClick={dispatch.save}>save</a>
-    : status === 'loading'
-    ? 'loading'
-    : status === 'failure'
-    ? <span className={style['action']} onClick={dispatch.download}>failed to download, try again</span>
-    : <span className={style['action']} onClick={dispatch.download}>download</span>
+    ({content && content.status && content.status.isLoading
+        ? ({
+            loaded: <a href={binaryToUrl(content.payload.buffer, attachment.type)} download={attachment.name} onClick={dispatch.save}>save</a>,
+            loading: 'loading',
+            failure: <span className={style['action']} onClick={dispatch.download}>failed to download, try again</span>
+        }[content.status.isLoading])
+        : <span className={style['action']} onClick={dispatch.download}>download</span>
     })
 </p>
 
 const Attachment = connect(
     (state, props) => ({
-        status: state.contentStore.has(props.attachment.cid)
-            ? 'loaded'
-            : state.attachmentIsLoading[props.attachment.cid],
-        buffer: state.contentStore.has(props.attachment.cid)
-            && state.contentStore.get(props.attachment.cid).payload.buffer
+        content: state.poema.contents[props.attachment.cid]
     }),
     (dispatch, props) => ({dispatch: {
         download: () => dispatch({type: 'react surah-item/attachment download', cid: props.attachment.cid})

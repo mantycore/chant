@@ -28,6 +28,6 @@ const SurahItem = ({surah, sutra, mini = false}) => <div>
 
 export default connect(
     (state, {surah}) => ({
-        sutra: state.suwar.filter(curSurah => curSurah.result.opid === surah.pid)
+        sutra: state.surah.suwar.filter(curSurah => curSurah.result.opid === surah.pid)
     })
 )(SurahItem)

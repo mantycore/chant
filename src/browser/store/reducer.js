@@ -2,22 +2,24 @@ import produce from 'immer'
 import initialState from './initialState.js'
 import { copy, handleUrl } from './utils.js'
 
-function reducer(state = initialState, action) {
-    console.log("RDCR", action)
+function reducer(state, action) {
+    //console.log("RDCR", action)
     const newState = produce(state, draft => {
         switch (action.type) {
-            case 'epic attachment download start':
-            case 'attachment load start':
-                draft.attachmentIsLoading[action.cid] = 'loading'
+            /*
+            //case 'epic attachment download start':
+            //case 'attachment load start':
+                draft.newState.surahItem.attachment.isLoading[action.cid] = 'loading'
                 break
             case 'epic attachment download failure':
-            case 'attachment load failure':
-                draft.attachmentIsLoading[action.cid] = 'failure'
+            //case 'attachment load failure':
+                draft.newState.surahItem.attachment.isLoading[action.cid] = 'failure'
                 break
             case 'epic attachment download success':
-            case 'attachment load success':
-                draft.attachmentIsLoading[action.cid] = 'loaded'
+            //case 'attachment load success':
+                draft.newState.surahItem.attachment.isLoading[action.cid] = 'loaded'
                 break
+            */
 
             case 'hashchange': // from browser entry file
                 handleUrl(draft)
@@ -48,10 +50,11 @@ function reducer(state = initialState, action) {
                 }
                 break
 
-            case 'update post': // react surah-item/meta update (?)
-                draft.postBeingEdited.body = action.post.result.body.text
+            //case 'update post': // react surah-item/meta update (?)
+            case 'react surah-item/meta update':
+                draft.postBeingEdited.body = action.surah.result.body.text
                 draft.postBeingEdited.mode = 'patch'
-                draft.postBeingEdited.post = action.post
+                draft.postBeingEdited.post = action.surah
                 break
             case 'post body change': // react post-form body change
                 draft.postBeingEdited.body = action.event.target.value

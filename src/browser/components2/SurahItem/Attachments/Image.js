@@ -3,18 +3,21 @@ import { connect } from 'react-redux'
 import style from './Image.css'
 import {binaryToUrl, format} from './utils.js'
 
-const Image = ({attachment, status, storedContent, dispatch}) => 
+const Image = ({attachment, content, status, dispatch}) =>
     status === 'loaded'
         ? <div>
-            <a href={binaryToUrl(storedContent.payload.buffer, attachment.type)} download={attachment.name}>
+            {content.payload.buffer
+            ? <a href={binaryToUrl(content.payload.buffer, attachment.type)} download={attachment.name}>
                 <img
-                    src={binaryToUrl(storedContent.payload.buffer, attachment.type)}
+                    src={binaryToUrl(content.payload.buffer, attachment.type)}
                     className={style.image}
                 />
             </a>
+            : `Error displaying content ${JSON.stringify(content)}`
+            }
             <div style={{display: 'flex', justifyContent: 'flex-end', marginRight: 10}}>
-                {storedContent.replicated && <span>✆ {storedContent.replicated}</span>} {
-                    storedContent.persisted && <span>✇ {storedContent.persisted}</span>}
+                {content.replicated && <span>✆ {content.replicated}</span>} {
+                    content.persisted && <span>✇ {content.persisted}</span>}
            </div>
         </div>
         : <div
@@ -32,13 +35,13 @@ const Image = ({attachment, status, storedContent, dispatch}) =>
         </div>
 
 export default connect(
-    (state, props) => ({ 
-        status: state.contentStore.has(props.attachment.cid)
-            ? 'loaded'
-            : state.attachmentIsLoading[props.attachment.cid],
-        storedContent: state.contentStore.has(props.attachment.cid)
-            && state.contentStore.get(props.attachment.cid)
-    }),
+    (state, props) => {
+        const content = state.poema.contents[props.attachment.cid]
+        return { 
+            content,
+            status: content && content.status && content.status.isLoading
+        }
+    },
     dispatch => ({dispatch: {
         download: cid => () => dispatch({type: 'react surah-item/attachment download', cid})
     }})

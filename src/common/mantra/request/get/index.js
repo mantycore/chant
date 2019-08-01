@@ -2,19 +2,31 @@ import send from 'Mantra/send.js'
 import { waitForReply } from 'Mantra/reply.js'
 
 const getContent = async (cid, peers, pr) => new Promise((resolve, reject) => {
-    const mid = send(Array.from(peers.values())[0].nid, {type: 'req content get', params: {cid}}, false, pr)
+    let plainPeers
+    if (Array.isArray(peers)) { //compat
+        plainPeers = peers
+    } else if (peers instanceof Map) {
+        plainPeers = peers.values()
+    } else {
+        plainPeers = Object.values(peers)
+    }
+
+    const mantra = {type: 'req content get', params: {cid}}
+    const mid = send(plainPeers[0].nid, mantra, false, pr)
     //NB! only one reply is handled. Needs fixing
-    waitForReply(mid, resolve, reject, 10000)
+    waitForReply(mid, mantra, resolve, reject, 10000)
 })
 
 const ping = async (payload, nid, pr) => new Promise((resolve, reject) => {
-    const mid = send(nid, {type: 'ping', ...(payload ? {payload} : {})}, false, pr)
-    waitForReply(mid, resolve, reject)
+    const mantra = {type: 'ping', ...(payload ? {payload} : {})}
+    const mid = send(nid, mantra, false, pr)
+    waitForReply(mid, mantra, resolve, reject)
 })
 
 const getPosts = async (nid, pr) => new Promise((resolve, reject) => {
-    const mid = send(nid, {type: 'req poemata get'}, false, pr)
-    waitForReply(mid, resolve, reject)
+    const mantra = {type: 'req poemata get'}
+    const mid = send(nid, mantra, false, pr)
+    waitForReply(mid, mantra, resolve, reject)
 })
 
 export {

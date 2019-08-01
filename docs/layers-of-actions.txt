@@ -1,0 +1,36 @@
+Layers of actions
+
+1-2. (Init)
+
+	1. terma init
+	1.5 terma init complete
+	2. mantra init
+
+3. Initiators:
+
+	3a-b ("Things that use getters"):
+	3a. mantra pr peer, mantra interval ping 
+	3b. mantra req content get
+
+getters (getPost, getContent, ping)
+
+    3c. mantra pr message
+
+4. mantra incoming poema, mantra incoming content (mantra incoming ping is skipped)
+5. prakriti poema put, prakriti content put + prakriti content status *, prakriti peer put/delete
+6. temra poema put, terma content put
+7. prakriti surah put
+
+
+1 -> 5
+3a-b -> getters -> 4; 3c -> 4 directly
+4 -> 3b (load attachments for incoming poema)
+5 -> 3b (load encrypted attachments for incoming haiku poema and decrypt)
+putters -> 5
+
+
+::: obsolete :::
+
+storePost was 4
+putPostToStore was 5
+getAndStoreContent was 3b..5

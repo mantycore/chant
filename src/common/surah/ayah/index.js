@@ -6,6 +6,7 @@ export { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import crypto from 'Common/crypto.js'
 
+const cloneDeep = obj => JSON.parse(JSON.stringify(obj))
 
 function verifyByPid(psalm, ayah, poemata) { //TODO: move to verify.js
     const original = poemata.find(psalm => psalm.pid === ayah.pid)
@@ -14,7 +15,7 @@ function verifyByPid(psalm, ayah, poemata) { //TODO: move to verify.js
     return original && verify(psalm, ayah, original)  // from, from.ayah, from.ayah.pid
 }
 
-const ayat = (payload, psalm, directSide, suwar, poemata) => {
+const ayat = (poema, psalm, directSide, suwar, poemata) => {
     let surah
 
     if (directSide !== 'unknown') {
@@ -25,7 +26,7 @@ const ayat = (payload, psalm, directSide, suwar, poemata) => {
         // there should be no more than one update type ayah per psalm
         if (updateAyah) {
             //case 1: post has put/delete proofs, so there must be an original in surah
-            surah = suwar.find(curSurah => curSurah.pid === updateAyah.pid)
+            surah = cloneDeep(suwar.find(curSurah => curSurah.pid === updateAyah.pid))
             if (!surah) {
                 // This means that the choir is in erroneous state:
                 // it have the update psalm, but no original psalm.
@@ -45,7 +46,7 @@ const ayat = (payload, psalm, directSide, suwar, poemata) => {
                                 asBuffer(psalm))))                // Buffer
                 }
 
-                suwar.push(surah)
+                //suwar.push(surah)
             }
             surah.psalmoi.push(psalm)
             surah.psalmoi.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
@@ -147,29 +148,29 @@ const ayat = (payload, psalm, directSide, suwar, poemata) => {
                 }
             }
             if (directSide) {
-                Object.assign(surah, {to: payload.to, encrypted: directSide})
+                Object.assign(surah, {to: poema.to, encrypted: directSide})
             }
-            suwar.push(surah)
+            //suwar.push(surah)
         }
     } else {
         const minimalPsalm = {
-            pid: payload.pid,
-            timestamp: payload.timestamp,
-            version: payload.version
+            pid: poema.pid,
+            timestamp: poema.timestamp,
+            version: poema.version
         }
         surah = {
-            pid: payload.pid,
+            pid: poema.pid,
             psalmoi: [minimalPsalm],
             origin: minimalPsalm,
             //latest: minimalPsalm,
             result: minimalPsalm,
             my: false,
-            to: payload.to,
+            to: poema.to,
             encrypted: 'unknown'
         }
         //push to suwar?
     }
-    suwar.sort(((a, b) => new Date(a.origin.timestamp) - new Date(b.origin.timestamp))) //ascending
+    //suwar.sort(((a, b) => new Date(a.origin.timestamp) - new Date(b.origin.timestamp))) //ascending
 
     return surah
 }

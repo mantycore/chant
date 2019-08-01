@@ -1,3 +1,5 @@
+const cloneDeep = obj => JSON.parse(JSON.stringify(obj))
+
 const addSurahToRenga = (
     payload,
     psalm,
@@ -5,12 +7,13 @@ const addSurahToRenga = (
     suwar,
     rengashu
 ) => {
+    let renga = null
     if (surah.encrypted && surah.encrypted !== 'unknown') {
         if (!psalm.conversationId) { //this is the second post (first reply) in the conversation
             const oSurah = suwar.find(curSurah => curSurah.pid === payload.to[0].pid)
             // TODO:  this must be changed if the multiperson conversation will be implemented
             // possibly to an array of oSuwar?
-            const renga = {
+            renga = {
                 id: `/${oSurah.pid}/direct/${surah.pid}`,
                 firstPid: oSurah.pid,
                 secondPid: surah.pid,
@@ -18,11 +21,11 @@ const addSurahToRenga = (
                 latest: surah.result.timestamp,
                 fresh: surah.encrypted === 'their'
             }
-            if (!rengashu.find(curRenga => curRenga.id === renga.id)) {
-                rengashu.push(renga)
-            } // or else?
+            //if (!rengashu.find(curRenga => curRenga.id === renga.id)) {
+                //rengashu.push(renga)
+            //} // or else?
         } else {
-            const renga = rengashu.find(curRenga => curRenga.id === psalm.conversationId)
+            renga = cloneDeep(rengashu.find(curRenga => curRenga.id === psalm.conversationId))
             if (!renga) {
                 //possibly error
                 const [_, first, __, second] = psalm.conversationId.split('/')
@@ -38,8 +41,7 @@ const addSurahToRenga = (
             }
         }
     }
-    rengashu.sort(((a, b) => new Date(b.latest) - new Date(a.latest))) // descending
+    return renga
 }
 
 export default addSurahToRenga
-

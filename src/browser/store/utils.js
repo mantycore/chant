@@ -1,11 +1,11 @@
 import bs58 from 'bs58'
 
 function copy(draft, action) {
-    draft.poemata = [...action.state.poemata]
-    draft.suwar = [...action.state.suwar]
-    draft.rengashu = [...action.state.rengashu]
-    draft.contentStore = new Map(action.state.contentStore)
-    draft.peers = new Set(action.state.peers)
+    //draft.poemata = [...action.state.poemata]
+    //draft.suwar = [...action.state.suwar]
+    //draft.rengashu = [...action.state.rengashu]
+    //draft.contentStore = new Map(action.state.contentStore)
+    //draft.peers = new Set(action.state.peers)
 }
 
 function handleUrl(draft) {
@@ -30,7 +30,7 @@ function handleUrl(draft) {
     } else if (path[1] && bs58.decode(path[1]).length === 64) {
         draft.newState.maya.sutraPid = path[1] 
 
-        const oSurah = draft.suwar.find(surah => surah.pid === path[1]) //TODO: or else!
+        const oSurah = draft.surah.suwar.find(surah => surah.pid === path[1]) //TODO: or else!
         if (oSurah.result.tags) {
             draft.newState.maya.tag = oSurah.result.tags[0]
             //TODO: what if there are more than one tag?
