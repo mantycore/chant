@@ -1,5 +1,15 @@
 import produce from 'immer'
 
+const setReplicated = (state, content, hexNid) => {
+    content.status.replicated[hexNid] = true
+    if (state.mantra.peers[hexNid] && state.mantra.peers[hexNid].persistent) {
+        content.status.persisted[hexNid] = true
+        // the resource in fact might be not (yet) persisted;
+        // maybe a separate follow-up mantra must be sent when
+        // the resource is successfully persisted?
+    }
+}
+
 export default (state, action) => {
     //console.log("RDCR Common", action)
     return produce(state, draft => {
@@ -68,26 +78,26 @@ export default (state, action) => {
             /* matra res content get */
             case 'prakriti content put': {
                 // was in getAndStoreContent
-                draft.poema.contents[action.cid] = {
-                    payload: action.payload,
-                    status: Object.assign({}, action.status, {isLoading: 'loaded'}) //TODO: change for more peers
+                const hexNid = action.nid.toString('hex')
+                let content = draft.poema.contents[action.cid]
+                if (!content) {
+                    content = draft.poema.contents[action.cid] = {payload: null, status: {replicated: {}, persisted: {}, isLoading: null}}
                 }
+                content.payload = action.payload
+                content.status.isLoading = 'loaded'
+                if (content.status.source === null) {
+                    content.status.source = action.source
+                }
+                setReplicated(draft, content, hexNid)
             }
             break
 
             /* TODO: think about it */
-            case 'prakriti content status replicated increment': {
+            case 'prakriti content status replicated': {
+                const hexNid = action.nid.toString('hex')
                 const content = draft.poema.contents[action.cid]
                 if (content && content.status && content.status.replicated) {
-                    content.status.replicated += 1
-                }
-            }
-            break
-
-            case 'prakriti content status persisted increment': {
-                const content = draft.poema.contents[action.cid]
-                if (content && content.status && content.status.persisted) {
-                    content.status.persisted += 1
+                    setReplicated(draft, content, hexNid)
                 }
             }
             break

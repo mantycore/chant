@@ -1,8 +1,10 @@
 // @flow
 export type MantraWithId = {
     mid: string,
+    version: number,
     type: string,
     payload: ?MicroJSON,
+    status: ?MicroJSON,
     re: ?string
 }
 

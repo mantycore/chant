@@ -17,18 +17,14 @@ const putContent = (payload, peers, pr) => {
     const mantra = {type: 'req content put', ...(payload ? {payload} : {})}
     const mid = broadcast(mantra, true, persistingPeers, pr)
 
-    return new Observable(observer => waitForReplies(mid, mantra, persistingPeers.map(peer => peer.nid.toString('hex')), observer))
+    return new Observable(observer => waitForReplies(mid, mantra, persistingPeers.map(peer => peer.nid), observer))
 }
 
 const putContents = async (subscriber, contents, peers, pr) => {
     const contentsWithReplies = contents.map(payload => ({payload, reply$: putContent(payload, peers, pr).pipe(share())}))
 
-    contentsWithReplies.forEach(({payload, reply$}) => reply$.subscribe(reply => {
-        //TODO: do it better, maybe have a Map of nodes that replicated this content
-        subscriber.next({type: 'prakriti content status replicated increment', cid: payload.cid})
-        if (reply.persistent) {
-            subscriber.next({type: 'prakriti content status persisted increment', cid: payload.cid})
-        }
+    contentsWithReplies.forEach(({payload, reply$}) => reply$.subscribe(({resolution, nid}) => {
+        subscriber.next({type: 'prakriti content status replicated', cid: payload.cid, nid}) // persistent: resolution.persistent
     }))
 
     return combineLatest(contentsWithReplies.map(({reply$}) => reply$.pipe(first()))).pipe(timeout(2500)).toPromise()

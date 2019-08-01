@@ -14,7 +14,7 @@ const waitForReply = (mid, mantra, resolve, reject, timeout = 1000) => {
 }
 
 const waitForReplies = (mid, mantra, peers, observer, timeout = 1000) => {
-    const peersMap = peers.reduce((acc, cur) => {acc[cur] = false; return acc;}, {})
+    const peersMap = peers.reduce((acc, cur) => {acc[cur.toString('hex')] = false; return acc;}, {})
     repliesPending.set(mid, {mantra, observer, peers: peersMap, timestamp: new Date()})
 
     if (timeout) {
@@ -35,11 +35,11 @@ const handleReply = (mantra, resolution) => {
     }
 }
 
-const handleReplies = (from, mantra, resolution) => {
+const handleReplies = (nid, mantra, resolution) => {
     if (repliesPending.has(mantra.re)) {
         const {observer, peers} = repliesPending.get(mantra.re)
-        observer.next(resolution) // we can also use sender, etc
-        peers[from] = true
+        observer.next({resolution, nid})
+        peers[nid.toString('hex')] = true
         if (Object.values(peers).reduce((acc, cur) => acc && cur, true)) {
             observer.complete()
             repliesPending.delete(mantra.re)

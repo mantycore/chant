@@ -51,7 +51,7 @@ export default combineEpics(
 
             for (const newPoema of newPoemata) {
                 if (!localPoemata.find(localPoema => localPoema.pid === newPoema.pid)) {
-                    subscriber.next({type: 'mantra incoming poema', poema: newPoema})
+                    subscriber.next({type: 'mantra incoming poema', nid: action.nid, poema: newPoema})
                 }
                 /* else increase replication count of poema */
             }
@@ -62,11 +62,11 @@ export default combineEpics(
 
     (action$, state$) => action$.pipe(
         ofType('mantra incoming poema'),
-        mergeMap(({poema}) => new Observable(subscriber => {
+        mergeMap(({poema, nid}) => new Observable(subscriber => {
             const state = state$.value
 
             // was in storePost
-            subscriber.next({type: 'prakriti poema put', poema, status: {source: 'choir'}})
+            subscriber.next({type: 'prakriti poema put', poema, source: 'choir', nid})
 
             if (state.init.isServerNode && poema.attachments) {
                 poema.attachments.map(async attachment => {
@@ -95,12 +95,16 @@ export default combineEpics(
             const peers = state.mantra.peers
             const pr = state.init.pr
             const cid = action.cid
+
+            const nid = Object.values(peers)[0].nid //TODO: at least find the first persisting node!
+
             try {
                 return {
                     type: 'mantra incoming content',
                     cid,
+                    nid,
                     ...(action.haiku ? {haiku: action.haiku} : {}),
-                    content: await getContent(cid, peers, pr)
+                    content: await getContent(cid, nid, pr)
                     //when BSON was used, we had to call buffer(Binary).buffer; with msgpack it's just buffer
                 }
                 /*if (isServerNode) {
@@ -117,7 +121,7 @@ export default combineEpics(
 
     (action$, state$) => action$.pipe(
         ofType('mantra incoming content'),
-        map(({cid, content}) => ({type: 'prakriti content put', cid, payload: content, status: {source: 'choir'}}))
+        map(({cid, nid, content}) => ({type: 'prakriti content put', cid, nid, payload: content, status: {source: 'choir'}}))
     ),
 
     (action$, state$) => action$.pipe(
@@ -173,7 +177,7 @@ export default combineEpics(
 
                     /* called back when content is put to other nodes with react post*form submit */
                     case 'res content put':
-                        handleReplies(nid.toString('hex'), mantra, mantra.status)
+                        handleReplies(nid, mantra, mantra.status)
                     break
 
                     /* called from mantra.incoming.poema */
