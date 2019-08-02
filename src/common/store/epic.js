@@ -121,7 +121,7 @@ export default combineEpics(
 
     (action$, state$) => action$.pipe(
         ofType('mantra incoming content'),
-        map(({cid, nid, content}) => ({type: 'prakriti content put', cid, nid, payload: content, status: {source: 'choir'}}))
+        map(({cid, nid, content}) => ({type: 'prakriti content put', cid, nid, payload: content, source: 'choir'}))
     ),
 
     (action$, state$) => action$.pipe(
@@ -154,7 +154,7 @@ export default combineEpics(
                                 poema.pid === mantra.payload.pid)) {
                             broadcast(mantraToForward, false, peers, pr)
                             // TODO: optimize: do not sent the post to nodes we know already have it
-                            subscriber.next({type: 'mantra incoming poema', poema: mantra.payload})
+                            subscriber.next({type: 'mantra incoming poema', nid: originNid, poema: mantra.payload})
                         }
                         //mantra.post.body = await getContent(mantra.post.bodyCid)
                     }
@@ -167,7 +167,7 @@ export default combineEpics(
                     case 'req content put':
                         const cid = await toCID(mantra.payload.buffer) 
                         if (!(cid in state.poema.contents)) {
-                            subscriber.next({type: 'mantra incoming content', cid, content: mantra.payload}) //todo: counts
+                            subscriber.next({type: 'mantra incoming content', cid, nid: originNid, content: mantra.payload}) //todo: counts
                             // do not rebroadcast?
                             // old idea: send to all nodes, but only server nodes should store it.
                             // also old TODO: optimize: do not sent the post to nodes we know already have it

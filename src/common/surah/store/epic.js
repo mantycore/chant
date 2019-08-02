@@ -52,7 +52,7 @@ export default combineEpics(
     (action$, state$) => action$.pipe(
         ofType('mantra incoming content'),
         filter(action => action.haiku),
-        map(({cid, content, haiku}) => {
+        map(({cid, nid, content, haiku}) => {
             // was in decrypt
             const {psalm, cidPlain, secretKey, nonce} = haiku
 
@@ -66,7 +66,9 @@ export default combineEpics(
             return {
                 type: 'prakriti content put',
                 cid: cidPlain,
-                payload: {...originalContent, buffer: decryptedContentBuffer}
+                nid,
+                payload: {...originalContent, buffer: decryptedContentBuffer},
+                source: 'choir, decrypted'
             }
         })
     )

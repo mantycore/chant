@@ -17,7 +17,7 @@ export default combineEpics(
             for (const {pid, opid, timestamp, rest} of
                 (await postgres.query('SELECT * FROM posts ORDER BY timestamp')).rows) {
                 let poema = {pid, opid, timestamp: parseInt(timestamp),...JSON.parse(rest)}
-                subscriber.next({type: 'prakriti poema put', poema, status: {source: 'terma'}}) //TODO: handle
+                subscriber.next({type: 'prakriti poema put', poema, source: 'terma'}) //TODO: handle
             }
 
             for (const {cid, timestamp, rest} of
@@ -25,7 +25,7 @@ export default combineEpics(
                 const json = JSON.parse(rest)
                 const buffer = await readAttachment({cid, ...json}) //TODO: read only on request
                 const payload = {cid, timestamp: parseInt(timestamp), buffer, ...json}
-                subscriber.next({type: 'prakriti content put', cid, payload, status: {source: 'terma'}})
+                subscriber.next({type: 'prakriti content put', cid, payload, source: 'terma'})
             }
 
             process.on('SIGTERM', async () => {
@@ -46,13 +46,13 @@ export default combineEpics(
 
     (action$, state$) => action$.pipe(
         ofType('prakriti poema put'),
-        filter(action => action.status.source !== 'terma'),
+        filter(action => action.source !== 'terma'),
         map(action => ({type: 'terma poema put', poema: action.poema}))
     ),
 
     (action$, state$) => action$.pipe(
         ofType('prakriti content put'),
-        filter(action => action.status.source !== 'terma'),
+        filter(action => action.source !== 'terma'),
         map(action => ({type: 'terma content put', cid: action.cid, payload: action.payload}))
     ),
 

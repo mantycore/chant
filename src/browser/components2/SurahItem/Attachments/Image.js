@@ -16,8 +16,9 @@ const Image = ({attachment, content, status, dispatch}) =>
             : `Error displaying content ${JSON.stringify(content)}`
             }
             <div style={{display: 'flex', justifyContent: 'flex-end', marginRight: 10}}>
-                {content.replicated && <span>✆ {content.replicated}</span>} {
-                    content.persisted && <span>✇ {content.persisted}</span>}
+                {/*JSON.stringify(content.status)*/}
+                {content.status.replicated && <span>✆ {Object.keys(content.status.replicated).length}</span>} {
+                    content.status.persisted && <span>✇ {Object.keys(content.status.persisted).length}</span>}
            </div>
         </div>
         : <div

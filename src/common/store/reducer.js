@@ -51,6 +51,11 @@ export default (state, action) => {
             case 'prakriti poema put': {
                 // was in storePost => putPostToStore
                 // delete poema.opid if it is null?
+                /*if (action.source === 'choir') {
+                    hexNid = action.nid.toString('hex')
+                } else {
+                    hexNid = 'local'
+                }*/
                 draft.poema.poemata.push(action.poema)
             }
             break
@@ -60,7 +65,7 @@ export default (state, action) => {
             case 'mantra req content get': {
                 let content = draft.poema.contents[action.cid]
                 if (!content) {
-                    content = draft.poema.contents[action.cid] = {status: {}}
+                    content = draft.poema.contents[action.cid] = {payload: null, status: {replicated: {}, persisted: {}, isLoading: null}}
                 }
                 content.status.isLoading = 'loading'
             }
@@ -69,7 +74,7 @@ export default (state, action) => {
             case 'mantra err content get': {
                 let content = draft.poema.contents[action.cid]
                 if (!content) {
-                    content = draft.poema.contents[action.cid] = {status: {}}
+                    content = draft.poema.contents[action.cid] = {payload: null, status: {replicated: {}, persisted: {}, isLoading: null}}
                 }
                 content.status.isLoading = 'failure'
             }
@@ -78,14 +83,19 @@ export default (state, action) => {
             /* matra res content get */
             case 'prakriti content put': {
                 // was in getAndStoreContent
-                const hexNid = action.nid.toString('hex')
+                let hexNid
+                if (action.source === 'choir') {
+                    hexNid = action.nid.toString('hex')
+                } else {
+                    hexNid = 'local'
+                }
                 let content = draft.poema.contents[action.cid]
                 if (!content) {
                     content = draft.poema.contents[action.cid] = {payload: null, status: {replicated: {}, persisted: {}, isLoading: null}}
                 }
                 content.payload = action.payload
                 content.status.isLoading = 'loaded'
-                if (content.status.source === null) {
+                if (!content.status.source) {
                     content.status.source = action.source
                 }
                 setReplicated(draft, content, hexNid)

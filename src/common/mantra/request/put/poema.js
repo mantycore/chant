@@ -20,7 +20,7 @@ const revoke = async (state, subscriber, origin) => {
         proofs: [{type: 'delete', post: origin}]
     })
     //putPostToStore(psalm)
-    subscriber.next({type: 'prakriti poema put', poema: psalm, nid: state.init.pr.id, source: 'maya'})
+    subscriber.next({type: 'prakriti poema put', poema: psalm, source: 'maya'})
     broadcast({type: 'req poema put', payload: psalm}, false, state.mantra.peers, state.init.pr)
 }
 
@@ -54,7 +54,7 @@ const updatePost = async (state, subscriber, update, origin, mode) => {
         psalm = await createPost(/*...*/)
     }
     //putPostToStore(psalm)
-    subscriber.next({type: 'prakriti poema put', poema: psalm, nid: state.init.pr.id, source: 'maya'})
+    subscriber.next({type: 'prakriti poema put', poema: psalm, source: 'maya'})
     broadcast({type: 'req poema put', payload: psalm}, false, state.mantra.peers, state.init.pr)
 }
 
@@ -102,9 +102,9 @@ const putPost = async(state, subscriber, post) => {
             const cid = await toCID(encryptedBody)
             const buffer = Buffer.from(body)
             const encryptedPayload = {type: 'application/octet-stream', buffer: encryptedBody, cid, size: encryptedBody.length, name: cid}
-            subscriber.next({type: 'prakriti content put', cid, payload: encryptedPayload, nid: state.init.pr.id.toString('hex'), source: 'maya'})
+            subscriber.next({type: 'prakriti content put', cid, payload: encryptedPayload, source: 'maya'})
             const payload = {type: 'text/plain', buffer, cid: psalm.body.cid, size: buffer.length}
-            subscriber.next({type: 'prakriti content put', cid: psalm.body.cid, payload, private: true, nid: state.init.pr.id, source: 'maya'})
+            subscriber.next({type: 'prakriti content put', cid: psalm.body.cid, payload, private: true, source: 'maya'})
                 // private flag means do not replicate from this node and do not persist on this node.
                 // however, the flag should be set to false if the content with the same cid is stored to the contents
                 // from public source!
@@ -117,8 +117,8 @@ const putPost = async(state, subscriber, post) => {
             const encryptedAttachment = nacl.secretbox(file.buffer, nonce, secretKey.itself)
             const cid = await toCID(encryptedAttachment)
             const encryptedPayload = {type: 'application/octet-stream', buffer: encryptedAttachment, cid, size: encryptedAttachment.length, name: cid}
-            subscriber.next({type: 'prakriti content put', cid, payload: encryptedPayload, nid: state.init.pr.id source: 'maya'})
-            subscriber.next({type: 'prakriti content put', cid: file.cid, payload: file, private: true, nid: state.init.pr.id, source: 'maya'})
+            subscriber.next({type: 'prakriti content put', cid, payload: encryptedPayload, source: 'maya'})
+            subscriber.next({type: 'prakriti content put', cid: file.cid, payload: file, private: true, source: 'maya'})
             contentMap[file.cid] = cid
             contentsToBroadcast.push(encryptedPayload)
         }
@@ -164,12 +164,12 @@ const putPost = async(state, subscriber, post) => {
     } else {
         if (psalm.body) {
             const buffer = Buffer.from(body) //TODO: support both plain and markdown text
-            subscriber.next({type: 'prakriti content put', cid: psalm.body.cid, nid: state.init.pr.id, source: 'maya',
+            subscriber.next({type: 'prakriti content put', cid: psalm.body.cid, source: 'maya',
                 payload: {type: 'text/markdown', buffer, cid: psalm.body.cid, size: buffer.length, name: 'index.md'}})
         }
 
         filesFull.forEach(file => {
-            subscriber.next({type: 'prakriti content put', cid: file.cid, payload: file, nid: state.init.pr.id, source: 'maya'})
+            subscriber.next({type: 'prakriti content put', cid: file.cid, payload: file, source: 'maya'})
         })
 
         poema = psalm
@@ -177,7 +177,7 @@ const putPost = async(state, subscriber, post) => {
     }
 
     //putPostToStore(psalm)
-    subscriber.next({type: 'prakriti poema put', poema, nid: state.init.pr.id, source: 'maya'})
+    subscriber.next({type: 'prakriti poema put', poema, source: 'maya'})
     broadcast({type: 'req poema put', payload: poema}, false, state.mantra.peers, state.init.pr)
     //TODO: await for reply, display replication count
     return poema.pid
