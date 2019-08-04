@@ -23,7 +23,7 @@ const logger = (state, action) => {
 /* combine things */
 const initialState = Object.assign({}, commonInitialState, surahInitialState, mayaInitialState)
 const reducer = (state = initialState, action) =>
-    [logger, mayaReducer, surahReducer, commonReducer]
+    [mayaReducer, surahReducer, commonReducer]
         .reduce((state, reducer) => reducer(state, action), state)
 const epic = combineEpics(commonEpic, surahEpic, mayaEpic)
 

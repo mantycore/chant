@@ -1,6 +1,15 @@
 import produce from 'immer'
 import initialState from './initialState.js'
-import { copy, handleUrl } from './utils.js'
+
+function handleUrl(draft) {
+    const matchData = window.location.hash.match('#(.*)')
+    if (matchData) {
+        draft.maya.path = matchData[1].split('/')
+        draft.newState.suwarList.autoScrollAllowed = true
+    } else {
+        draft.maya.path = '/d/'
+    }
+}
 
 function reducer(state, action) {
     //console.log("RDCR", action)
@@ -21,30 +30,20 @@ function reducer(state, action) {
                 break
             */
 
-            case 'hashchange': // from browser entry file
+            case 'hashchange': {// from init epic
                 handleUrl(draft)
-                break
+            }
+            break
 
             case 'update': // from common
-                copy(draft, action)
                 // hacky, improve
                 if (action.mhType === 'posts initialized') {
                     draft.displaySplash = false
-                    handleUrl(draft)
                 }
                 break
             case 'init': // from redux entry file
                 draft.maya.theme = localStorage.getItem('theme') || 'light'
-
-                copy(draft, action)
-                //handleUrl(draft)
-                draft.getAndStoreContent = action.state.getAndStoreContent
-
-                draft.putPost = action.state.putPost
-                draft.revoke = action.state.revoke
-                draft.updatePost = action.state.updatePost
-
-                draft.crypto = action.state.crypto
+                handleUrl(draft)
                 if (action.state.initiation) {
                     draft.initiation = true
                     draft.secretCode = action.state.secretCode
@@ -56,6 +55,11 @@ function reducer(state, action) {
                 draft.maya.theme = draft.maya.theme === 'light'
                     ? 'dark'
                     : 'light'
+            }
+            break
+
+            case 'maya suwarList stopAutoScroll': {
+                draft.newState.suwarList.autoScrollAllowed = false
             }
             break
 

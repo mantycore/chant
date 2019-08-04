@@ -1,6 +1,7 @@
 import React, {useState} from 'react'
 import { connect } from 'react-redux'
 import {
+    selectPath,
     selectTags,
     selectSutraniByTag,
     selectSuwarBySutraPid,
@@ -19,7 +20,6 @@ import Splash from 'Browser/components/Splash.js'
 const connector = connect(
     state => ({
         state,
-        newState: state.newState
     }),
     dispatch => ({dispatch: {
         updateSutra: pid => dispatch({type: 'react maya/sutra update', pid}),
@@ -98,14 +98,14 @@ const RengaItem = connector(({renga, highlighted, dispatch}) => {
     </div>)
 })
 
-const Maya = ({state, newState, dispatch}) => {
-    const rengaMode = newState.maya.mode === 'direct'
-                   || newState.maya.mode === 'direct conversation'
-                   || newState.maya.mode === 'directs list'
+const Maya = ({state, dispatch}) => {
+    const {mode, tag, sutraPid, rengaId, scrollTrigger} = selectPath(state)
+    const rengaMode = mode === 'direct'
+                   || mode === 'direct conversation'
+                   || mode === 'directs list'
     //TODO: move to connector
     const tags = selectTags(state)
-    const {tag, sutraPid, rengaId} = newState.maya
-
+ 
     const theme = state.maya.theme
     const toggleTheme = dispatch.toggleTheme
     const tagList = (
@@ -117,6 +117,7 @@ const Maya = ({state, newState, dispatch}) => {
                 ].join(' ')} onClick={dispatch.rengashuList}>/@/</div>
                 {tags.map(curTag => <TagItem {...{tag: curTag, highlighted: curTag[0] === tag}} />)}
             </div>
+            <div>{JSON.stringify({mode, tag, sutraPid, rengaId, scrollTrigger})}</div>
             <div onClick={toggleTheme}>
                 theme: {theme}
             </div>
@@ -136,9 +137,9 @@ const Maya = ({state, newState, dispatch}) => {
     if (rengaMode) { //todo: two different components?
         const rengashu = selectRengashu(state)
         let oSurah = null, suwar = null
-        if (newState.maya.mode === 'direct') {
+        if (mode === 'direct') {
             oSurah = selectSurahByPid(state, sutraPid)
-        } else if (newState.maya.rengaId) {
+        } else if (rengaId) {
             [oSurah, suwar] = selectRenga(state, rengaId)
         }
 
@@ -153,7 +154,7 @@ const Maya = ({state, newState, dispatch}) => {
             <div className={style['sutra-column']}>
                 <div className={style['sutra-meta']}>{peerStatus}</div>
                 {/* special component for renga suwar? */}
-                <SuwarList {...{origin: oSurah, suwar}} />
+                <SuwarList {...{origin: oSurah, suwar, scrollTrigger,}} />
                 <PostForm />
             </div>
         </div>
@@ -175,7 +176,7 @@ const Maya = ({state, newState, dispatch}) => {
             </div>
             <div className={style['sutra-column']}>
                 <div className={style['sutra-meta']}>{peerStatus}</div>
-                <SuwarList {...{origin: oSurah, suwar}} />
+                <SuwarList {...{origin: oSurah, suwar, scrollTrigger}} />
                 <PostForm />
             </div>
         </div>

@@ -22,7 +22,8 @@ const initialState = {
     displaySplash: true,
 
     maya: {
-        theme: 'light'
+        theme: 'light',
+        path: '/d/'
     },
 
     newState: {
@@ -33,7 +34,8 @@ const initialState = {
             rengaId: null
         },
         suwarList: {
-            scrollTrigger: 0
+            scrollTrigger: 0,
+            autoScrollAllowed: true
         },
         postForm: {
             //move from postBeingEdited
