@@ -3,42 +3,59 @@
     height: 100vh;
 }
 
-.highlighted {
+:global(.dark) {
+    color: #fff;
+    background-color: #000;
+}
+
+:global(.light) .highlighted {
     background-color: #eee;
+}
+
+:global(.dark) .highlighted {
+    background-color: #111;
 }
 
 /* ---- I column ---- */
 
-.maya-tags-list { /* also column */
-    width: 5em;
-    min-width: 5em;
+.tags-column {
+    width: 5rem;
+    min-width: 5rem;
+    display: flex;
+    flex-direction: column;
 
-    padding-top: 8px;
-    padding-left: 1em;
-    /*font-family: monospace;*/
+    padding-top: 0.5rem;
+    padding-left: 1rem;
+    padding-bottom: 0.5rem;
     text-align: center;
 }
 
+.tags-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    /*font-family: monospace;*/
+}
+
 .tag-item {
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
     cursor: pointer;
 }
 
 /* ---- II column ---- */
 
 .tag-column {
-    width: 12em;
-    min-width: 12em;
+    width: 12rem;
+    min-width: 12rem;
     display: flex;
     flex-direction: column;
 
-    padding-top: 8px;
-    padding-left: 1em;
+    padding-top: 0.5rem;
+    padding-left: 1rem;
 }
 
 .tag-meta {
-    height: 4em;
+    height: 4rem;
 }
 
 .tag-sutrani-list {
@@ -47,9 +64,9 @@
 }
 
 .sutra-item {
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
-    font-size: 14px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem;
     cursor: pointer;
 }
 
@@ -66,13 +83,16 @@
 }
 
 .sutra-meta {
-    height: 4em;
+    padding-top: 0.5rem;
+    padding-right: 1rem;
+    height: 4rem;
+    text-align: right;
 }
 
 .sutra-suwar-list {
     flex-grow: 1;
     overflow-y: auto;
 
-    padding-left: 50px;
+    padding-left: 3.125rem;
 }
 

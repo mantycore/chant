@@ -15,10 +15,17 @@
 
 .surah-item.revoked {
     padding: 3px 0;
-    background-color: #bbb;
     margin-top: 0.5em;
     margin-bottom: 0.5em;
     border-bottom: 1px dotted #a44;
+}
+
+:global(.light) .surah-item.revoked {
+    background-color: #bbb;
+}
+
+:global(.light) .surah-item.revoked {
+    background-color: #444;
 }
 
 .surah-item .body :first-child {

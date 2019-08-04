@@ -16,5 +16,13 @@
 }
 .sutra .more a {
     text-decoration: none;
+}
+
+:global(.light) .sutra .more a {
     color: #bbb;
 }
+
+:global(.dark) .sutra .more a {
+    color: #444;
+}
+

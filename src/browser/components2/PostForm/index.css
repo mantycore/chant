@@ -18,12 +18,19 @@
 .post-form button {
     width: 70px;
 }
-.post-form textarea::placeholder {
+:global(.light) .post-form textarea::placeholder {
     color: #baa;
 }
-.post-form textarea.encrypted::placeholder, {
+:global(.light) .post-form textarea.encrypted::placeholder, {
     color: #aba;
 }
+:global(.light) .post-form textarea::placeholder {
+    color: #544;
+}
+:global(.light) .post-form textarea.encrypted::placeholder, {
+    color: #454;
+}
+
 .post-form input {
     color: #464;
     font-size: 24px;

@@ -14,6 +14,14 @@ const epic = combineEpics(
     ),
 
     (action$, state$) => action$.pipe(
+        ofType('maya theme toggle'),
+        map(action => {
+            localStorage.setItem('theme', state$.value.maya.theme)
+            return {type: 'maya theme toggle complete'}
+        })
+    ),
+
+    (action$, state$) => action$.pipe(
         ofType('react surah-item/meta revoke'),
         mergeMap(observableAsync(async ({surah}, subscriber) => {
             if (window.confirm("Really revoke the post?")) {

@@ -21,6 +21,10 @@ const initialState = {
 
     displaySplash: true,
 
+    maya: {
+        theme: 'light'
+    },
+
     newState: {
         maya: {
             mode: 'tag',

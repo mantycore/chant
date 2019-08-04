@@ -5,8 +5,15 @@
     opacity: 0;
     font-family: monospace;
     display: flex;
-    color: #bbb;
     transition: opacity 100ms ease-out;
+}
+
+:global(.light) .meta, :global(.light) .meta a {
+    color: #bbb;
+}
+
+:global(.dark) .meta, :global(.dark) .meta a {
+    color: #444;
 }
 
 .surah-item:hover .meta {
@@ -22,7 +29,6 @@
 
 .meta a {
     text-decoration: none;
-    color: #bbb;
     font-family: monospace;
 }
 

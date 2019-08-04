@@ -14,6 +14,8 @@ import SuwarList from './SuwarList/'
 import SurahItem from './SurahItem/'
 import PostForm from './PostForm/'
 
+import Splash from 'Browser/components/Splash.js'
+
 const connector = connect(
     state => ({
         state,
@@ -24,6 +26,7 @@ const connector = connect(
         updateTag: tag => dispatch({type: 'react maya/tag update', tag}),
         rengashuList: () => dispatch({type: 'react maya rengashu-list'}),
         updateRenga: id => dispatch({type: 'react maya/renga update', id}),
+        toggleTheme: () => dispatch({type: 'maya theme toggle'}),
     }})
 )
 
@@ -103,15 +106,32 @@ const Maya = ({state, newState, dispatch}) => {
     const tags = selectTags(state)
     const {tag, sutraPid, rengaId} = newState.maya
 
+    const theme = state.maya.theme
+    const toggleTheme = dispatch.toggleTheme
     const tagList = (
-        <div className={style['maya-tags-list']}>
-            <div className={[
-                style['tag-item'],
-                ...(rengaMode ? [style['highlighted']] : [])
-            ].join(' ')} onClick={dispatch.rengashuList}>/@/</div>
-            {tags.map(curTag => <TagItem {...{tag: curTag, highlighted: curTag[0] === tag}} />)}
+        <div className={style['tags-column']}>
+            <div className={style['tags-list']}>
+                <div className={[
+                    style['tag-item'],
+                    ...(rengaMode ? [style['highlighted']] : [])
+                ].join(' ')} onClick={dispatch.rengashuList}>/@/</div>
+                {tags.map(curTag => <TagItem {...{tag: curTag, highlighted: curTag[0] === tag}} />)}
+            </div>
+            <div onClick={toggleTheme}>
+                theme: {theme}
+            </div>
         </div>
     )
+
+    const peerCount = Object.values(state.mantra.peers).length
+    const persistentPeersCount = Object.values(state.mantra.peers).filter(peer => peer.persistent).length
+    const peerStatus = <span>
+        {peerCount} {peerCount === 1 ? 'peer' : 'peers'} online ({persistentPeersCount} persistent)
+    </span>
+
+    if (state.surah.suwar.length === 0) {
+        return <Splash />
+    }
 
     if (rengaMode) { //todo: two different components?
         const rengashu = selectRengashu(state)
@@ -122,7 +142,7 @@ const Maya = ({state, newState, dispatch}) => {
             [oSurah, suwar] = selectRenga(state, rengaId)
         }
 
-        return <div className={style['maya']}>
+        return <div className={[style['maya'], theme].join(' ')}>
             {tagList}
             <div className={style['tag-column']}>
                 {/*<div className={style['tag-meta']} />*/}
@@ -131,7 +151,7 @@ const Maya = ({state, newState, dispatch}) => {
                 }</div>
             </div>
             <div className={style['sutra-column']}>
-                {/*<div className={style['sutra-meta']}>OP</div>*/}
+                <div className={style['sutra-meta']}>{peerStatus}</div>
                 {/* special component for renga suwar? */}
                 <SuwarList {...{origin: oSurah, suwar}} />
                 <PostForm />
@@ -143,7 +163,8 @@ const Maya = ({state, newState, dispatch}) => {
         const suwar = selectSuwarBySutraPid(state, sutraPid)
         const oSurah = selectSurahByPid(state, sutraPid)
 
-        return <div className={style['maya']}>
+
+        return <div className={[style['maya'], theme].join(' ')}>
             {tagList}
             <div className={style['tag-column']}>
                 {/*<div className={style['tag-meta']} />*/}
@@ -153,7 +174,7 @@ const Maya = ({state, newState, dispatch}) => {
                 }</div>
             </div>
             <div className={style['sutra-column']}>
-                {/*<div className={style['sutra-meta']}>OP</div>*/}
+                <div className={style['sutra-meta']}>{peerStatus}</div>
                 <SuwarList {...{origin: oSurah, suwar}} />
                 <PostForm />
             </div>

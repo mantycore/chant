@@ -34,6 +34,8 @@ function reducer(state, action) {
                 }
                 break
             case 'init': // from redux entry file
+                draft.maya.theme = localStorage.getItem('theme') || 'light'
+
                 copy(draft, action)
                 //handleUrl(draft)
                 draft.getAndStoreContent = action.state.getAndStoreContent
@@ -49,6 +51,13 @@ function reducer(state, action) {
                     draft.passwordEditable = false
                 }
                 break
+
+            case 'maya theme toggle': {
+                draft.maya.theme = draft.maya.theme === 'light'
+                    ? 'dark'
+                    : 'light'
+            }
+            break
 
             //case 'update post': // react surah-item/meta update (?)
             case 'react surah-item/meta update':

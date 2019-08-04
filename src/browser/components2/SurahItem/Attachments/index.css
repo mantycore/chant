@@ -11,6 +11,13 @@
 .attachment .action, .attachment a {
 	text-decoration: underline;
 	/* font-weight: bold; */ 
-	color: #aaa;
 	cursor: pointer;
+}
+
+:global(.light) .attachment .action, :global(.light) .attachment a {
+    color: #bbb;
+}
+
+:global(.dark) .attachment .action, :global(.dark) .attachment a {
+    color: #444;
 }

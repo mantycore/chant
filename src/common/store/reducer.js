@@ -80,14 +80,15 @@ export default (state, action) => {
             }
             break
 
-            /* matra res content get */
+            /* mantra res content get */
             case 'prakriti content put': {
                 // was in getAndStoreContent
                 let hexNid
                 if (action.source === 'choir') {
                     hexNid = action.nid.toString('hex')
                 } else {
-                    hexNid = 'local'
+                    //hexNid = 'local'
+                    //TODO: display local replicas info differently from remote onses
                 }
                 let content = draft.poema.contents[action.cid]
                 if (!content) {
