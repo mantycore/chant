@@ -18,3 +18,4 @@ if (!secretCode) {
 
 store.dispatch({type: 'init', state})
 store.dispatch({type: 'mantra init'})
+window.store = store

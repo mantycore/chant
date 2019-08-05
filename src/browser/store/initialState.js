@@ -23,16 +23,17 @@ const initialState = {
 
     maya: {
         theme: 'light',
-        path: '/d/'
+        path: '/d/',
+
+        mode: 'tag',
+        tag: 'd',
+        sutraPid: null,
+        rengaId: null,
+
+        scrollTrigger: false // todo: move?
     },
 
-    newState: {
-        maya: {
-            mode: 'tag',
-            tag: 'd',
-            sutraPid: null,
-            rengaId: null
-        },
+    newState: { //move to maya
         suwarList: {
             scrollTrigger: 0,
             autoScrollAllowed: true

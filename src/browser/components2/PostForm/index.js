@@ -27,30 +27,30 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
             }</div>
         </div>
     }
-    if (state.newState.maya.mode === 'directs list') {
+    if (state.maya.mode === 'directs list') {
         placeholder = `⚿ List of your direct conversations ⚿`
         disabled = true
         encrypted = true
     }
-    if (state.newState.maya.mode === 'direct') {
-        protoPost.to = state.newState.maya.sutraPid
+    if (state.maya.mode === 'direct') {
+        protoPost.to = state.maya.sutraPid
         placeholder = `⚿ Encrypted direct message to ~${protoPost.to.substring(0, 8)} ⚿`
         encrypted = true
     }
-    if (state.newState.maya.mode === 'direct conversation') {
-        const renga = state.surah.rengashu.find(curRenga => curRenga.id === state.newState.maya.rengaId)
+    if (state.maya.mode === 'direct conversation') {
+        const renga = state.surah.rengashu.find(curRenga => curRenga.id === state.maya.rengaId)
         protoPost.to = renga.suwar[0].my ? renga.secondPid : renga.firstPid // can fail if the conversation is malformed
         // think about it. What if both sides are mine?
-        protoPost.conversationId = state.newState.maya.rengaId
+        protoPost.conversationId = state.maya.rengaId
         placeholder = `⚿ Encrypted direct message to ~${protoPost.to.substring(0, 8)} ⚿`
         encrypted = true
     }
-    if (state.newState.maya.mode === 'thread') {
-        protoPost.opid = state.newState.maya.sutraPid
+    if (state.maya.mode === 'thread') {
+        protoPost.opid = state.maya.sutraPid
         placeholder = `Public message in reply to ~${protoPost.opid.substring(0, 8)}`
         encrypted = false
-    } else if (state.newState.maya.mode === 'tag') {
-        protoPost.tags = [state.newState.maya.tag]
+    } else if (state.maya.mode === 'tag') {
+        protoPost.tags = [state.maya.tag]
         placeholder = `Public message to /${protoPost.tags.join('/')}/`
         encrypted = false
     } else if (state.postsMode === 'tilde') {

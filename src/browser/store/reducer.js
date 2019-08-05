@@ -1,46 +1,61 @@
 import produce from 'immer'
 import initialState from './initialState.js'
 
+import bs58 from 'bs58'
 function handleUrl(draft) {
+    draft.newState.suwarList.autoScrollAllowed = true
     const matchData = window.location.hash.match('#(.*)')
+    let path, mode, tag = null, sutraPid = null, rengaId = null, scrollTrigger = false
+
     if (matchData) {
-        draft.maya.path = matchData[1].split('/')
-        draft.newState.suwarList.autoScrollAllowed = true
+        path = matchData[1].split('/')
+
+        if (path[0] === 'directs') {
+            mode = 'directs list'
+        } else if (path[1]) {
+            if (path[1] === '~') {
+                mode = 'tilde' //todo for v3
+            } else if (bs58.decode(path[1]).length === 64) {
+                sutraPid = path[1]
+                if (path[2] && path[2] === 'direct') {
+                    if (path[3] && bs58.decode(path[3]).length === 64) {
+                        mode = 'direct conversation'
+                        rengaId = path.slice(0, 4).join('/')
+                        sutraPid = null //??
+                        tag = null //??
+                        scrollTrigger = true
+                    } else {
+                        mode = 'direct'
+                    }
+                } else {
+                    mode = 'thread'
+                    if (path.length > 2) {
+                        scrollTrigger = true //TODO: scroll to a specific post in thread. #/pid/head ?
+                        //was: scrollTrigger plusplus
+                    }
+                }
+            } else {
+                mode = 'tag'
+                tag = path[1]
+            }
+        } else {
+            mode = 'tag'
+            tag = 'd'
+            path = ['', 'd', ''] //todo: redirect in epic?
+        }
     } else {
-        draft.maya.path = '/d/'
+        mode = 'tag'
+        tag = 'd'
+        path = ['', 'd', '']
     }
+
+    Object.assign(draft.maya, {path, mode, tag, sutraPid, rengaId, scrollTrigger})
 }
 
 function reducer(state, action) {
     //console.log("RDCR", action)
     const newState = produce(state, draft => {
         switch (action.type) {
-            /*
-            //case 'epic attachment download start':
-            //case 'attachment load start':
-                draft.newState.surahItem.attachment.isLoading[action.cid] = 'loading'
-                break
-            case 'epic attachment download failure':
-            //case 'attachment load failure':
-                draft.newState.surahItem.attachment.isLoading[action.cid] = 'failure'
-                break
-            case 'epic attachment download success':
-            //case 'attachment load success':
-                draft.newState.surahItem.attachment.isLoading[action.cid] = 'loaded'
-                break
-            */
-
-            case 'hashchange': {// from init epic
-                handleUrl(draft)
-            }
-            break
-
-            case 'update': // from common
-                // hacky, improve
-                if (action.mhType === 'posts initialized') {
-                    draft.displaySplash = false
-                }
-                break
             case 'init': // from redux entry file
                 draft.maya.theme = localStorage.getItem('theme') || 'light'
                 handleUrl(draft)
@@ -49,7 +64,12 @@ function reducer(state, action) {
                     draft.secretCode = action.state.secretCode
                     draft.passwordEditable = false
                 }
-                break
+            break
+
+            case 'hashchange': {// from init epic
+                handleUrl(draft)
+            }
+            break
 
             case 'maya theme toggle': {
                 draft.maya.theme = draft.maya.theme === 'light'

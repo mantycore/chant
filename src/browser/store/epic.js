@@ -93,10 +93,12 @@ const epic = combineEpics(
                 Object.assign(post, action.protoPost) //todo: move protopost to state?
                 const pid = await putPost(state, subscriber, post)
 
-                if (state.newState.maya.mode === 'direct') {
-                    const path = window.location.hash.match('#(.*)')[1].split('/')
+                if (state.maya.mode === 'direct') {
+                    const path = state$.value.maya.path
                     path[3] = pid
                     window.location.hash = path.slice(0,4).join('/')
+                } else if (state.maya.mode === 'tag') {
+                    window.location.hash = `/${pid}/`
                 }
                 subscriber.next({type: 'epic post-form submit success'})
             }
@@ -119,7 +121,7 @@ const epic = combineEpics(
     (action$, state$) => action$.pipe(
         ofType('react maya/sutra update'),
         map(action => {
-            if (state$.value.newState.maya.sutraPid !== action.pid) {
+            if (state$.value.maya.sutraPid !== action.pid) {
                 window.location.hash = `#/${action.pid}/` //TODO: think about it
             }
             return {type: 'epic navigation complete'}
@@ -129,7 +131,7 @@ const epic = combineEpics(
     (action$, state$) => action$.pipe(
         ofType('react maya/tag update'),
         map(action => {
-            //if (state$.value.newState.maya.tag !== action.tag) {
+            //if (state$.value.maya.tag !== action.tag) {
                 window.location.hash = `#/${action.tag}/` //TODO: think about it
             //}
             return {type: 'epic navigation complete'}
@@ -139,7 +141,7 @@ const epic = combineEpics(
     (action$, state$) => action$.pipe(
         ofType('react maya rengashu-list'),
         map(action => {
-            if (state$.value.newState.maya.mode !== 'directs list') {
+            if (state$.value.maya.mode !== 'directs list') {
                 window.location.hash = `#directs` //TODO: think about it
             }
             return {type: 'epic navigation complete'}
@@ -149,7 +151,7 @@ const epic = combineEpics(
     (action$, state$) => action$.pipe(
         ofType('react maya/renga update'),
         map(action => {
-            if (state$.value.newState.maya.rengaId !== action.id) {
+            if (state$.value.maya.rengaId !== action.id) {
                 window.location.hash = `#${action.id}`
             }
             return {type: 'epic navigation complete'}
