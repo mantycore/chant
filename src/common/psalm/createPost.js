@@ -1,3 +1,6 @@
+// @flow
+import type { InnerPsalm, Psalm, Attachment } from './.flow/index.js'
+
 import { Buffer } from 'buffer'
 import crypto from 'Common/crypto.js'
 import bs58 from 'bs58'
@@ -7,38 +10,56 @@ import asBuffer, { asBufferPlain } from './asBuffer.js'
 
 import PROTOCOL_VERSION from 'Common/version.js'
 
-const createPost = async ({body, attachments, nid, opid, tags, proofs, conversationId}) => {
-    const timestamp = new Date().getTime() // millisecond from epoch
+const createPost = async ({body, attachments, nid, opid, tags, proofs, conversationId}: {
+    body: ?string,
+    attachments: ?Attachment[],
+    nid: any, /*TODO: FIX FLOW*/
+    opid: string,
+    tags: ?string[],
+    proofs: any, /*TODO: FIX FLOW*/
+    conversationId: ?string
+}): Promise<Psalm> => {
+    const timestamp: number = new Date().getTime() // millisecond from epoch
 
-    const psalm = {
+    const innerPsalm: InnerPsalm = {
         timestamp,
         //links
         version: PROTOCOL_VERSION
     }
+
     if (body) {
         const cid = await toCID(body)
-        Object.assign(psalm, {body: {cid: await toCID(body), text: body}})
+        Object.assign(innerPsalm, {body: {cid: await toCID(body), text: body}})
     }
     if (opid) {
-        Object.assign(psalm, {opid})
+        Object.assign(innerPsalm, {opid})
     }
     if (tags) {
-        Object.assign(psalm, {tags})
+        Object.assign(innerPsalm, {tags})
     }
     if (conversationId) {
-        Object.assign(psalm, {conversationId})
+        Object.assign(innerPsalm, {conversationId})
     }
     if (attachments && attachments.length > 0) {
-        Object.assign(psalm, {attachments})
+        Object.assign(innerPsalm, {attachments})
     }
 
     /*------------------------
        inner post is complete
       ------------------------*/
-    const binaryPsalm = asBufferPlain(psalm)// is it good enough?
-    const pid = bs58.encode(nacl.hash(asBufferPlain({psalm, nid})))
-    const [proofKey, proofSignature] = crypto.proof.signOrigin(binaryPsalm).map(Buffer.from).map(bs58.encode)
-    const directKey = bs58.encode(Buffer.from(crypto.direct.signOrigin(binaryPsalm)))
+
+    const binaryPsalm = asBufferPlain(innerPsalm)// is it good enough?
+    const pid: string = bs58.encode(nacl.hash(asBufferPlain({innerPsalm, nid})))
+    const [proofKey, proofSignature]: [string, string] = crypto.proof.signOrigin(binaryPsalm).map(Buffer.from).map(bs58.encode)
+    const directKey: string = bs58.encode(Buffer.from(crypto.direct.signOrigin(binaryPsalm)))
+
+    const psalm: Psalm = Object.assign({}, innerPsalm, {
+        pid,
+        proofKey,
+        proofSignature,
+        directKey
+        //proofs
+    });
 
     if (proofs) {
         Object.assign(psalm, {proofs: proofs.map(proof => {
@@ -61,13 +82,6 @@ const createPost = async ({body, attachments, nid, opid, tags, proofs, conversat
         )})
     }
 
-    Object.assign(psalm, {
-        pid,
-        proofKey,
-        proofSignature,
-        directKey
-        //proofs
-    })
 
     return psalm
 }

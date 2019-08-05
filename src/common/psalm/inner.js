@@ -1,4 +1,7 @@
-const inner = psalm => {
+// @flow
+import type { InnerPsalm, Psalm } from './.flow/index.js'
+
+const inner = (psalm: Psalm): InnerPsalm => {
     const innerPsalm = {...psalm}
     delete innerPsalm.pid
     delete innerPsalm.proofs

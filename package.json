@@ -15,6 +15,7 @@
     "@babel/preset-flow": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
     "babel-loader": "^8.0.6",
+    "babel-plugin-tcomb": "^0.4.0",
     "css-loader": "^3.0.0",
     "fast-async": "^6.3.8",
     "flow-bin": "^0.102.0",
@@ -23,6 +24,7 @@
     "shelljs": "^0.8.3",
     "sloc": "^0.2.1",
     "style-loader": "^0.23.1",
+    "tcomb": "^3.2.29",
     "webpack": "^4.35.0",
     "webpack-bundle-analyzer": "^3.3.2",
     "webpack-cli": "^3.3.5"

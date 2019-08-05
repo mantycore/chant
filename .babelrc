@@ -2,5 +2,10 @@
 	"presets": [
 		"@babel/preset-react",
 		"@babel/flow"
+	],
+	"plugins": [
+	    "@babel/syntax-flow",
+	    "tcomb",
+	    "@babel/transform-flow-strip-types"
 	]
 }
