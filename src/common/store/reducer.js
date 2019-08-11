@@ -1,6 +1,9 @@
+// @flow
+import type { CommonPrakriti, Content } from './.flow/'
+
 import produce from 'immer'
 
-const setReplicated = (state, content, hexNid) => {
+const setReplicated = (state: CommonPrakriti, content: Content, hexNid: string): void => {
     content.status.replicated[hexNid] = true
     if (state.mantra.peers[hexNid] && state.mantra.peers[hexNid].persistent) {
         content.status.persisted[hexNid] = true
@@ -10,9 +13,9 @@ const setReplicated = (state, content, hexNid) => {
     }
 }
 
-export default (state, action) => {
+export default (state: CommonPrakriti, action: any): CommonPrakriti => {
     //console.log("RDCR Common", action)
-    return produce(state, draft => {
+    return produce(state, (draft: CommonPrakriti): void => {
         switch (action.type) {
             case 'init': {
                 //draft.init.pr = action.state.pr
@@ -60,12 +63,12 @@ export default (state, action) => {
             }
             break
 
-            /* :::: */
+            /* [][] */
 
             case 'mantra req content get': {
                 let content = draft.poema.contents[action.cid]
                 if (!content) {
-                    content = draft.poema.contents[action.cid] = {payload: null, status: {replicated: {}, persisted: {}, isLoading: null}}
+                    content = draft.poema.contents[action.cid] = {payload: null, status: {replicated: {}, persisted: {}, isLoading: 'null', source: null}}
                 }
                 content.status.isLoading = 'loading'
             }
@@ -74,7 +77,7 @@ export default (state, action) => {
             case 'mantra err content get': {
                 let content = draft.poema.contents[action.cid]
                 if (!content) {
-                    content = draft.poema.contents[action.cid] = {payload: null, status: {replicated: {}, persisted: {}, isLoading: null}}
+                    content = draft.poema.contents[action.cid] = {payload: null, status: {replicated: {}, persisted: {}, isLoading: 'null', source: null}}
                 }
                 content.status.isLoading = 'failure'
             }
@@ -87,12 +90,13 @@ export default (state, action) => {
                 if (action.source === 'choir') {
                     hexNid = action.nid.toString('hex')
                 } else {
-                    //hexNid = 'local'
+                    //hexNid = undefined
+                    hexNid = 'local'
                     //TODO: display local replicas info differently from remote onses
                 }
                 let content = draft.poema.contents[action.cid]
                 if (!content) {
-                    content = draft.poema.contents[action.cid] = {payload: null, status: {replicated: {}, persisted: {}, isLoading: null}}
+                    content = draft.poema.contents[action.cid] = {payload: null, status: {replicated: {}, persisted: {}, isLoading: 'null', source: null}}
                 }
                 content.payload = action.payload
                 content.status.isLoading = 'loaded'
@@ -112,7 +116,7 @@ export default (state, action) => {
                 }
             }
             break
-            /* :::: */
+            /* [][] */
 
             case 'prakriti peer put': {
                 // was in Mantra/ (on message switch)

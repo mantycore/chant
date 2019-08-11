@@ -1,3 +1,9 @@
+// @flow
+// @flow-runtime
+import type { CommonPrakriti, Peer } from './.flow/'
+import type { PeerRelayClient } from 'Mantra/.flow/'
+import type { Poema } from 'Psalm/.flow/'
+
 import { ofType, combineEpics } from 'redux-observable'
 import { Observable, of, merge } from 'rxjs'
 import { mergeMap, map, catchError, tap } from 'rxjs/operators'
@@ -14,6 +20,9 @@ import { ping, getPosts, getContent } from 'Mantra/request/get/'
 import { handleReply, handleReplies } from 'Mantra/reply.js'
 
 function nodeStatus(state) {
+    if (typeof state.init.isServerNode !== 'boolean') {
+        throw new Error()
+    }
     return {
         type: state.init.isServerNode ? 'server' : 'browser',
         persistent: state.init.isServerNode, //TODO: think about better capabilities format
@@ -25,11 +34,12 @@ export default combineEpics(
     (action$, state$) => action$.pipe(
         ofType('mantra init'),
         mergeMap(() => new Observable(subscriber => {
-            console.log(state$.value.init.prOptions)
-            const pr = new Client(state$.value.init.prOptions)
+            const state: CommonPrakriti = state$.value
+            console.log(state.init.prOptions)
+            const pr: PeerRelayClient = new Client(state.init.prOptions)
             // was in Browser/
             // TODO: move to Browser epic
-            crypto.setPassphrase(state$.value.init.secretCode)
+            crypto.setPassphrase(state.init.secretCode)
             // was in Mantra/
 
             /* TODO: maybe do it on any new peer, not only on peer event? Study the peer-repaly protocol better. */
@@ -46,8 +56,9 @@ export default combineEpics(
         ofType('mantra pr peer'),
         mergeMap(observableAsync(async (action, subscriber) => {
             // was in Mantra/ (on peer)
-            const newPoemata = await getPosts(action.nid, state$.value.init.pr)
-            const localPoemata = state$.value.poema.poemata
+            const state: CommonPrakriti = state$.value
+            const newPoemata = await getPosts(action.nid, state.init.pr)
+            const localPoemata = state.poema.poemata
 
             for (const newPoema of newPoemata) {
                 if (!localPoemata.find(localPoema => localPoema.pid === newPoema.pid)) {
@@ -63,7 +74,7 @@ export default combineEpics(
     (action$, state$) => action$.pipe(
         ofType('mantra incoming poema'),
         mergeMap(({poema, nid}) => new Observable(subscriber => {
-            const state = state$.value
+            const state: CommonPrakriti = state$.value
 
             // was in storePost
             subscriber.next({type: 'prakriti poema put', poema, source: 'choir', nid})
@@ -91,12 +102,13 @@ export default combineEpics(
         ofType('mantra req content get'),
         // was in getAndStoreContent
         mergeMap(async action => {
-            const state = state$.value
+            const state: CommonPrakriti = state$.value
             const peers = state.mantra.peers
             const pr = state.init.pr
             const cid = action.cid
 
-            const nid = Object.values(peers)[0].nid //TODO: at least find the first persisting node!
+            // Flow cast through any because .values return Array<mixed>
+            const nid = ((Object.values(peers): any)[0]: Peer).nid //TODO: at least find the first persisting node!
 
             try {
                 return {
@@ -128,9 +140,12 @@ export default combineEpics(
         ofType('mantra pr message'), // incoming mantra
         mergeMap(observableAsync(async ({mantra, nid}, subscriber) => { // async is only for CID calc
             // was in Mantra/ (on message)
-            const state = state$.value
+            const state: CommonPrakriti = state$.value
             const peers = state.mantra.peers
             const pr = state.init.pr
+            if (!pr) {
+                throw new Error()
+            }
 
             if (mantra.type !== 'ping' && mantra.type !== 'pong') {
                 log.info('RECV', nid.toString('hex', 0, 2), mantra)
@@ -147,6 +162,7 @@ export default combineEpics(
 
             if (!(umid in state$.value.mantra.mantrasaProcessed)) {
                 subscriber.next({type: 'mantra pr message success', umid})
+
 
                 switch (mantra.type) {
                     case 'req poema put': {
@@ -172,6 +188,11 @@ export default combineEpics(
                             // old idea: send to all nodes, but only server nodes should store it.
                             // also old TODO: optimize: do not sent the post to nodes we know already have it
                         }
+
+                        if (typeof state.init.isServerNode !== 'boolean') {
+                            throw new Error()
+                        }
+
                         send(originNid, {type: 'res content put', status: {persistent: state.init.isServerNode}, re: mantra.mid}, false, pr)
                     break
 
@@ -183,7 +204,7 @@ export default combineEpics(
                     /* called from mantra.incoming.poema */
                     case 'req content get': {
                         const content = state.poema.contents[mantra.params.cid] //todo: think about it
-                        if (content) {
+                        if (content && content.payload) {
                             const payload = content.payload
                             send(originNid, {type: 'res content get', payload, re: mantra.mid}, /*binary*/ true, pr)
                         } else {
@@ -215,14 +236,14 @@ export default combineEpics(
 
                     /* called from mantra.pr.peer */
                     case 'req poemata get': {
-                        const payload = state.poema.poemata
+                        let payload = state.poema.poemata
 
                         let params = mantra.params
                         if (params) {
-                            payload = poemata.filter(poema => 
+                            payload = payload.filter((poema: Poema) => 
                                 (!params.pid || poema.pid === params.pid) &&
                                 (!params.opid || (poema.opid && poema.opid === params.opid)) &&
-                                (!params.tag || (poema.tags && poema.tags.includes(params.tag))) &&
+                                (!params.tag || (Array.isArray(poema.tags) && poema.tags.includes(params.tag))) &&
                                 (!params.rid || (poema.conversationId && poema.conversationId === params.rid))
                             )
                             // All of the selectors below may be implemented here, or may be implemented in the function
@@ -285,14 +306,17 @@ export default combineEpics(
     (action$, state$) => action$.pipe(
         ofType('mantra interval ping'),
         mergeMap(observableAsync(async (action, subscriber) => {
-            const state = state$.value
+            const state: CommonPrakriti = state$.value
             const peers = state.mantra.peers
             const pr = state.init.pr
             const payload = nodeStatus(state)
             const results = [] // TODO: find a way to combine async/await and new Observable, or something
 
             // was in root setInterval
-            for (const [hexNid, peer] of Object.entries(peers)) {
+            // Flow cast through any because .entries return Array<[string, mixed]>
+            for (const [hexNid, peer]: [string, Peer]
+                of (Object.entries(peers): any)) {
+
                 try {
                     // next ping will be send only after receiving the previous one
                     await ping(payload, peer.nid, pr) // mantra/request

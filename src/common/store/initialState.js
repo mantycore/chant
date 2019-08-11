@@ -1,4 +1,7 @@
-export default {
+// @flow
+import type { CommonPrakriti } from './.flow/'
+
+const commonPrakriti: CommonPrakriti = {
     init: {},
     mantra: {
         peers: {},
@@ -9,3 +12,5 @@ export default {
         contents: {}
     }
 }
+
+export default commonPrakriti

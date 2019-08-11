@@ -1,5 +1,5 @@
 // @flow
-import type { InnerPsalm, Psalm, Attachment } from './.flow/index.js'
+import type { InnerPsalm, Psalm, ContentPayload } from './.flow/index.js'
 
 import { Buffer } from 'buffer'
 import crypto from 'Common/crypto.js'
@@ -12,7 +12,7 @@ import PROTOCOL_VERSION from 'Common/version.js'
 
 const createPost = async ({body, attachments, nid, opid, tags, proofs, conversationId}: {
     body: ?string,
-    attachments: ?Attachment[],
+    attachments: ?ContentPayload[],
     nid: any, /*TODO: FIX FLOW*/
     opid: string,
     tags: ?string[],

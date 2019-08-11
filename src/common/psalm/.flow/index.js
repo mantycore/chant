@@ -1,10 +1,10 @@
 // @flow
-export type Attachment = { //ContentPayload?
+export type ContentPayload = {|
     cid: string, //cid
     type: string,
     name: string,
     size: number
-}
+|}
 
 export type InnerPsalm = {
     timestamp: number,
@@ -17,7 +17,7 @@ export type InnerPsalm = {
     opid?: string, //bs58
     tags?: string[],
     conversationId?: string, // {bs58}/direct/{bs58}
-    attachments?: Attachment[]
+    attachments?: ContentPayload[]
 }
 
 export type Ayah = {
