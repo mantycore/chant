@@ -1,6 +1,5 @@
 // @flow
-// @flow-runtime
-import type { CommonPrakriti, Peer } from './.flow/'
+import type { Prakriti, Peer } from './.flow/'
 import type { PeerRelayClient } from 'Mantra/.flow/'
 import type { Poema } from 'Psalm/.flow/'
 
@@ -34,7 +33,7 @@ export default combineEpics(
     (action$, state$) => action$.pipe(
         ofType('mantra init'),
         mergeMap(() => new Observable(subscriber => {
-            const state: CommonPrakriti = state$.value
+            const state: Prakriti = state$.value
             console.log(state.init.prOptions)
             const pr: PeerRelayClient = new Client(state.init.prOptions)
             // was in Browser/
@@ -56,7 +55,10 @@ export default combineEpics(
         ofType('mantra pr peer'),
         mergeMap(observableAsync(async (action, subscriber) => {
             // was in Mantra/ (on peer)
-            const state: CommonPrakriti = state$.value
+            const state: Prakriti = state$.value
+
+            ping(nodeStatus(state), action.nid, state.init.pr)
+
             const newPoemata = await getPosts(action.nid, state.init.pr)
             const localPoemata = state.poema.poemata
 
@@ -74,7 +76,7 @@ export default combineEpics(
     (action$, state$) => action$.pipe(
         ofType('mantra incoming poema'),
         mergeMap(({poema, nid}) => new Observable(subscriber => {
-            const state: CommonPrakriti = state$.value
+            const state: Prakriti = state$.value
 
             // was in storePost
             subscriber.next({type: 'prakriti poema put', poema, source: 'choir', nid})
@@ -102,7 +104,7 @@ export default combineEpics(
         ofType('mantra req content get'),
         // was in getAndStoreContent
         mergeMap(async action => {
-            const state: CommonPrakriti = state$.value
+            const state: Prakriti = state$.value
             //const state = state$.value
             const peers = state.mantra.peers
             const pr = state.init.pr
@@ -142,7 +144,7 @@ export default combineEpics(
         ofType('mantra pr message'), // incoming mantra
         mergeMap(observableAsync(async ({mantra, nid}, subscriber) => { // async is only for CID calc
             // was in Mantra/ (on message)
-            const state: CommonPrakriti = state$.value
+            const state: Prakriti = state$.value
             const peers = state.mantra.peers
             const pr = state.init.pr
             if (!pr) {
@@ -308,7 +310,7 @@ export default combineEpics(
     (action$, state$) => action$.pipe(
         ofType('mantra interval ping'),
         mergeMap(observableAsync(async (action, subscriber) => {
-            const state: CommonPrakriti = state$.value
+            const state: Prakriti = state$.value
             //const state = state$.value
             const peers = state.mantra.peers
             const pr = state.init.pr

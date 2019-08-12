@@ -16,7 +16,7 @@ export default combineEpics(
 
             for (const {pid, opid, timestamp, rest} of
                 (await postgres.query('SELECT * FROM posts ORDER BY timestamp')).rows) {
-                let poema = {pid, opid, timestamp: parseInt(timestamp),...JSON.parse(rest)}
+                let poema = {pid, ...(opid ? {opid} : {}), timestamp: parseInt(timestamp),...JSON.parse(rest)}
                 subscriber.next({type: 'prakriti poema put', poema, source: 'terma'}) //TODO: handle
             }
 

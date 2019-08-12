@@ -1,15 +1,31 @@
 import { ofType, combineEpics } from 'redux-observable'
-import { of, merge } from 'rxjs'
-import { mergeMap, map } from 'rxjs/operators'
+import { of, merge, race, timer } from 'rxjs'
+import { mergeMap, map, first } from 'rxjs/operators'
 import observableAsync from 'Common/observableAsync.js'
 import { putPost, updatePost, revoke } from 'Mantra/request/put/poema.js'
+
+const waitForResource = (action$, state$, subscriber, predicate) => {
+    race(
+        state$.pipe(first(predicate), map(_ => 'success')),
+        timer(1000).pipe(map(_ => 'timeout')),
+        action$.pipe(ofType('hashchange'), first(), map(_ => 'cancel'))
+    ).subscribe(result => {
+        console.log('POEMA FOUND?', result)
+    })
+}
 
 const epic = combineEpics(
     (action$, state$) => action$.pipe(
         ofType('init'),
         mergeMap(observableAsync(async (action, subscriber) => {
+            const state = state$.value
             window.addEventListener('hashchange', event =>
                 subscriber.next({type: 'hashchange', event}))
+
+            if (state.maya.sutraPid) {
+                waitForResource(action$, state$, subscriber, state =>
+                    state.poema.poemata.find(poema => poema.pid === state.maya.sutraPid))
+            }
         }))
     ),
 

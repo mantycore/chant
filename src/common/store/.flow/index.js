@@ -1,31 +1,46 @@
-//@flow
-import type { PeerRelayClient, PeerPayload } from 'Mantra/.flow'
-import type { Poema, ContentPayload } from 'Psalm/.flow'
+// @flow
+import type { PeerRelayClient, PeerPayload } from 'Mantra/.flow/'
+import type { Poema, ContentPayload } from 'Psalm/.flow/'
 
 //does't check any PeerPayload fields!
-export type Peer = {
+//TODO: fix
+export type Peer = ({} | PeerPayload) & { //|
     nid: Buffer
 }
 
+//TODO: fix
 export type Content = {|
-    status: {
+    //payload: ?ContentPayload
+    payload: ?({
+        cid: string,
+        buffer: Buffer,
+        type: string,
+        name: string,
+        size: number,
+        timestamp?: number //not present in "choir, decrypted"!
+    } | {
+        cid: string,
+        text: string,
+        buffer: Buffer
+    }),
+    status: {|
         replicated: {[string]: boolean},
         persisted: {[string]: boolean},
         isLoading: 'null' | 'loading' | 'loaded' | 'failure',
-        source: null | 'choir' | 'terma' | 'maya'
-    },
-    payload: ?ContentPayload
+        // flow forbid reassignment from null to string
+        source: null | 'choir' | 'choir, decrypted' | 'terma' | 'maya'
+    |}
 |}
 
 export type CommonPrakriti = {|
     init: {|
-        isServerNode?: boolean,
-        initiation?: boolean,
-        secretCode?: string,
         prOptions?: {|
             bootstrap: Array<string>,
             port?: number
         |},
+        isServerNode?: boolean,
+        secretCode?: string,
+        initiation?: boolean,
         pr?: PeerRelayClient
     |},
     mantra: {|
@@ -37,3 +52,5 @@ export type CommonPrakriti = {|
         contents: {[string]: Content}
     |}
 |}
+
+export type Prakriti = {...CommonPrakriti}

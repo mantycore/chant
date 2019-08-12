@@ -1,10 +1,10 @@
 // @flow
 // @flow-runtime
-import type { CommonPrakriti, Content } from './.flow/'
+import type { Prakriti, Content } from './.flow/'
 
-import produce from 'immer'
+import produce, {original} from 'immer'
 
-const setReplicated = (state: CommonPrakriti, content: Content, hexNid: string): void => {
+const setReplicated = (state: Prakriti, content: Content, hexNid: string): void => {
     content.status.replicated[hexNid] = true
     if (state.mantra.peers[hexNid] && state.mantra.peers[hexNid].persistent) {
         content.status.persisted[hexNid] = true
@@ -14,9 +14,9 @@ const setReplicated = (state: CommonPrakriti, content: Content, hexNid: string):
     }
 }
 
-export default (state: CommonPrakriti, action: any): CommonPrakriti => {
+export default (state: Prakriti, action: any): Prakriti => {
     //console.log("RDCR Common", action)
-    return produce(state, (draft: CommonPrakriti): void => {
+    return produce(state, (draft: Prakriti): void => {
         switch (action.type) {
             case 'init': {
                 //draft.init.pr = action.state.pr
