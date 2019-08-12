@@ -1,4 +1,5 @@
 // @flow
+// @flow-runtime
 import type { CommonPrakriti, Content } from './.flow/'
 
 import produce from 'immer'

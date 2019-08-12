@@ -3,9 +3,7 @@ import type { Poema, ContentPayload } from 'Psalm/.flow/'
 
 // for tcomb recursion support:
 // recursive
-export type MicroJSON = string | number | boolean |
-    Array<string> | Array<number> | Array<boolean> |
-    Array<{+[any]: MicroJSON}> | {+[any]: MicroJSON}
+export type MicroJSON = string | number | boolean | Array<MicroJSON> | {+[any]: MicroJSON}
 //solved per https://stackoverflow.com/questions/45992316/recursive-type-definition-in-flow
 
 export type PeerPayload = {|
@@ -59,15 +57,11 @@ export type Mantra = {|
     re: any
 |}
 
-export type MantraWithId = {|
-    ...Mantra,
-
-    type: any, //TODO: flow fix
-    payload: any, //TODO: flow fix
-    
+// inexact object; doesn't check presense of any Mantra fields!
+export type MantraWithId = {
     mid: string,
     version: number
-|}
+}
 
 
 export type PeerRelayClient = {

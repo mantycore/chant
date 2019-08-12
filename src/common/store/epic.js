@@ -103,12 +103,14 @@ export default combineEpics(
         // was in getAndStoreContent
         mergeMap(async action => {
             const state: CommonPrakriti = state$.value
+            //const state = state$.value
             const peers = state.mantra.peers
             const pr = state.init.pr
             const cid = action.cid
 
             // Flow cast through any because .values return Array<mixed>
             const nid = ((Object.values(peers): any)[0]: Peer).nid //TODO: at least find the first persisting node!
+            //const nid = Object.values(peers)[0].nid //TODO: at least find the first persisting node!
 
             try {
                 return {
@@ -307,16 +309,17 @@ export default combineEpics(
         ofType('mantra interval ping'),
         mergeMap(observableAsync(async (action, subscriber) => {
             const state: CommonPrakriti = state$.value
+            //const state = state$.value
             const peers = state.mantra.peers
             const pr = state.init.pr
             const payload = nodeStatus(state)
             const results = [] // TODO: find a way to combine async/await and new Observable, or something
 
             // was in root setInterval
+            // [hexNid, peer]: [string, Peer] is working in flow, but fails with flow-runtime
             // Flow cast through any because .entries return Array<[string, mixed]>
-            for (const [hexNid, peer]: [string, Peer]
-                of (Object.entries(peers): any)) {
-
+            for (const [hexNid: string, peer: Peer] of (Object.entries(peers): any)) {
+            //for (const [hexNid, peer] of Object.entries(peers)) {
                 try {
                     // next ping will be send only after receiving the previous one
                     await ping(payload, peer.nid, pr) // mantra/request
