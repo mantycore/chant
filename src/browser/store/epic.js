@@ -14,18 +14,53 @@ const waitForResource = (action$, state$, subscriber, predicate) => {
     })
 }
 
+const requestResource = (action$, state$, subscriber) => {
+    const state = state$.value
+
+    switch (state.maya.mode) {
+        case 'tag':
+            waitForResource(action$, state$, subscriber, state =>
+                state.poema.poemata.find(poema => poema.tags && poema.tags.includes(state.maya.tag)))
+        break
+
+        case 'direct':
+        case 'thread':
+            waitForResource(action$, state$, subscriber, state =>
+                state.poema.poemata.find(poema => poema.pid === state.maya.sutraPid))
+        break
+
+        case 'direct conversation': {
+            //todo: replace with rengashu search
+            const md = state.maya.rengaId.match(/^\/([^/]*)\/direct\/([^/]*)/)
+            waitForResource(action$, state$, subscriber, state =>
+                state.poema.poemata.find(poema => poema.pid === md[1]) ||
+                state.poema.poemata.find(poema => poema.pid === md[2]) ||
+                state.surah.suwar.find(surah => surah.origin.conversationId &&
+                    surah.origin.conversationId === state.maya.rengaId))
+        }
+        break
+
+        case 'directs list':
+            waitForResource(action$, state$, subscriber, state =>
+                state.poema.poemata.find(poema => poema.to))
+        break
+    }
+}
+
 const epic = combineEpics(
     (action$, state$) => action$.pipe(
         ofType('init'),
         mergeMap(observableAsync(async (action, subscriber) => {
-            const state = state$.value
             window.addEventListener('hashchange', event =>
                 subscriber.next({type: 'hashchange', event}))
+            requestResource(action$, state$, subscriber)
+        }))
+    ),
 
-            if (state.maya.sutraPid) {
-                waitForResource(action$, state$, subscriber, state =>
-                    state.poema.poemata.find(poema => poema.pid === state.maya.sutraPid))
-            }
+    (action$, state$) => action$.pipe(
+        ofType('hashchange'),
+        mergeMap(observableAsync(async (action, subscriber) => {
+            requestResource(action$, state$, subscriber)
         }))
     ),
 
