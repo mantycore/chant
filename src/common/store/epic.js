@@ -59,14 +59,16 @@ export default combineEpics(
 
             ping(nodeStatus(state), action.nid, state.init.pr)
 
-            const newPoemata = await getPosts(action.nid, state.init.pr)
-            const localPoemata = state.poema.poemata
+            if (state.init.isServerNode) {
+                const newPoemata = await getPosts(action.nid, state.init.pr)
+                const localPoemata = state.poema.poemata
 
-            for (const newPoema of newPoemata) {
-                if (!localPoemata.find(localPoema => localPoema.pid === newPoema.pid)) {
-                    subscriber.next({type: 'mantra incoming poema', nid: action.nid, poema: newPoema})
+                for (const newPoema of newPoemata) {
+                    if (!localPoemata.find(localPoema => localPoema.pid === newPoema.pid)) {
+                        subscriber.next({type: 'mantra incoming poema', nid: action.nid, poema: newPoema})
+                    }
+                    /* else increase replication count of poema */
                 }
-                /* else increase replication count of poema */
             }
             subscriber.complete()
         }))
@@ -246,7 +248,7 @@ export default combineEpics(
                         if (params) {
                             payload = payload.filter((poema: Poema) => 
                                 (!params.pid || poema.pid === params.pid) &&
-                                (!params.opid || (poema.opid && poema.opid === params.opid)) &&
+                                (!params.opid || (poema.opid && poema.opid === params.opid) || (poema.pid === params.opid)) &&
                                 (!params.tag || (Array.isArray(poema.tags) && poema.tags.includes(params.tag))) &&
                                 (!params.rid || (poema.conversationId && poema.conversationId === params.rid))
                             )
@@ -297,7 +299,7 @@ export default combineEpics(
                     break
 
                     case 'res poemata get': {
-                        handleReply(mantra, mantra.payload)
+                        handleReplies(nid, mantra, mantra.payload)
                     }
                     break
                 }

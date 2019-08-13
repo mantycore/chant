@@ -3,48 +3,58 @@ import { of, merge, race, timer } from 'rxjs'
 import { mergeMap, map, first } from 'rxjs/operators'
 import observableAsync from 'Common/observableAsync.js'
 import { putPost, updatePost, revoke } from 'Mantra/request/put/poema.js'
+import { getPoemata } from 'Mantra/request/get/index.js'
 
 const waitForResource = (action$, state$, subscriber, predicate) => {
     race(
         state$.pipe(first(predicate), map(_ => 'success')),
-        timer(1000).pipe(map(_ => 'timeout')),
+        timer(4000).pipe(map(_ => 'timeout')),
         action$.pipe(ofType('hashchange'), first(), map(_ => 'cancel'))
     ).subscribe(result => {
         console.log('POEMA FOUND?', result)
     })
 }
 
-const requestResource = (action$, state$, subscriber) => {
-    const state = state$.value
+const requestResource = async (action$, state$, subscriber) => {
+    let state = state$.value
+    let predicate, params
 
     switch (state.maya.mode) {
         case 'tag':
-            waitForResource(action$, state$, subscriber, state =>
-                state.poema.poemata.find(poema => poema.tags && poema.tags.includes(state.maya.tag)))
+            predicate = state =>
+                (console.log("in predicate", state),
+                state.poema.poemata.find(poema => poema.tags && poema.tags.includes(state.maya.tag))
+                )
+            params = {tag: state.maya.tag}
         break
 
         case 'direct':
         case 'thread':
-            waitForResource(action$, state$, subscriber, state =>
-                state.poema.poemata.find(poema => poema.pid === state.maya.sutraPid))
+            predicate = state =>
+                state.poema.poemata.find(poema => poema.pid === state.maya.sutraPid)
+            params = {opid: state.maya.sutraPid}
         break
 
-        case 'direct conversation': {
-            //todo: replace with rengashu search
-            const md = state.maya.rengaId.match(/^\/([^/]*)\/direct\/([^/]*)/)
-            waitForResource(action$, state$, subscriber, state =>
-                state.poema.poemata.find(poema => poema.pid === md[1]) ||
-                state.poema.poemata.find(poema => poema.pid === md[2]) ||
-                state.surah.suwar.find(surah => surah.origin.conversationId &&
-                    surah.origin.conversationId === state.maya.rengaId))
-        }
+        case 'direct conversation':
+            predicate = state =>
+                state.surah.rengashu.find(renga => renga.id === state.maya.rengaId)
+            params = {rid: state.maya.rengaId}
         break
 
         case 'directs list':
-            waitForResource(action$, state$, subscriber, state =>
-                state.poema.poemata.find(poema => poema.to))
+            predicate = state => state.surah.rengashu.length > 0
+            params = {}
         break
     }
+
+    if (!predicate(state) && Object.keys(params).length > 0) {
+        getPoemata(params, state.mantra.peers, state.init.pr).subscribe(({resolution, nid}) => {
+            //TODO: fix as per common epic
+            resolution.forEach(poema => 
+                subscriber.next({type: 'mantra incoming poema', nid, poema}))
+        })
+    }
+    waitForResource(action$, state$, subscriber, predicate)
 }
 
 const epic = combineEpics(
@@ -53,6 +63,17 @@ const epic = combineEpics(
         mergeMap(observableAsync(async (action, subscriber) => {
             window.addEventListener('hashchange', event =>
                 subscriber.next({type: 'hashchange', event}))
+            //requestResource(action$, state$, subscriber)
+            state$.pipe(
+                first(state =>
+                    Object.values(state.mantra.peers).find(peer => peer.persistent)),
+            ).subscribe(() => subscriber.next({type: '*** first*persistent*peer ***'}))
+        }))
+    ),
+
+    (action$, state$) => action$.pipe(
+        ofType('*** first*persistent*peer ***'),
+        mergeMap(observableAsync(async (action, subscriber) => {
             requestResource(action$, state$, subscriber)
         }))
     ),
