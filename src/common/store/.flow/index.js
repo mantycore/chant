@@ -4,25 +4,13 @@ import type { Poema, ContentPayload } from 'Psalm/.flow/'
 
 //does't check any PeerPayload fields!
 //TODO: fix
-export type Peer = ({} | PeerPayload) & { //|
+export type Peer = ({} | PeerPayload) & {
     nid: Buffer
 }
 
 //TODO: fix
 export type Content = {|
-    //payload: ?ContentPayload
-    payload: ?({
-        cid: string,
-        buffer: Buffer,
-        type: string,
-        name: string,
-        size: number,
-        timestamp?: number //not present in "choir, decrypted"!
-    } | {
-        cid: string,
-        text: string,
-        buffer: Buffer
-    }),
+    payload: ?ContentPayload,
     status: {|
         replicated: {[string]: boolean},
         persisted: {[string]: boolean},

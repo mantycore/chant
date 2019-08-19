@@ -6,7 +6,7 @@ export { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import crypto from 'Common/crypto.js'
 
-const cloneDeep = obj => JSON.parse(JSON.stringify(obj))
+import { cloneDeep, whenAvailable } from '../util.js'
 
 function verifyByPid(psalm, ayah, poemata) { //TODO: move to verify.js
     const original = poemata.find(psalm => psalm.pid === ayah.pid)
@@ -15,7 +15,7 @@ function verifyByPid(psalm, ayah, poemata) { //TODO: move to verify.js
     return original && verify(psalm, ayah, original)  // from, from.ayah, from.ayah.pid
 }
 
-const ayat = (poema, psalm, directSide, suwar, poemata) => {
+const ayat = async (poema, psalm, directSide, suwar, poemata, state$) => {
     let surah
 
     if (directSide !== 'unknown') {
@@ -26,12 +26,16 @@ const ayat = (poema, psalm, directSide, suwar, poemata) => {
         // there should be no more than one update type ayah per psalm
         if (updateAyah) {
             //case 1: post has put/delete proofs, so there must be an original in surah
-            surah = cloneDeep(suwar.find(curSurah => curSurah.pid === updateAyah.pid))
+            surah = cloneDeep(await whenAvailable(state$, state =>
+                state.surah.suwar.find(curSurah =>
+                    curSurah.pid === updateAyah.pid)))
             if (!surah) {
                 // This means that the choir is in erroneous state:
                 // it have the update psalm, but no original psalm.
                 // We more or less can handle it. Also
                 // TODO: try to rerequest the original psalm.
+                // NB: currently this branch is impossible to reach
+                // because of whenAvailable
 
                 console.warn('original psalm not found while constructing a surah', updateAyah, psalm)
                 surah = {

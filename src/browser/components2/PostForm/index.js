@@ -39,11 +39,16 @@ browser console by pressing F12, Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0J, or\u00A0C
     }
     if (state.maya.mode === 'direct conversation') {
         const renga = state.surah.rengashu.find(curRenga => curRenga.id === state.maya.rengaId)
-        protoPost.to = renga.suwar[0].my ? renga.secondPid : renga.firstPid // can fail if the conversation is malformed
-        // think about it. What if both sides are mine?
-        protoPost.conversationId = state.maya.rengaId
-        placeholder = `⚿ Encrypted direct message to ~${protoPost.to.substring(0, 8)} ⚿`
-        encrypted = true
+        if (renga) {
+            protoPost.to = renga.suwar[0].my ? renga.secondPid : renga.firstPid // can fail if the conversation is malformed
+            // think about it. What if both sides are mine?
+            protoPost.conversationId = state.maya.rengaId
+            placeholder = `⚿ Encrypted direct message to ~${protoPost.to.substring(0, 8)} ⚿`
+            encrypted = true
+        } else {
+            placeholder = 'Waiting for conversation to load'
+            disabled = true
+        }
     }
     if (state.maya.mode === 'thread') {
         protoPost.opid = state.maya.sutraPid

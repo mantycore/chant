@@ -1,10 +1,26 @@
 // @flow
+
+/*
 export type ContentPayload = {|
     cid: string, //cid
     type: string,
     name: string,
     size: number
-|}
+|}*/
+
+//TODO: fix
+export type ContentPayload = {
+    cid: string,
+    buffer?: Buffer,
+    type: string,
+    name: string,
+    size: number,
+    timestamp?: number //not present in "choir, decrypted"!
+} | {
+    cid: string,
+    text: string,
+    buffer: Buffer
+}
 
 export type InnerPsalm = {
     timestamp: number,
@@ -37,7 +53,7 @@ export type Psalm = {
     contentMap?: {[string]: string} //cid -> cid
 }
 
-type To = {
+export type To = {
     pid: string,
     key: string //base64
 }

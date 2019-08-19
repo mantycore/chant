@@ -1,4 +1,5 @@
 // @flow
+// @flow-runtime
 import type { Prakriti, Peer } from './.flow/'
 import type { PeerRelayClient } from 'Mantra/.flow/'
 import type { Poema } from 'Psalm/.flow/'
@@ -17,6 +18,7 @@ import send from 'Mantra/send.js'
 import broadcast from 'Mantra/broadcast.js'
 import { ping, getPosts, getContent } from 'Mantra/request/get/'
 import { handleReply, handleReplies } from 'Mantra/reply.js'
+import selectPoemata from './selectPoemata.js'
 
 function nodeStatus(state) {
     if (typeof state.init.isServerNode !== 'boolean') {
@@ -59,17 +61,14 @@ export default combineEpics(
 
             ping(nodeStatus(state), action.nid, state.init.pr)
 
-            if (state.init.isServerNode) {
-                const newPoemata = await getPosts(action.nid, state.init.pr)
-                const localPoemata = state.poema.poemata
+            //if (state.init.isServerNode) {
+                const poemata = await getPosts(action.nid, state.init.pr)
+                console.log('POEM', poemata)
 
-                for (const newPoema of newPoemata) {
-                    if (!localPoemata.find(localPoema => localPoema.pid === newPoema.pid)) {
-                        subscriber.next({type: 'mantra incoming poema', nid: action.nid, poema: newPoema})
-                    }
-                    /* else increase replication count of poema */
+                for (const poema of poemata) {
+                    subscriber.next({type: 'mantra incoming poema', nid: action.nid, poema})
                 }
-            }
+            //}
             subscriber.complete()
         }))
         //catchError(error => of({type: 'mantra req poemata get error', error}))
@@ -79,17 +78,22 @@ export default combineEpics(
         ofType('mantra incoming poema'),
         mergeMap(({poema, nid}) => new Observable(subscriber => {
             const state: Prakriti = state$.value
+            const localPoemata = state.poema.poemata
 
+            if (!localPoemata.find(localPoema => localPoema.pid === poema.pid)) {
             // was in storePost
-            subscriber.next({type: 'prakriti poema put', poema, source: 'choir', nid})
+                subscriber.next({type: 'prakriti poema put', poema, source: 'choir', nid})
 
-            if (state.init.isServerNode && poema.attachments) {
-                poema.attachments.map(async attachment => {
-                    if (!(attachment.cid in state.poema.contents)) {
-                        subscriber.next({type: 'mantra req content get', cid: attachment.cid})
-                    }
-                })
+                // becoming obsolete?
+                if (state.init.isServerNode && poema.attachments) {
+                    poema.attachments.map(async attachment => {
+                        if (!(attachment.cid in state.poema.contents)) {
+                            subscriber.next({type: 'mantra req content get', cid: attachment.cid})
+                        }
+                    })
+                }
             }
+            /* else increase replication count of poema */
 
             subscriber.complete()
         }))
@@ -242,64 +246,21 @@ export default combineEpics(
 
                     /* called from mantra.pr.peer */
                     case 'req poemata get': {
-                        let payload = state.poema.poemata
-
-                        let params = mantra.params
-                        if (params) {
-                            payload = payload.filter((poema: Poema) => 
-                                (!params.pid || poema.pid === params.pid) &&
-                                (!params.opid || (poema.opid && poema.opid === params.opid) || (poema.pid === params.opid)) &&
-                                (!params.tag || (Array.isArray(poema.tags) && poema.tags.includes(params.tag))) &&
-                                (!params.rid || (poema.conversationId && poema.conversationId === params.rid))
-                            )
-                            // All of the selectors below may be implemented here, or may be implemented in the function
-                            // creating the req-poemata-get request, probably in Maya.
-
-                            // For each poema, it is also necessary to load all poemata having update ayah on it.
-
-                            // It is not possible to find poemata by ayah if it is encrypted,
-                            // so all updating poemata must be in the same renga as the updated one!
-                            // (Or we need to allow for update ayah to be stored in haiku unencrypted)
-
-                            // We also _could_ prefetch other kinds of ayah-linked poemata, posts referencing this with
-                            // hyperlinks or referenced by it; and maybe something more. (And also prefetch content!)
-
-                            // If we are displaying a tag, it is necessary to have all (or newest N) o-psalms in the tag.
-                            // It is also possible to preload all sutras in the tag (or newest N); this must be handled not here,
-                            // but in the code placing req-poemata-get.
-
-                            // If we are displaying a sutra, we need all the psalms in the sutra (sharing the same opid)
-                            // For each of these psalms, it that psalms starts a sutra, we also need _that_ sutra.
-                            // For each of psalms of subsutra, we also need to know if there are further subsubsutra branches,
-                            // but not necessary its psalmoi; however, current logic doesnt' allow to transfer
-                            // this kind of metadata with the psalm.
-                            // We also want a parent tag(s?) or parent sutra (or only those suwar from
-                            // parent sutra which start a subsutra themselves)
-
-                            // If we are displaying a psalm (in sutra), we want its parent sutra (or, if it is a head in a sutra, then that sutra)
-                            // and all the related objects, see above.
-
-                            // If we are displaying a renga, or a psalm belonging to renga, we want all the haiku with the matching rid.
-                            // We also want the objects to display conversations list (see below). Maybe for renga psalms it is possible
-                            // to display some parallel of subsutras (maybe a fact that there is a direct (subdirect? subrenga?) directed at 
-                            // the renga psalm).
-
-                            // To display conversations list, we want all the hokku and waki. It may be dificult to find just them.
-                            // The simplest thing is to find all haiku directed to plain psalms (but see above on subrengas)
-                            // It is also possible for user node to track rids and request only hokku + waki for specific rids;
-                            // but maybe it is easier to just store hokku + waki locally.
-
-                            // (It is also very ironic that hokku is the only unencrypted poema in renga; while haiku is an encrypted psalm.
-                            // Think about terminology better.)
-                        }
-
-                        send(originNid, {type: 'res poemata get', payload, re: mantra.mid}, false, pr)
+                        const payload = selectPoemata(state, mantra)
+                        const type = mantra.params ? 'res poemata get' : 'res poemata get * legacy'
+                        send(originNid, {type, payload, re: mantra.mid}, false, pr)
                         broadcast(mantraToForward, false, peers, pr)
+                        
                     }
                     break
 
                     case 'res poemata get': {
                         handleReplies(nid, mantra, mantra.payload)
+                    }
+                    break
+
+                    case 'res poemata get * legacy': {
+                        handleReply(mantra, mantra.payload)
                     }
                     break
                 }

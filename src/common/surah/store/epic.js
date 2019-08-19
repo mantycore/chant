@@ -6,11 +6,12 @@ import ayat from 'Surah/ayah/'
 import addSurahToRenga from 'Surah/renga.js'
 export { Buffer } from 'buffer'
 import nacl from 'tweetnacl'
+import observableAsync from 'Common/observableAsync.js'
 
 export default combineEpics(
     (action$, state$) => action$.pipe(
         ofType('prakriti poema put'),
-        mergeMap(action => new Observable(subscriber => {
+        mergeMap(observableAsync(async (action, subscriber) => {
             const poema = action.poema
             const state = state$.value
             const {poemata, contents} = state.poema
@@ -28,20 +29,22 @@ export default combineEpics(
                 psalm = poema
             }
 
-            const surah = ayat(
+            const surah = await ayat(
                 poema, // TODO: not needed, remove?
                 psalm,
                 directSide,
                 suwar,
-                poemata
+                poemata,
+                state$
             )
 
-            const renga = addSurahToRenga(
+            const renga = await addSurahToRenga(
                 poema,
                 psalm,
                 surah,
                 suwar,
-                rengashu
+                rengashu,
+                state$
             )
 
             subscriber.next({type: 'prakriti surah put', surah, ...(renga ? {renga} : {})})

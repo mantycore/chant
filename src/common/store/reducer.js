@@ -6,7 +6,8 @@ import produce, {original} from 'immer'
 
 const setReplicated = (state: Prakriti, content: Content, hexNid: string): void => {
     content.status.replicated[hexNid] = true
-    if (state.mantra.peers[hexNid] && state.mantra.peers[hexNid].persistent) {
+    const peer: any = state.mantra.peers[hexNid] //TODO: fix flow
+    if (peer && peer.persistent) {
         content.status.persisted[hexNid] = true
         // the resource in fact might be not (yet) persisted;
         // maybe a separate follow-up mantra must be sent when

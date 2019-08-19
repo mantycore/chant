@@ -1,16 +1,18 @@
-const cloneDeep = obj => JSON.parse(JSON.stringify(obj))
+import { cloneDeep, whenAvailable } from './util.js'
 
-const addSurahToRenga = (
-    payload,
+const addSurahToRenga = async (
+    poema,
     psalm,
     surah,
     suwar,
-    rengashu
+    rengashu,
+    state$
 ) => {
     let renga = null
     if (surah.encrypted && surah.encrypted !== 'unknown') {
         if (!psalm.conversationId) { //this is the second post (first reply) in the conversation
-            const oSurah = suwar.find(curSurah => curSurah.pid === payload.to[0].pid)
+            const selectOSurah = state => state.surah.suwar.find(curSurah => curSurah.pid === poema.to[0].pid)
+            const oSurah = await whenAvailable(state$, selectOSurah)
             // TODO:  this must be changed if the multiperson conversation will be implemented
             // possibly to an array of oSuwar?
             renga = {
@@ -21,13 +23,15 @@ const addSurahToRenga = (
                 latest: surah.result.timestamp,
                 fresh: surah.encrypted === 'their'
             }
+            console.log(renga)
             //if (!rengashu.find(curRenga => curRenga.id === renga.id)) {
                 //rengashu.push(renga)
             //} // or else?
         } else {
-            renga = cloneDeep(rengashu.find(curRenga => curRenga.id === psalm.conversationId))
+            const selectRenga = state => state.surah.rengashu.find(curRenga => curRenga.id === psalm.conversationId)
+            renga = cloneDeep(await whenAvailable(state$, selectRenga))
             if (!renga) {
-                //possibly error
+                //possibly error; and is not possible with whenAvailable
                 const [_, first, __, second] = psalm.conversationId.split('/')
                 renga = {id: psalm.conversationId, suwar: [], latest: 0, fresh: true, firstPid, secondPid, headless: true}
                 console.log('Headless conversation', renga)

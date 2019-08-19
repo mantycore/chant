@@ -25,35 +25,35 @@ const requestResource = async (action$, state$, subscriber) => {
                 (console.log("in predicate", state),
                 state.poema.poemata.find(poema => poema.tags && poema.tags.includes(state.maya.tag))
                 )
-            params = {tag: state.maya.tag}
+            params = {mode: 'tag', tag: state.maya.tag}
         break
 
         case 'direct':
         case 'thread':
             predicate = state =>
                 state.poema.poemata.find(poema => poema.pid === state.maya.sutraPid)
-            params = {opid: state.maya.sutraPid}
+            params = {mode: 'sutra', opid: state.maya.sutraPid}
         break
 
         case 'direct conversation':
             predicate = state =>
                 state.surah.rengashu.find(renga => renga.id === state.maya.rengaId)
-            params = {rid: state.maya.rengaId}
+            params = {mode: 'renga', rid: state.maya.rengaId}
         break
 
         case 'directs list':
             predicate = state => state.surah.rengashu.length > 0
-            params = {}
+            params = {mode: 'rengashu'}
         break
     }
 
-    if (!predicate(state) && Object.keys(params).length > 0) {
+    //if (!predicate(state) && Object.keys(params).length > 0) {
         getPoemata(params, state.mantra.peers, state.init.pr).subscribe(({resolution, nid}) => {
-            //TODO: fix as per common epic
-            resolution.forEach(poema => 
-                subscriber.next({type: 'mantra incoming poema', nid, poema}))
+            for (const poema of resolution) { 
+                subscriber.next({type: 'mantra incoming poema', nid, poema})
+            }
         })
-    }
+    //}
     waitForResource(action$, state$, subscriber, predicate)
 }
 
