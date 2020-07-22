@@ -130,9 +130,9 @@ const Maya = ({state, dispatch}) => {
         {peerCount} {peerCount === 1 ? 'peer' : 'peers'} online ({persistentPeersCount} persistent)
     </span>
 
-    if (state.surah.suwar.length === 0) {
+    /*if (state.surah.suwar.length === 0) {
         return <Splash />
-    }
+    }*/
 
     if (rengaMode) { //todo: two different components?
         const rengashu = selectRengashu(state)

@@ -22,9 +22,7 @@ const requestResource = async (action$, state$, subscriber) => {
     switch (state.maya.mode) {
         case 'tag':
             predicate = state =>
-                (console.log("in predicate", state),
                 state.poema.poemata.find(poema => poema.tags && poema.tags.includes(state.maya.tag))
-                )
             params = {mode: 'tag', tag: state.maya.tag}
         break
 

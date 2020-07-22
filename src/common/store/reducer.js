@@ -16,7 +16,7 @@ const setReplicated = (state: Prakriti, content: Content, hexNid: string): void 
 }
 
 export default (state: Prakriti, action: any): Prakriti => {
-    //console.log("RDCR Common", action)
+    console.log("RDCR", action)
     return produce(state, (draft: Prakriti): void => {
         switch (action.type) {
             case 'init': {
